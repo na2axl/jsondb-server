@@ -36,6 +36,11 @@ namespace JSONDB.UI
             }
         }
 
+        public static Process GetProcess()
+        {
+            return ServerProcess;
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             StartServer();
@@ -59,7 +64,7 @@ namespace JSONDB.UI
 
         public static bool ServerIsStopped()
         {
-            return (null == App.ServerProcess || App.ServerProcess.HasExited);
+            return (null == ServerProcess || ServerProcess.HasExited);
         }
     }
 }
