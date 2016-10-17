@@ -12,17 +12,13 @@ namespace JSONDB
         {
             var createWebSocketServer = Edge.Func(@"return require('jdb-core')");
 
-            await createWebSocketServer(new
-            {
-                port = 2717
-            });
+            await createWebSocketServer(null);
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Task.Run((Action)Serve);
             new ManualResetEvent(false).WaitOne();
-            Console.ReadLine();
         }
 
     }
