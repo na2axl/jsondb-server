@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace JSONDB
 {
@@ -13,7 +12,7 @@ namespace JSONDB
         /// </summary>
         /// <param name="adress">The IP address</param>
         /// <returns>true if is a valid address</returns>
-        public static bool ValidateAddress(string adress)
+        public static bool ValidateAddress(string address)
         {
             IPAddress addr;
             return IPAddress.TryParse(address, out addr);
