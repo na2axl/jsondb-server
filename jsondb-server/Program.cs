@@ -1,29 +1,47 @@
 ﻿using System;
 using WebSocketSharp;
-using WebSocketSharp.Server;
-using System.Threading.Tasks;
-using System.Threading;
-using EdgeJs;
 using System.Net;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
 
 namespace JSONDB.Server
 {
     public class Program
     {
-
+        /// <summary>
+        /// The JSONDB server address.
+        /// </summary>
         private static IPAddress ServerAddress = IPAddress.Any;
 
+        /// <summary>
+        /// Get the value determinating if an user is currently connected through the console.
+        /// </summary>
         private static bool UserIsConnected = false;
 
+        /// <summary>
+        /// The username of the user connected through the console.
+        /// </summary>
         private static string Username = String.Empty;
-        private static string Password = String.Empty;
+
+        /// <summary>
+        /// The name of the currently used server.
+        /// </summary>
         private static string ServerName = String.Empty;
-        private static string DatabaseName = String.Empty;
 
-        /// TODO: Uncomment this when you'll implement JSONDB in C#
-        // private static Database DB;
+        /// <summary>
+        /// The Database instance used with the current connection.
+        /// </summary>
+        private static Database DB;
 
+        /// <summary>
+        /// Check if the server is running.
+        /// </summary>
+        private static bool IsRunning = true;
+
+        /// <summary>
+        /// The main program logic.
+        /// </summary>
+        /// <param name="args">Program arguments passed through the console</param>
         public static void Main(string[] args)
         {
             // Getting the server adsress from the list of arguments
@@ -79,113 +97,343 @@ namespace JSONDB.Server
             // Start the HTTP server
             http.Start();
 
-            // Continue to recieve commands until we get a "close" command
-            Console.Clear();
-            Console.WriteLine();
-            var IsRunning = true;
-            while (IsRunning)
+            // If the JSONDB Server is launched as a console
+            if (!Console.IsInputRedirected)
             {
-                if (UserIsConnected)
-                {
-                    Console.Write(" $ " + Username + "@" + ServerName + " >  ");
-                }
-                else
-                {
-                    Console.Write(" $ jsondb >  ");
-                }
-                var command = Console.ReadLine();
-                if (command.ToLower().StartsWith("connect"))
-                {
-                    var cmd_args = command.Remove(0, 7).TrimStart().Split(' ');
-                    string username = String.Empty;
-                    string password = String.Empty;
-                    string server   = String.Empty;
-                    string database = String.Empty;
-
-                    password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
-
-                    for (int i = 0, l = cmd_args.Length; i < l; ++i)
-                    {
-                        switch (cmd_args[i])
-                        {
-                            case "-u":
-                                username = cmd_args[i + 1];
-                                break;
-                            case "-s":
-                                server = cmd_args[i + 1];
-                                break;
-                            case "-d":
-                                database = cmd_args[i + 1];
-                                break;
-                        }
-                    }
-
-                    if (server == String.Empty)
-                    {
-                        Console.WriteLine("Cannot connect to a server. No server provided. Use \"-s ServerName\" to give the name of the server to use with the connection.");
-                    }
-                    else
-                    {
-                        if (username == String.Empty)
-                        {
-                            Console.WriteLine("Cannot connect to a server. No user provided. Use \"-u Username\" to give the username.");
-                        }
-                        else
-                        {
-                            var ServerList = Configuration.GetConfigFile("users");
-                            if (ServerList[server] != null)
-                            {
-                                if (ServerList[server]["username"].ToString() == Util.Crypt(username) && ServerList[server]["password"].ToString() == Util.Crypt(password))
-                                {
-                                    Username = username;
-                                    Password = password;
-                                    ServerName = server;
-                                    DatabaseName = database;
-
-                                    /// TODO: Uncomment this when JSONDB will be implemented in C#
-                                    // DB = JSONDB.Connect(Username, Password, ServerName, DatabaseName);
-
-                                    UserIsConnected = true;
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Cannot connect to a server. There is an error with the username or with the password.");
-                                }
-                            }
-                            else
-                            {
-                                Console.WriteLine("Cannot connect to a server. No server found with the given name.");
-                            }
-                        }
-                    }
-                }
-                else if (command.ToLower().StartsWith("disconnect"))
-                {
-                    Username = String.Empty;
-                    Password = String.Empty;
-                    ServerName = String.Empty;
-                    DatabaseName = String.Empty;
-                    // DB.Disconnect();
-                    UserIsConnected = false;
-                }
-                else if (command.ToLower().StartsWith("quit") || command.ToLower().StartsWith("exit") || command.ToLower().StartsWith("close"))
+                Console.Clear();
+                Console.WriteLine("Welcome to JSONDB Server");
+                Console.WriteLine("Copyright (c) 2016 Centers Technologies. All rights reserved.");
+                Console.WriteLine("Server version 1.0.0");
+                Console.WriteLine();
+                Console.WriteLine("The server is listening for incomming connections at the address jsondb://" + ServerAddress.ToString() + ":2717");
+                Console.WriteLine("The server is serving the web administration interface at the address http://" + ServerAddress.ToString() + ":2717");
+                Console.WriteLine();
+                Console.WriteLine("Type 'help' for the list of available commands.");
+                Console.WriteLine();
+                // Continue to recieve commands until we get a "close" command
+                while (IsRunning)
                 {
                     if (UserIsConnected)
                     {
-                        // DB.Disconnect();
+                        Console.Write("$ " + Username + "@" + ServerName + " >  ");
                     }
-                    IsRunning = false;
+                    else
+                    {
+                        Console.Write("$ jsondb >  ");
+                    }
+
+                    var command = Console.ReadLine();
+
+                    if (command.ToLower().StartsWith("mkserver"))
+                    {
+                        ExecMkServer(command);
+                    }
+                    else if (command.ToLower().StartsWith("connect"))
+                    {
+                        ExecConnect(command);
+                    }
+                    else if (command.ToLower().StartsWith("cd"))
+                    {
+                        ExecChangeDatabase(command);
+                    }
+                    else if (command.ToLower().StartsWith("mktable"))
+                    {
+                        ExecMkTable(command);
+                    }
+                    else if (command.ToLower().StartsWith("disconnect"))
+                    {
+                        ExecDisconnect(command);
+                    }
+                    else if (command.ToLower().StartsWith("quit") || command.ToLower().StartsWith("exit") || command.ToLower().StartsWith("close") || command.ToLower().StartsWith("shutdown"))
+                    {
+                        ExecClose(command);
+                    }
+                    else if (command.ToLower().StartsWith("clear"))
+                    {
+                        Console.Clear();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unknow command.");
+                    }
+
+                    Console.WriteLine();
                 }
-                else
+            }
+            // Otherwise JSONDB Server is launched with the UI
+            else
+            {
+                // Continue to recieve queries until we get a "close" command
+                while (IsRunning)
                 {
-                    Console.WriteLine("Unknow command.");
+                    string command = Console.In.ReadLine();
+                    if (command.ToLower().StartsWith("quit") || command.ToLower().StartsWith("exit") || command.ToLower().StartsWith("close") || command.ToLower().StartsWith("shutdown"))
+                    {
+                        ExecClose(command);
+                    }
                 }
-                Console.WriteLine();
             }
 
             // Stop the server when a "close" command is recieved
             http.Stop();
         }
 
+        private static void ExecMkServer(string command)
+        {
+            string[] parts = command.Remove(0, 8).Trim().Split(' ');
+
+            string username = String.Empty;
+            string password = String.Empty;
+            string server = String.Empty;
+
+            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+
+            for (int i = 0, l = parts.Length; i < l; i++)
+            {
+                switch (parts[i])
+                {
+                    case "-s":
+                        server = parts[i + 1];
+                        break;
+                    case "-u":
+                        username = parts[i + 1];
+                        break;
+                }
+            }
+
+            while (server == String.Empty)
+            {
+                Console.Write(" -> Server name: ");
+                server = Console.ReadLine().Trim().Split(' ')[0];
+            }
+
+            while (username == String.Empty)
+            {
+                Console.Write(" -> Username: ");
+                username = Console.ReadLine().Trim();
+            }
+
+            if (command.Trim().Length == 8 && password == String.Empty)
+            {
+                Console.Write(" -> Password (Leave blank to ignore (not recommended)): ");
+                password = Console.ReadLine();
+            }
+
+            try
+            {
+                JSONDB.CreateServer(server, username, password);
+                Console.WriteLine("Server created.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unable to create the server: " + e.Message);
+            }
+        }
+
+        private static void ExecChangeDatabase(string command)
+        {
+            if (UserIsConnected)
+            {
+                string database = command.Remove(0, 2).Trim().Split(' ')[0];
+                if (database == String.Empty)
+                {
+                    Console.WriteLine("Use: cd DatabaseName");
+                }
+                else
+                {
+                    if (DB.Exists(database))
+                    {
+                        try
+                        {
+                            DB.SetDatabase(database);
+                            Console.WriteLine("Database changed.");
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Unable to change the working datbabase: " + e.Message);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to find the database \"" + database + "\" in the current server.");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("You are not connected to a server. Use the command \"connect\" first.");
+            }
+        }
+
+        private static void ExecClose(string command)
+        {
+            if (UserIsConnected)
+            {
+                DB.Disconnect();
+            }
+            IsRunning = false;
+        }
+
+        private static void ExecDisconnect(string command)
+        {
+            Username = String.Empty;
+            ServerName = String.Empty;
+            DB.Disconnect();
+            UserIsConnected = false;
+        }
+
+        private static void ExecMkTable(string command)
+        {
+            if (UserIsConnected)
+            {
+                string table = command.Remove(0, 7).Trim();
+                if (DB.IsWorkingDatabase())
+                {
+                    while (table == String.Empty)
+                    {
+                        Console.Write(" -> Table name: ");
+                        table = Console.ReadLine().Trim().Split(' ')[0];
+                    }
+                    JObject prototype = new JObject();
+                    bool IsAddindFields = true;
+                    do
+                    {
+                        Console.Write("Do you want to add a new column? (Yes/No) ");
+                        string res = Console.ReadLine().Trim().ToLower();
+                        if (res == "yes" || res == "y")
+                        {
+                            Console.Write(" -> Column name: ");
+                            string c_name = Console.ReadLine().Trim();
+                            Console.Write(" -> Column type: ");
+                            string c_type = Console.ReadLine().Trim();
+                            Console.Write(" -> Default value (Leave blank to ignore): ");
+                            string c_defv = Console.ReadLine().Trim();
+                            Console.Write(" -> Max length (Leave blank to ignore): ");
+                            string c_maxl = Console.ReadLine().Trim();
+                            Console.Write(" -> Not null (Yes/No): ");
+                            string c_null = Console.ReadLine().Trim().ToLower();
+                            Console.Write(" -> Auto increment (Yes/No): ");
+                            string c_auto = Console.ReadLine().Trim().ToLower();
+                            Console.Write(" -> Primary key (Yes/No): ");
+                            string c_pkey = Console.ReadLine().Trim().ToLower();
+                            Console.Write(" -> Unique key (Yes/No): ");
+                            string c_ukey = Console.ReadLine().Trim().ToLower();
+
+                            JObject properties = new JObject();
+                            properties["type"] = c_type ?? "string";
+                            if (c_defv != String.Empty) properties["default"] = c_defv;
+                            if (c_maxl != String.Empty) properties["max_length"] = c_maxl;
+                            if (c_null == "yes" || c_null == "y") properties["not_null"] = true;
+                            if (c_auto == "yes" || c_auto == "y") properties["auto_increment"] = true;
+                            if (c_pkey == "yes" || c_pkey == "y") properties["primary_key"] = true;
+                            if (c_ukey == "yes" || c_ukey == "y") properties["unique_key"] = true;
+
+                            prototype[c_name] = properties;
+                        }
+                        else
+                        {
+                            IsAddindFields = false;
+                        }
+                    } while (IsAddindFields);
+                    Console.WriteLine("The table \"" + table + "\" will be created with these columns:");
+                    Console.WriteLine(prototype.ToString());
+                    Console.Write("It's OK? (Yes/No) ");
+                    string ok = Console.ReadLine().Trim().ToLower();
+                    if (ok == "yes" || ok == "y")
+                    {
+                        try
+                        {
+                            DB.CreateTable(table, prototype);
+                            Console.WriteLine("Table created.");
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("An error occured when creating the table: " + e.Message);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Table creation cancelled.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No working database found. Use the command \"cd DatabaseName\" to use a database.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("You are not connected to a server. Use the command \"connect\" first.");
+            }
+        }
+
+        private static void ExecConnect(string command)
+        {
+            var cmd_args = command.Remove(0, 7).TrimStart().Split(' ');
+            string username = String.Empty;
+            string password = String.Empty;
+            string server = String.Empty;
+            string database = String.Empty;
+
+            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+
+            for (int i = 0, l = cmd_args.Length; i < l; ++i)
+            {
+                switch (cmd_args[i])
+                {
+                    case "-u":
+                        username = cmd_args[i + 1];
+                        break;
+                    case "-s":
+                        server = cmd_args[i + 1];
+                        break;
+                    case "-d":
+                        database = cmd_args[i + 1];
+                        break;
+                }
+            }
+
+            if (server == String.Empty)
+            {
+                Console.WriteLine("Cannot connect to a server. No server provided. Use \"-s ServerName\" to give the name of the server to use with the connection.");
+            }
+            else
+            {
+                if (username == String.Empty)
+                {
+                    Console.WriteLine("Cannot connect to a server. No user provided. Use \"-u Username\" to give the username.");
+                }
+                else
+                {
+                    var ServerList = Configuration.GetConfigFile("users");
+                    if (ServerList[server] != null)
+                    {
+                        if (ServerList[server]["username"].ToString() == Util.Crypt(username) && ServerList[server]["password"].ToString() == Util.Crypt(password))
+                        {
+                            Username = username;
+                            ServerName = server;
+
+                            try
+                            {
+                                DB = JSONDB.Connect(ServerName, Username, password, database);
+                                UserIsConnected = true;
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine("Unable to connect to the database: " + e.Message);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Cannot connect to a server. There is an error with the username or with the password.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Cannot connect to a server. No server found with the given name.");
+                    }
+                }
+            }
+        }
     }
 }
