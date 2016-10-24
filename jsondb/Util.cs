@@ -1,81 +1,26 @@
 ﻿using System;
-using System.Threading.Tasks;
-using EdgeJs;
 using System.IO;
+using System.Net;
 using System.Text;
-using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 
 namespace JSONDB
 {
     public class Util
     {
-        public static async void TestServerConnection(string adress, Func<object, Task<object>> callback)
-        {
-            var TestServer = Edge.Func(@"
-                return function (data, cb) {
-                    var WebSocketServer = require('ws').Server;
-                    var wss = new WebSocketServer({server: app});
-                    cb();
-                };
-            ");
-
-            await TestServer(new {
-                Callback = callback
-            });
-        }
-
+        /// <summary>
+        /// Validate an IP address.
+        /// </summary>
+        /// <param name="adress">The IP address</param>
+        /// <returns>true if is a valid address</returns>
         public static bool ValidateAddress(string adress)
         {
-            var parts = adress.Split('.');
-
-            if (parts.Length == 4)
-            {
-                foreach (var num in parts)
-                {
-                    if (int.Parse(num) > 255 || int.Parse(num) < 0)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            return false;
-        }
-
-        public static async void CreateServer(string serverName, string username, string password)
-        {
-            var Create = Edge.Func(@"
-                var JSONDB = require('jdb-jsondb');
-                var jdb = new JSONDB();
-
-                return function (opt, cb) {
-                    jdb.createServer(opt.server, opt.username, opt.password);
-                    cb();
-                };
-            ");
-
-            await Create(new
-            {
-                server = serverName,
-                username = username,
-                password = password
-            });
-        }
-
-        public static bool ServerExists(string serverName)
-        {
-            if (serverName == null)
-            {
-                return false;
-            }
-
-            return Directory.Exists(".\\servers\\" + serverName);
+            IPAddress addr;
+            return IPAddress.TryParse(address, out addr);
         }
 
         /// <summary>
-        /// Get the absolute path in which JSONDB is installed
+        /// Get the absolute path in which JSONDB is installed.
         /// </summary>
         /// <returns>The absolute path of the folder which contains JSONDB</returns>
         public static string AppRoot()
@@ -84,7 +29,46 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Crypt a string with the default JSONDB salt
+        /// Make a path by joining all the parts with the character '\'.
+        /// </summary>
+        /// <param name="parts">The parts of the path</param>
+        /// <returns>The path.</returns>
+        public static string MakePath(params string[] parts)
+        {
+            string path = String.Empty;
+
+            foreach (var part in parts)
+            {
+                path += part.TrimEnd('\\') + "\\";
+            }
+
+            return path.TrimEnd('\\');
+        }
+
+        /// <summary>
+        /// Create all directories in a path.
+        /// </summary>
+        /// <param name="path">The path to create</param>
+        public static void MakeDirectory(string path)
+        {
+            if (!Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+
+        /// <summary>
+        /// Check if a file or a directory exist at the given path.
+        /// </summary>
+        /// <param name="path">The path to check</param>
+        /// <returns>true if exist and false otherwise</returns>
+        public static bool Exists(string path)
+        {
+            return Directory.Exists(path) || File.Exists(path);
+        }
+
+        /// <summary>
+        /// Crypt a string with the default JSONDB salt.
         /// </summary>
         /// <param name="value">The string to be crypted</param>
         /// <returns>The crypted value of the string</returns>
@@ -94,7 +78,7 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Prepend a leading zero on a number lesser than 10
+        /// Prepend a leading zero on a number lesser than 10.
         /// </summary>
         /// <param name="number">The number</param>
         /// <returns>The given number with a leading zero if necessary</returns>
@@ -132,8 +116,8 @@ namespace JSONDB
         {
             byte[] bytes = Encoding.UTF8.GetBytes(s);
 
-            var sha1 = System.Security.Cryptography.MD5.Create();
-            byte[] hashBytes = sha1.ComputeHash(bytes);
+            var md5 = System.Security.Cryptography.MD5.Create();
+            byte[] hashBytes = md5.ComputeHash(bytes);
 
             return HexStringFromBytes(hashBytes);
         }
@@ -152,6 +136,35 @@ namespace JSONDB
                 sb.Append(hex);
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Write a text file.
+        /// </summary>
+        /// <param name="path">The path of the file</param>
+        /// <param name="contents">The file contents</param>
+        public static void WriteTextFile(string path, string contents)
+        {
+            if (!Exists(path))
+            {
+                File.CreateText(path).Close();
+            }
+
+            File.WriteAllText(path, contents);
+        }
+
+        /// <summary>
+        /// Read a text file.
+        /// </summary>
+        /// <param name="path">The path of the file</param>
+        /// <returns>The file contents</returns>
+        public static string ReadTextFile(string path)
+        {
+            if (!Exists(path))
+            {
+                return null;
+            }
+            return File.ReadAllText(path);
         }
     }
 }
