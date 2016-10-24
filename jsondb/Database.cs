@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace JSONDB
 {
@@ -395,18 +392,10 @@ namespace JSONDB
         /// Send a query to the database.
         /// </summary>
         /// <param name="query">The query</param>
-        public void Query(string query)
+        /// <returns>The query result</returns>
+        public object Query(string query)
         {
-
-        }
-
-        /// <summary>
-        /// Send a prepared query to the database.
-        /// </summary>
-        /// <param name="query">The query</param>
-        public void Prepare(string query)
-        {
-
+            return new Query(this).Send(query);
         }
     }
 }
