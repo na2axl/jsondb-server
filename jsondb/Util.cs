@@ -257,5 +257,20 @@ namespace JSONDB
             }
             return ret;
         }
+
+        /// <summary>
+        /// Get a JArray of values contained in a JObject
+        /// </summary>
+        /// <param name="array">The object to extract values</param>
+        /// <returns>The JArray of extracted values</returns>
+        public static JArray Values(JObject array)
+        {
+            JArray ret = new JArray();
+            for (int i = 0, l = array.Count; i < l; i++)
+            {
+                ret.Add(array[i.ToString()]);
+            }
+            return ret;
+        }
     }
 }
