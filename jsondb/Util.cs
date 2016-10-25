@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -20,7 +21,7 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// The if the server can be created on the given IP address.
+        /// Test if the server can be created on the given IP address.
         /// </summary>
         /// <param name="address">The IP adress</param>
         /// <returns>true if the server can use the IP address, false otherwise</returns>
@@ -73,7 +74,7 @@ namespace JSONDB
         /// <returns>The absolute path of the folder which contains JSONDB</returns>
         public static string AppRoot()
         {
-            return Directory.GetParent(".\\").FullName.TrimEnd('\\');
+            return Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar);
         }
 
         /// <summary>
@@ -87,10 +88,10 @@ namespace JSONDB
 
             foreach (var part in parts)
             {
-                path += part.TrimEnd('\\') + "\\";
+                path += part.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             }
 
-            return path.TrimEnd('\\');
+            return path.TrimEnd(Path.DirectorySeparatorChar);
         }
 
         /// <summary>
@@ -213,6 +214,48 @@ namespace JSONDB
                 return null;
             }
             return File.ReadAllText(path);
+        }
+
+        /// <summary>
+        /// Sort an object with a function test.
+        /// </summary>
+        /// <param name="array">The object to sort</param>
+        /// <param name="callback">The function which will be called with the next and the current values as parameters</param>
+        /// <returns>The sorted object</returns>
+        public static JObject Sort(JObject array, Func<JToken, JToken, bool> callback)
+        {
+            JObject ret = new JObject();
+            JArray tmp = new JArray();
+
+            var arrayIterator = array.GetEnumerator();
+            while (arrayIterator.MoveNext())
+            {
+                tmp.Add(arrayIterator.Current.Value);
+            }
+            for (int i = 0, l = tmp.Count; i < l-1; i++)
+            {
+                for (int j = i+1; j < l; j++)
+                {
+                    if (callback(tmp[j], tmp[i]))
+                    {
+                        var k = tmp[i];
+                        tmp[i] = tmp[j];
+                        tmp[j] = k;
+                    }
+                }
+            }
+            for (int i = 0, l = tmp.Count; i < l; i++)
+            {
+                foreach (var current in array)
+                {
+                    if (JObject.DeepEquals(tmp[i], array[current.Key]))
+                    {
+                        ret[current.Key] = array[current.Key];
+                        break;
+                    }
+                }
+            }
+            return ret;
         }
     }
 }
