@@ -259,7 +259,7 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Get a JArray of values contained in a JObject
+        /// Get a JArray of values contained in a JObject.
         /// </summary>
         /// <param name="array">The object to extract values</param>
         /// <returns>The JArray of extracted values</returns>
@@ -269,6 +269,42 @@ namespace JSONDB
             for (int i = 0, l = array.Count; i < l; i++)
             {
                 ret.Add(array[i.ToString()]);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Concatenate two or more JObjects in one.
+        /// </summary>
+        /// <param name="arrays">JObjects to concatenate</param>
+        /// <returns>The concatenation of JObjects</returns>
+        public static JObject Concat(params JObject[] arrays)
+        {
+            JObject ret = new JObject();
+            for (int i = 0, l = arrays.Length; i < l; i++)
+            {
+                foreach (var array in arrays[i])
+                {
+                    ret[array.Key] = array.Value;
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Concatenate two or more JArrays in one.
+        /// </summary>
+        /// <param name="arrays">JArrays to concatenate</param>
+        /// <returns>The concatenation of JArrays</returns>
+        public static JArray Concat(params JArray[] arrays)
+        {
+            JArray ret = new JArray();
+            for (int i = 0, l = arrays.Length; i < l; i++)
+            {
+                foreach (var item in arrays[i])
+                {
+                    ret.Add(item);
+                }
             }
             return ret;
         }
