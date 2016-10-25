@@ -136,6 +136,10 @@ namespace JSONDB.Server
                     {
                         ExecConnect(command);
                     }
+                    else if (command.ToLower().StartsWith("mkdatabase"))
+                    {
+                        ExecMkDatabase(command);
+                    }
                     else if (command.ToLower().StartsWith("cd"))
                     {
                         ExecChangeDatabase(command);
@@ -186,9 +190,36 @@ namespace JSONDB.Server
             http.Stop();
         }
 
+        private static void ExecMkDatabase(string command)
+        {
+            string database = command.Remove(0, 10).Trim();
+
+            while (database == String.Empty)
+            {
+                Console.Write(" -> Database name: ");
+                database = Console.ReadLine().Trim().Split(' ')[0];
+            }
+
+            try
+            {
+                DB.CreateDatabase(database);
+                Console.WriteLine("Database created.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unable to create the database: " + e.Message);
+            }
+        }
+
         private static void ExecQuery(string command)
         {
             string query = command.Remove(0, 5).Trim();
+
+            while (query == String.Empty)
+            {
+                Console.WriteLine(" -> ");
+                query = Console.ReadLine().Trim();
+            }
 
             try
             {
