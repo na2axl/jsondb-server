@@ -54,7 +54,10 @@ namespace JSONDB.Server
                         case "-a":
                             if (Util.ValidateAddress(args[i + 1]))
                             {
-                                ServerAddress = IPAddress.Parse(args[i + 1]);
+                                if (Util.TestServerAddress(args[i + 1]))
+                                {
+                                    ServerAddress = IPAddress.Parse(args[i + 1]);
+                                }
                             }
                             break;
                     }
@@ -110,6 +113,7 @@ namespace JSONDB.Server
                 Console.WriteLine();
                 Console.WriteLine("Type 'help' for the list of available commands.");
                 Console.WriteLine();
+
                 // Continue to recieve commands until we get a "close" command
                 while (IsRunning)
                 {
@@ -139,6 +143,10 @@ namespace JSONDB.Server
                     else if (command.ToLower().StartsWith("mktable"))
                     {
                         ExecMkTable(command);
+                    }
+                    else if (command.ToLower().StartsWith("query"))
+                    {
+                        ExecQuery(command);
                     }
                     else if (command.ToLower().StartsWith("disconnect"))
                     {
@@ -176,6 +184,20 @@ namespace JSONDB.Server
 
             // Stop the server when a "close" command is recieved
             http.Stop();
+        }
+
+        private static void ExecQuery(string command)
+        {
+            string query = command.Remove(0, 5).Trim();
+
+            try
+            {
+                var res = DB.Query(query);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unable to execute the query: " + e.Message);
+            }
         }
 
         private static void ExecMkServer(string command)
