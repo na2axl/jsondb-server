@@ -108,16 +108,16 @@ namespace JSONDB
                 return new Regex(",").Replace(match.Value, ";");
             });
             ParsedQuery["parameters"] = new JArray(ParsedQuery["parameters"].ToString().Split(','));
-            ParsedQuery["parameters"] = ParsedQuery["parameters"].Count() > 0 ? ParsedQuery["parameters"] : new JArray();
-            Array.ForEach(ParsedQuery["parameters"].ToArray(), (field) => {
-                ParsedQuery["parameters"][Array.IndexOf(ParsedQuery["parameters"].ToArray(), field)] = field.ToString().Trim();
+            ParsedQuery["parameters"] = ((JArray)ParsedQuery["parameters"]).Count > 0 ? ParsedQuery["parameters"] : new JArray();
+            Array.ForEach(((JArray)ParsedQuery["parameters"]).ToArray(), (field) => {
+                ParsedQuery["parameters"][Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), field)] = field.ToString().Trim();
             });
 
             // Parsing values for some actions
             if (Array.IndexOf(new JArray("insert", "replace").ToArray(), ParsedQuery["action"].ToString().ToLower()) > -1)
             {
-                Array.ForEach(ParsedQuery["parameters"].ToArray(), (field) => {
-                    ParsedQuery["parameters"][Array.IndexOf(ParsedQuery["parameters"].ToArray(), field)] = _parseValue(field).ToString();
+                Array.ForEach(((JArray)ParsedQuery["parameters"]).ToArray(), (field) => {
+                    ParsedQuery["parameters"][Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), field)] = _parseValue(field);
                 });
             }
 
