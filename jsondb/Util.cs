@@ -227,10 +227,9 @@ namespace JSONDB
             JObject ret = new JObject();
             JArray tmp = new JArray();
 
-            var arrayIterator = array.GetEnumerator();
-            while (arrayIterator.MoveNext())
+            foreach (var item in array)
             {
-                tmp.Add(arrayIterator.Current.Value);
+                tmp.Add(item.Value);
             }
             for (int i = 0, l = tmp.Count; i < l-1; i++)
             {
@@ -259,6 +258,32 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Sort an object with a function test.
+        /// </summary>
+        /// <param name="array">The object to sort</param>
+        /// <param name="callback">The function which will be called with the next and the current values as parameters</param>
+        /// <returns>The sorted object</returns>
+        public static JArray Sort(JArray array, Func<JToken, JToken, bool> callback)
+        {
+            JArray ret = array;
+
+            for (int i = 0, l = ret.Count; i < l - 1; i++)
+            {
+                for (int j = i + 1; j < l; j++)
+                {
+                    if (callback(ret[j], ret[i]))
+                    {
+                        var k = ret[i];
+                        ret[i] = ret[j];
+                        ret[j] = k;
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        /// <summary>
         /// Get a JArray of values contained in a JObject.
         /// </summary>
         /// <param name="array">The object to extract values</param>
@@ -266,9 +291,9 @@ namespace JSONDB
         public static JArray Values(JObject array)
         {
             JArray ret = new JArray();
-            for (int i = 0, l = array.Count; i < l; i++)
+            foreach (var item in array)
             {
-                ret.Add(array[i.ToString()]);
+                ret.Add(item.Value);
             }
             return ret;
         }
