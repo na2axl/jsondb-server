@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using WebSocketSharp.Server;
 
 namespace JSONDB
 {
@@ -16,6 +17,54 @@ namespace JSONDB
         {
             IPAddress addr;
             return IPAddress.TryParse(address, out addr);
+        }
+
+        /// <summary>
+        /// The if the server can be created on the given IP address.
+        /// </summary>
+        /// <param name="address">The IP adress</param>
+        /// <returns>true if the server can use the IP address, false otherwise</returns>
+        public static bool TestServerAddress(string address)
+        {
+            if (ValidateAddress(address))
+            {
+                IPAddress addr = IPAddress.Parse(address);
+                try
+                {
+                    var testServer = new WebSocketServer(addr, 2717);
+                    testServer.Start();
+
+                    var start = DateTime.Now.Second;
+                    bool elapsed = false;
+                    bool failure = false;
+
+                    while (!elapsed)
+                    {
+                        if (testServer.IsListening)
+                        {
+                            elapsed = true;
+                        }
+                        else
+                        {
+                            if (DateTime.Now.Second - start > 10)
+                            {
+                                elapsed = true;
+                                failure = true;
+                            }
+                        }
+                    }
+
+                    testServer.Stop();
+
+                    return !failure;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
