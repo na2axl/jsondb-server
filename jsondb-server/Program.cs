@@ -39,6 +39,11 @@ namespace JSONDB.Server
         private static bool IsRunning = true;
 
         /// <summary>
+        /// Check if a server is already running. Used to allow multi instance for the console.
+        /// </summary>
+        private static bool AServerIsRunning = false;
+
+        /// <summary>
         /// The main program logic.
         /// </summary>
         /// <param name="args">Program arguments passed through the console</param>
@@ -64,46 +69,54 @@ namespace JSONDB.Server
                 }
             }
 
-            // Create an HTTP Server
-            var http = new HTTPServer(ServerAddress, 2717);
+            HTTPServer http = null;
 
-            // Add WebSocket Services to the HTTP server
-            http.AddWebSocketService<ClientSocketServer>(
-                "/",
-                () =>
-                    new ClientSocketServer()
-                    {
-                        Protocol = "jsondb",
-                        IgnoreExtensions = true,
-                        EmitOnPing = false
-                    }
-            );
-            http.AddWebSocketService<APISocketServer>(
-                "/jdbwebapi",
-                () =>
-                    new APISocketServer()
-                    {
-                        IgnoreExtensions = true,
-                        EmitOnPing = false,
-                        OriginValidator = (val) =>
+            try
+            {
+                // Create an HTTP Server
+                http = new HTTPServer(ServerAddress, 2717);
+
+                // Add WebSocket Services to the HTTP server
+                http.AddWebSocketService<ClientSocketServer>(
+                    "/",
+                    () =>
+                        new ClientSocketServer()
                         {
-                            // Check the value of the Origin header, and return true if valid.
-                            Uri origin;
-                            return !val.IsNullOrEmpty()
-                                   && Uri.TryCreate(val, UriKind.Absolute, out origin)
-                                   && origin.Host == ServerAddress.ToString()
-                                   && origin.Port == 2717;
+                            Protocol = "jsondb",
+                            IgnoreExtensions = true,
+                            EmitOnPing = false
                         }
-                    }
-            );
+                );
+                http.AddWebSocketService<APISocketServer>(
+                    "/jdbwebapi",
+                    () =>
+                        new APISocketServer()
+                        {
+                            IgnoreExtensions = true,
+                            EmitOnPing = false,
+                            OriginValidator = (val) =>
+                            {
+                                // Check the value of the Origin header, and return true if valid.
+                                Uri origin;
+                                return !val.IsNullOrEmpty()
+                                       && Uri.TryCreate(val, UriKind.Absolute, out origin)
+                                       && origin.Host == ServerAddress.ToString()
+                                       && origin.Port == 2717;
+                            }
+                        }
+                );
 
-            // Start the HTTP server
-            http.Start();
+                // Start the HTTP server
+                http.Start();
+            }
+            catch (Exception)
+            {
+                AServerIsRunning = true;
+            }
 
             // If the JSONDB Server is launched as a console
             if (!Console.IsInputRedirected)
             {
-                Console.Clear();
                 Console.WriteLine("Welcome to JSONDB Server");
                 Console.WriteLine("Copyright (c) 2016 Centers Technologies. All rights reserved.");
                 Console.WriteLine("Server version 1.0.0");
@@ -186,8 +199,11 @@ namespace JSONDB.Server
                 }
             }
 
-            // Stop the server when a "close" command is recieved
-            http.Stop();
+            if (!AServerIsRunning)
+            {
+                // Stop the server when a "close" command is recieved
+                http.Stop();
+            }
         }
 
         private static void ExecMkDatabase(string command)
