@@ -79,8 +79,6 @@ namespace JSONDB
                         case "count":
                             res = _count(json_array);
                             break;
-                        default:
-                            throw new Exception();
                     }
                     Benchmark.Mark("jsondb_(query)_end");
                     return res;
@@ -123,7 +121,7 @@ namespace JSONDB
                 throw new Exception("Query Error: Can't use the table \"" + table + "\", there is no database selected.");
             }
 
-            string path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), table);
+            string path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), table + ".jdbt");
             if (!Util.Exists(path))
             {
                 throw new Exception("Query Error: Can't use the table \"" + table + "\", the table doesn't exist in the database.");
