@@ -407,5 +407,23 @@ namespace JSONDB
             }
             return ret;
         }
+
+        /// <summary>
+        /// Create a JObject with a JArray of key and a JArray of values.
+        /// </summary>
+        /// <param name="keys">The JArray of keys</param>
+        /// <param name="values">The JArray of values</param>
+        /// <returns>The combined JObject</returns>
+        public static JObject Combine(JArray keys, JArray values)
+        {
+            JObject ret = new JObject();
+
+            for (int i = 0, l = keys.Count; i < l; i++)
+            {
+                ret[keys[i]] = values[i];
+            }
+
+            return ret;
+        }
     }
 }
