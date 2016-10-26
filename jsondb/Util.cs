@@ -377,5 +377,20 @@ namespace JSONDB
             }
             return ret;
         }
+
+        /// <summary>
+        /// Flip a JObject's keys -> values pairs.
+        /// </summary>
+        /// <param name="array">The array to flip</param>
+        /// <returns>The flipped array</returns>
+        public static JObject Flip(JObject array)
+        {
+            JObject ret = new JObject();
+            foreach (var item in array)
+            {
+                ret[item.Value] = item.Key;
+            }
+            return ret;
+        }
     }
 }
