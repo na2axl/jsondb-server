@@ -10,7 +10,7 @@ namespace JSONDB
         /// <summary>
         /// Reserved query's characters to trim
         /// </summary>
-        private static string TRIM_CHAR = "'\"`";
+        private static string TRIM_CHAR = ";'\"`";
 
         /// <summary>
         /// Reserved query's characters to escape
@@ -91,12 +91,12 @@ namespace JSONDB
             // Checking query's parts validity
             for (int i = 1, l = queryParts.Length; i < l; ++i)
             {
-                var part = queryParts[i];
+                var part = queryParts[i].Trim();
                 if (null == part || part == String.Empty)
                 {
                     throw new Exception("JSONDB Query Parse Error: Unexpected \".\" after extension \"" + part + "\".");
                 }
-                if (! new Regex("\\w+\\(.*\\)").IsMatch(part)) {
+                if (! new Regex("^\\w+\\(.*\\)$").IsMatch(part)) {
                     throw new Exception("JSONDB Query Parse Error: There is an error at the extension \"" + part + "\".");
                 }
             }
@@ -109,7 +109,7 @@ namespace JSONDB
             }
 
             // Getting the action's parameters
-            ParsedQuery["parameters"] = new Regex("\\((.+)\\)").Replace(queryParts[1].Replace(ParsedQuery["action"].ToString(), ""), "$1").Trim(TRIM_CHAR.ToCharArray());
+            ParsedQuery["parameters"] = new Regex("\\w+\\((.+)\\)").Replace(queryParts[1], "$1").Trim();
             ParsedQuery["parameters"] = new Regex("\\(([^)]*)\\)").Replace(ParsedQuery["parameters"].ToString(), (match) => {
                 return new Regex(",").Replace(match.Value, ";");
             });
@@ -178,6 +178,8 @@ namespace JSONDB
                         }
                         ((JArray)extensions["on"]).Add(_parseOnExtension(parameters));
                         break;
+                    default:
+                        throw new Exception("Query Parse Error: The extension " + name + "() is not a valid JQL extension.");
                 }
             }
             ParsedQuery["extensions"] = extensions;
@@ -380,21 +382,6 @@ namespace JSONDB
             ParsedClause["action"] = new JObject();
             ParsedClause["action"]["name"] = actionParts[0].ToString().Trim();
             ParsedClause["action"]["parameters"] = new JArray(actionParts[1].Split(';'));
-
-            return ParsedClause;
-        }
-
-        protected static JArray _parseLinkExtension(string clause)
-        {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) => {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-            });
-
-            if (ParsedClause.Count == 0)
-            {
-                throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"link()\" extension.");
-            }
 
             return ParsedClause;
         }
