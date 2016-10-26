@@ -388,7 +388,7 @@ namespace JSONDB
             JObject ret = new JObject();
             foreach (var item in array)
             {
-                ret[item.Value] = item.Key;
+                ret[item.Value.ToString()] = item.Key;
             }
             return ret;
         }
@@ -403,7 +403,7 @@ namespace JSONDB
             JObject ret = new JObject();
             for (int i = 0, l = array.Count; i < l; i++)
             {
-                ret[array[i]] = i;
+                ret[array[i].ToString()] = i;
             }
             return ret;
         }
