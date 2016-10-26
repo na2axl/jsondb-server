@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -440,6 +441,33 @@ namespace JSONDB
                 foreach (var item in array)
                 {
                     ret[item.Key] = item.Value;
+                }
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Get the difference between two or more JArrays
+        /// </summary>
+        /// <param name="arrays">JArrays</param>
+        /// <returns>The result of the difference</returns>
+        public static JArray Diff(params JArray[] arrays)
+        {
+            JArray ret = new JArray();
+
+            for (int j = 0, m = arrays.Length; j < m; j++)
+            {
+                for (int i = 0, l = arrays[j].Count; i < l; i++)
+                {
+                    if (Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()) == -1)
+                    {
+                        ret.Add(arrays[j][i]);
+                    }
+                    else
+                    {
+                        ret.RemoveAt(Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()));
+                    }
                 }
             }
 
