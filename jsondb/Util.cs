@@ -361,6 +361,59 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Slice a JArray.
+        /// </summary>
+        /// <param name="array">The JArray to slice</param>
+        /// <param name="start">The start index position</param>
+        /// <returns>The sliced JArray</returns>
+        public static JArray Slice(JArray array, int start)
+        {
+            return Slice(array, start, array.Count);
+        }
+
+        /// <summary>
+        /// Slice a JObject.
+        /// </summary>
+        /// <param name="array">The JObject to slice</param>
+        /// <param name="start">The start index position</param>
+        /// <param name="length">The length of th result JArray</param>
+        /// <returns>The sliced JObject</returns>
+        public static JObject Slice(JObject array, int start, int length)
+        {
+            JObject ret = new JObject();
+            int j = 0;
+            int i = 0;
+
+            if (start + length > array.Count)
+            {
+                length = array.Count - start;
+            }
+
+            foreach (var item in array)
+            {
+                if (i >= start && j < length)
+                {
+                    ret[item.Key] = item.Value;
+                    ++j;
+                }
+                ++i;
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Slice a JObject.
+        /// </summary>
+        /// <param name="array">The JObject to slice</param>
+        /// <param name="start">The start index position</param>
+        /// <returns>The sliced JObject</returns>
+        public static JObject Slice(JObject array, int start)
+        {
+            return Slice(array, start, array.Count);
+        }
+
+        /// <summary>
         /// Get the intersection between two JObjects.
         /// </summary>
         /// <param name="array1">The first array</param>
