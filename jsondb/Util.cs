@@ -448,10 +448,10 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Get the difference between two or more JArrays
+        /// Compute difference between two or more JArrays
         /// </summary>
         /// <param name="arrays">JArrays</param>
-        /// <returns>The result of the difference</returns>
+        /// <returns>The computed difference</returns>
         public static JArray Diff(params JArray[] arrays)
         {
             JArray ret = new JArray();
@@ -467,6 +467,33 @@ namespace JSONDB
                     else
                     {
                         ret.RemoveAt(Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()));
+                    }
+                }
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Compute difference between two or more JObjects.
+        /// </summary>
+        /// <param name="arrays">JObjects</param>
+        /// <returns>The computed difference</returns>
+        public static JObject DiffKey(params JObject[] arrays)
+        {
+            JObject ret = new JObject();
+
+            foreach (var array in arrays)
+            {
+                foreach (var item in array)
+                {
+                    if (ret[item.Key] == null)
+                    {
+                        ret[item.Key] = item.Value;
+                    }
+                    else
+                    {
+                        ret.Remove(item.Key);
                     }
                 }
             }
