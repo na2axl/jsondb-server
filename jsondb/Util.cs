@@ -425,5 +425,25 @@ namespace JSONDB
 
             return ret;
         }
+
+        /// <summary>
+        /// Merge two or more JObjects in one.
+        /// </summary>
+        /// <param name="arrays">JObjects to merge</param>
+        /// <returns>The result of merge</returns>
+        public static JObject Merge(params JObject[] arrays)
+        {
+            JObject ret = new JObject();
+
+            foreach (var array in arrays)
+            {
+                foreach (var item in array)
+                {
+                    ret[item.Key] = item.Value;
+                }
+            }
+
+            return ret;
+        }
     }
 }
