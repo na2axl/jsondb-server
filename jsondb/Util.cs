@@ -420,7 +420,7 @@ namespace JSONDB
 
             for (int i = 0, l = keys.Count; i < l; i++)
             {
-                ret[keys[i]] = values[i];
+                ret[keys[i].ToString()] = values[i];
             }
 
             return ret;
