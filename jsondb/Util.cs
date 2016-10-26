@@ -218,7 +218,7 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Sort an object with a function test.
+        /// Sort an object with a test function.
         /// </summary>
         /// <param name="array">The object to sort</param>
         /// <param name="callback">The function which will be called with the next and the current values as parameters</param>
@@ -259,7 +259,36 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Sort an object with a function test.
+        /// Sort a JObject by keys with a test function.
+        /// </summary>
+        /// <param name="array">The JObject to sort</param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public static JObject KeySort(JObject array, Func<string, string, bool> callback)
+        {
+            JObject ret = array;
+            int index = 0;
+
+            foreach (var i in array)
+            {
+                foreach (var j in Util.Slice(ret, index + 1))
+                {
+                    if (callback(j.Key, i.Key))
+                    {
+                        var k = ret[i.Key];
+                        ret[i.Key] = ret[j.Key];
+                        ret[j.Key] = k;
+                    }
+                }
+                ++index;
+            }
+
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Sort an object with a test function.
         /// </summary>
         /// <param name="array">The object to sort</param>
         /// <param name="callback">The function which will be called with the next and the current values as parameters</param>
