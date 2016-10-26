@@ -266,23 +266,38 @@ namespace JSONDB
         /// <returns></returns>
         public static JObject KeySort(JObject array, Func<string, string, bool> callback)
         {
-            JObject ret = array;
-            int index = 0;
+            JObject ret = new JObject();
+            JArray tmp = new JArray();
 
             foreach (var i in array)
             {
-                foreach (var j in Util.Slice(ret, index + 1))
-                {
-                    if (callback(j.Key, i.Key))
-                    {
-                        var k = ret[i.Key];
-                        ret[i.Key] = ret[j.Key];
-                        ret[j.Key] = k;
-                    }
-                }
-                ++index;
+                tmp.Add(i.Key);
             }
 
+            for (int i = 0, l = tmp.Count; i < l - 1; i++)
+            {
+                for (int j = i + 1; j < l; j++)
+                {
+                    if (callback(tmp[j].ToString(), tmp[i].ToString()))
+                    {
+                        var k = tmp[i];
+                        tmp[i] = tmp[j];
+                        tmp[j] = k;
+                    }
+                }
+            }
+
+            for (int i = 0, l = tmp.Count; i < l; i++)
+            {
+                foreach (var item in array)
+                {
+                    if (tmp[i].ToString() == item.Key)
+                    {
+                        ret[item.Key] = array[item.Key];
+                        break;
+                    }
+                }
+            }
 
             return ret;
         }
