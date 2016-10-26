@@ -358,5 +358,24 @@ namespace JSONDB
 
             return ret;
         }
+
+        /// <summary>
+        /// Get the intersection between two JObjects.
+        /// </summary>
+        /// <param name="array1">The first array</param>
+        /// <param name="array2">The second array</param>
+        /// <returns>The intersection between the two JObjects</returns>
+        public static JObject IntersectKey(JObject array1, JObject array2)
+        {
+            JObject ret = new JObject();
+            foreach (var item in array1)
+            {
+                if (array2[item.Key] != null)
+                {
+                    ret[item.Key] = item.Value;
+                }
+            }
+            return ret;
+        }
     }
 }
