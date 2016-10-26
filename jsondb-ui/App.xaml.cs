@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Windows;
+﻿using System.Windows;
 using System.Diagnostics;
 
 namespace JSONDB.UI
@@ -15,22 +8,30 @@ namespace JSONDB.UI
     /// </summary>
     public partial class App : Application
     {
-        public static Process ServerProcess { get; set; }
+        private static Process ServerProcess;
 
-        public void SetMainWindow(Window m)
-        {
-            MainWindow = m;
-        }
+        private static AppSettings Settings = new AppSettings();
 
         public static void StartServer()
         {
+            string serverCommandLine = "";
+
+            if (Settings.UseCustomServerAdress)
+            {
+                serverCommandLine += " -a " + Settings.CustomServerAdress;
+            }
+
             if (null == ServerProcess || ServerProcess.HasExited)
             {
                 ServerProcess = new Process();
                 ProcessStartInfo StartInfo = new ProcessStartInfo();
                 StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                StartInfo.CreateNoWindow = true;
                 StartInfo.FileName = "jsondb-server.exe";
-                StartInfo.Arguments = "";
+                StartInfo.Arguments = serverCommandLine;
+                StartInfo.RedirectStandardInput = true;
+                StartInfo.RedirectStandardOutput = false;
+                StartInfo.UseShellExecute = false;
                 ServerProcess.StartInfo = StartInfo;
                 ServerProcess.Start();
             }
@@ -49,15 +50,15 @@ namespace JSONDB.UI
 
         protected override void OnExit(ExitEventArgs e)
         {
-            KillServer();
+            StopServer();
             base.OnExit(e);
         }
 
-        public static void KillServer()
+        public static void StopServer()
         {
             if (!ServerProcess.HasExited)
             {
-                ServerProcess.Kill();
+                ServerProcess.StandardInput.WriteLine("exit");
                 ServerProcess.WaitForExit();
             }
         }
