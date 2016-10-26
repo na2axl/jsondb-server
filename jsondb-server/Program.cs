@@ -1,8 +1,8 @@
-﻿using System;
-using WebSocketSharp;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Net;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
+using WebSocketSharp;
 
 namespace JSONDB.Server
 {
@@ -52,7 +52,7 @@ namespace JSONDB.Server
             // Getting the server adsress from the list of arguments
             if (args.Length > 0)
             {
-                for (int i = 0, l = args.Length; i < l; ++i)
+                for (int i = 0, l = args.Length; i < l; i++)
                 {
                     switch (args[i])
                     {
@@ -239,7 +239,7 @@ namespace JSONDB.Server
 
             try
             {
-                var res = DB.Query(query);
+                Console.WriteLine(DB.Query(query).ToString());
             }
             catch (Exception e)
             {
