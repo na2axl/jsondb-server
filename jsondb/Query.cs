@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace JSONDB
@@ -23,7 +24,7 @@ namespace JSONDB
             DBConnection = database;
         }
 
-        public object Send(string query)
+        public JObject Send(string query)
         {
             QueryString = query;
 
@@ -42,7 +43,7 @@ namespace JSONDB
             return _execute();
         }
 
-        private object _execute()
+        private JObject _execute()
         {
             if (!QueryExecuted)
             {
@@ -81,7 +82,13 @@ namespace JSONDB
                             break;
                     }
                     Benchmark.Mark("jsondb_(query)_end");
-                    return res;
+
+                    JObject QueryResult = new JObject();
+                    QueryResult["result"] = (JToken)res;
+                    QueryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
+                    QueryResult["memory_usage"] = Benchmark.MemoryUsage("jsondb_(query)_start", "jsondb_(query)_end");
+
+                    return QueryResult;
                 }
                 catch (Exception e)
                 {
@@ -130,7 +137,7 @@ namespace JSONDB
             Table = table;
         }
 
-        private object _parseValue(object value, JObject properties)
+        private JToken _parseValue(JToken value, JObject properties)
         {
             if (value != null || (properties["not_null"] != null && bool.Parse(properties["not_null"].ToString()) == true))
             {
@@ -220,7 +227,7 @@ namespace JSONDB
             return value;
         }
 
-        private object _parseFunction(string func, string value)
+        private JToken _parseFunction(string func, string value)
         {
             switch (func)
             {
@@ -243,6 +250,164 @@ namespace JSONDB
             }
         }
 
+        private JArray _select(JObject data)
+        {
+            JArray result = Util.Values((JObject)data["data"]);
+
+            if (ParsedQuery["extensions"]["where"] != null)
+            {
+                if (((JArray)ParsedQuery["extensions"]["where"]).Count > 0)
+                {
+                    JArray res = new JArray();
+                    for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                    {
+                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    }
+                    result = res;
+                }
+            }
+
+            if (ParsedQuery["extensions"]["order"] != null)
+            {
+                string order_by = ParsedQuery["extensions"]["order"][0].ToString();
+                string order_method = ParsedQuery["extensions"]["order"][1].ToString();
+
+                result = Util.Sort(result, (after, now) =>
+                {
+                    if (order_method == "desc")
+                    {
+                        return String.Compare(now[order_by].ToString(), after[order_by].ToString()) == -1;
+                    }
+                    else
+                    {
+                        return String.Compare(now[order_by].ToString(), after[order_by].ToString()) == 1;
+                    }
+                });
+            }
+
+            if (ParsedQuery["extensions"]["limit"] != null)
+            {
+                result = Util.Slice(result, int.Parse(ParsedQuery["extensions"]["limit"][0].ToString()), int.Parse(ParsedQuery["extensions"]["limit"][1].ToString()));
+            }
+
+            if (ParsedQuery["extensions"]["on"] != null)
+            {
+                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["on"]).Count; i < l; i++)
+                {
+                    var on = ParsedQuery["extensions"]["on"][i];
+                    switch (on["action"]["name"].ToString())
+                    {
+                        case "link":
+                            JObject links = new JObject();
+                            string key = on["column"].ToString();
+                            JArray columns = (JArray)on["action"]["parameters"];
+
+                            for (int j = 0, m = result.Count; j < m; j++)
+                            {
+                                var result_p = result[j];
+                                if (new Regex("link\\((.+)\\)").IsMatch(data["properties"][key]["type"].ToString()))
+                                {
+                                    string link = new Regex("link\\((.+)\\)").Replace(data["properties"][key]["type"].ToString(), "$1");
+                                    var link_info = link.Split('.');
+                                    var link_table_path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), link_info[0] + ".jdbt");
+                                    var link_table_data = Database.GetTableData(link_table_path);
+
+                                    foreach (var linkID in (JObject)link_table_data["data"])
+                                    {
+                                        if (linkID.Key == result_p[key].ToString())
+                                        {
+                                            if (Array.IndexOf(columns.ToArray(), "*") != -1)
+                                            {
+                                                columns = (JArray)link_table_data["prototype"];
+                                                columns.RemoveAt(Array.IndexOf(columns.ToArray(), "#rowid"));
+                                            }
+                                            result[j][key] = Util.IntersectKey((JObject)linkID.Value, Util.Flip(columns));
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    throw new Exception("JSONDB Error: Can't link tables with the column \"" + key + "\". The column is not of type link.");
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+
+            JArray temp = new JArray();
+            if (Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), "last_insert_id") != -1)
+            {
+                JObject res = new JObject();
+                res["last_insert_id"] = data["properties"]["last_insert_id"];
+                temp.Add(res);
+            }
+            else if (Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), "*") != -1)
+            {
+                for (int i = 0, l = result.Count; i < l; i++)
+                {
+                    JObject line = (JObject)result[i];
+                    line.Remove("#rowid");
+                    temp.Add(line);
+                }
+            }
+            else
+            {
+                for (int i = 0, l = result.Count; i < l; i++)
+                {
+                    JObject line = (JObject)result[i];
+                    JObject res = new JObject();
+
+                    for (int j = 0, m = ((JArray)ParsedQuery["parameters"]).Count; j < m; j++)
+                    {
+                        string field = ParsedQuery["parameters"][j].ToString();
+                        if (new Regex("\\w+\\(.*\\)").IsMatch(field))
+                        {
+                            var parts = new Regex("(\\w+)\\((.*)\\)").Replace(field.ToString(), "$1.$2").Split('.');
+                            string name = parts[0].ToString().ToLower();
+                            string param = parts[1].ToString();
+
+                            res[field] = _parseFunction(name, line[param].ToString());
+                        }
+                        else if (Array.IndexOf(((JArray)data["prototype"]).ToArray(), field) != -1)
+                        {
+                            res[field] = line[field];
+                        }
+                        else
+                        {
+                            throw new Exception("JSONDB Error: The column " + field + " doesn't exists in the table.");
+                        }
+                    }
+                    temp.Add(res);
+                }
+                if (ParsedQuery["extensions"]["as"] != null)
+                {
+                    for (int i = 0, l = ((JArray)ParsedQuery["parameters"]).Count - ((JArray)ParsedQuery["extensions"]["as"]).Count; i < l; i++)
+                    {
+                        ((JArray)ParsedQuery["extensions"]["as"]).Add("null");
+                    }
+                    JObject replace = Util.Combine((JArray)ParsedQuery["parameters"], (JArray)ParsedQuery["extensions"]["as"]);
+                    for (int i = 0, l = temp.Count; i < l; i++)
+                    {
+                        foreach (var item in replace)
+                        {
+                            string n = item.Value.ToString();
+                            if (n.ToLower() == "null")
+                            {
+                                continue;
+                            }
+                            temp[i][n] = temp[i][item.Key];
+                            ((JObject)temp[i]).Remove(item.Key);
+                        }
+                    }
+                }
+            }
+
+            result = temp;
+
+            return result;
+        }
+
         private object _count(JObject json_array)
         {
             throw new NotImplementedException();
@@ -258,14 +423,100 @@ namespace JSONDB
             throw new NotImplementedException();
         }
 
-        private object _insert(JObject json_array)
+        private bool _insert(JObject data)
         {
             throw new NotImplementedException();
         }
 
-        private object _select(JObject json_array)
+        private JArray _filter(JObject data, JArray filters)
         {
-            throw new NotImplementedException();
+            JObject result = data;
+            JObject temp = new JObject();
+
+            for (int i = 0, l = filters.Count; i < l; i++)
+            {
+                JObject filter = (JObject)filters[i];
+                if (filter["value"].ToString().ToLower() == "last_insert_id")
+                {
+                    filter["value"] = data["properties"]["last_insert_id"];
+                }
+
+                foreach (var lid in result)
+                {
+                    var line = (JObject)lid.Value;
+                    var value = line[filter["field"].ToString()];
+                    if (new Regex("\\w+\\(.*\\)").IsMatch(filter["field"].ToString()))
+                    {
+                        var parts = new Regex("(\\w+)\\((.*)\\)").Replace(filter["field"].ToString(), "$1.$2").Split('.');
+                        string name = parts[0].ToString().ToLower();
+                        string param = parts[1].ToString();
+                        value = _parseFunction(name, line[param].ToString());
+                        filter["field"] = param;
+                    }
+                    if (line[filter["field"].ToString()] == null)
+                    {
+                        throw new Exception("JSONDB Error: The field \"" + filter["field"] + "\" doesn't exists in the table \"" + Table + "\".");
+                    }
+                    switch (filter["operator"].ToString())
+                    {
+                        case "<":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) == -1)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case "<=":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) >= 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case "=":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) == 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case ">=":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) <= 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case ">":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) == 1)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case "!=":
+                        case "<>":
+                            if (String.Compare(value.ToString(), filter["value"].ToString()) != 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case "%=":
+                            if (int.Parse(value.ToString()) % int.Parse(filter["value"].ToString()) == 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        case "%!":
+                            if (int.Parse(value.ToString()) % int.Parse(filter["value"].ToString()) != 0)
+                            {
+                                temp[line["#rowid"].ToString()] = line;
+                            }
+                            break;
+                        default:
+                            throw new Exception("JSONDB Error: The operator \"" + filter["operator"] +"\" is not supported. Try to use one of these operators: \"<\", \"<=\", \"=\", \">=\", \">\", \"<>\", \"!=\", \"%=\" or \"%!\".");
+                    }
+                }
+                result = temp;
+                temp = new JObject();
+            }
+
+            return Util.Values(result);
         }
     }
 }
