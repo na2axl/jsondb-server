@@ -1,0 +1,49 @@
+﻿<Window x:Class="JSONDB.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:JSONDB.UI"
+        mc:Ignorable="d"
+        Title="JSONDB Server" Height="140" Width="450" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen">
+    <Grid Margin="0">
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Height="20" Margin="0" Width="442" >
+            <Menu VerticalAlignment="Center" HorizontalAlignment="Left" Height="20" Margin="0" Width="442">
+                <MenuItem x:Name="MenuFile" Height="20" Header="_File">
+                    <MenuItem x:Name="MenuFileStartServer" Header="_Start Server" Click="ServerStart" />
+                    <MenuItem x:Name="MenuFileRestartServer" Header="_Restart Server" IsEnabled="False" Click="ServerRestart" />
+                    <MenuItem x:Name="MenuFileStopServer" Header="Stop Server" IsEnabled="False" Click="ServerStop" />
+                    <Separator />
+                    <MenuItem x:Name="MenuFileSettings" Header="_Settings" Click="OpenSettingsWindow" />
+                    <Separator/>
+                    <MenuItem x:Name="MenuFileQuit" Header="_Quit" Click="CloseWindow" />
+                </MenuItem>
+                <MenuItem x:Name="MenuServers" Height="20" Header="_Servers">
+                    <MenuItem x:Name="MenuServersAdd" Header="_New" Click="OpenNewServerWindow" />
+                    <MenuItem x:Name="MenuServersEdit" Header="_Edit" />
+                    <MenuItem x:Name="MenuServersDelete" Header="_Delete" />
+                </MenuItem>
+                <MenuItem x:Name="MenuHelp" Height="20" Header="_Help">
+                    <MenuItem x:Name="MenuHelpUpdate" Header="_Check For Updates" />
+                    <Separator />
+                    <MenuItem x:Name="MenuHelpAbout" Header="_About" Click="OpenAboutWindow" />
+                </MenuItem>
+            </Menu>
+        </StackPanel>
+        <DockPanel HorizontalAlignment="Center" LastChildFill="False" VerticalAlignment="Bottom" Width="442" Height="89">
+            <Ellipse x:Name="serverStateIcon" Fill="Transparent" Height="15" Margin="20,38,10,36" Stroke="Transparent" VerticalAlignment="Center" Width="15" RenderTransformOrigin="0.5,0.5">
+                <Ellipse.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="-1"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Ellipse.RenderTransform>
+            </Ellipse>
+            <Button x:Name="serverStateManager" Height="30" Content="Start Server" Margin="10,30,10,29" HorizontalAlignment="Left" VerticalAlignment="Center" Width="95" Click="ServerStateToggle" />
+            <Button x:Name="serverRestarter" Height="30" Content="Restart Server" Margin="10,30,10,29" VerticalAlignment="Center" Width="105" Click="ServerRestart" />
+            <TextBlock x:Name="serverStateNotifierText" TextWrapping="Wrap" Margin="25,37,20,36" Text="Server Stopped" VerticalAlignment="Center" Width="110" TextAlignment="Right" TextBlock.FontWeight="Bold" />
+        </DockPanel>
+    </Grid>
+</Window>
