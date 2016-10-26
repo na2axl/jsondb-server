@@ -392,5 +392,20 @@ namespace JSONDB
             }
             return ret;
         }
+
+        /// <summary>
+        /// Flip a JArray's keys -> values pairs.
+        /// </summary>
+        /// <param name="array">The array to flip</param>
+        /// <returns>The flipped array</returns>
+        public static JObject Flip(JArray array)
+        {
+            JObject ret = new JObject();
+            for (int i = 0, l = array.Count; i < l; i++)
+            {
+                ret[array[i]] = i;
+            }
+            return ret;
+        }
     }
 }
