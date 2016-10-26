@@ -333,5 +333,30 @@ namespace JSONDB
             }
             return ret;
         }
+
+        /// <summary>
+        /// Slice a JArray.
+        /// </summary>
+        /// <param name="array">The JArray to slice</param>
+        /// <param name="start">The start index position</param>
+        /// <param name="length">The length of th result JArray</param>
+        /// <returns>The sliced JArray</returns>
+        public static JArray Slice(JArray array, int start, int length)
+        {
+            JArray ret = new JArray();
+            int j = 0;
+
+            if (start + length > array.Count)
+            {
+                length = array.Count - start;
+            }
+
+            for (int i = start; j < length; i++, j++)
+            {
+                ret.Add(array[i]);
+            }
+
+            return ret;
+        }
     }
 }
