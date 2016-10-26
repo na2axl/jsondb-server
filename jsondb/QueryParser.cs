@@ -75,6 +75,12 @@ namespace JSONDB
             JObject ParsedQuery = new JObject();
             var queryParts = query.Split('.');
 
+            // If the query is not at the minimal form (table_name.action())
+            if (queryParts.Length < 2)
+            {
+                throw new Exception("JSONDB Query Parse Error: This is not a JQL query.");
+            }
+
             // Getting the table's name
             ParsedQuery["table"] = queryParts[0];
             if ((string)ParsedQuery["table"] == String.Empty)
@@ -127,7 +133,7 @@ namespace JSONDB
             {
                 var extension = queryParts[i];
                 var name = new Regex("\\(.*\\)").Replace(extension, "");
-                var parameters = new Regex("\\(([^)]*)\\)").Replace(new Regex("\\((.*)\\)").Replace(extension.Replace(name, ""), "$1"), (match) => {
+                var parameters = new Regex("\\(([^)]*)\\)").Replace(new Regex("^" + name + "\\((.*)\\)$").Replace(extension, "$1"), (match) => {
                     return new Regex(",").Replace(match.Value, ";");
                 });
 
@@ -171,13 +177,6 @@ namespace JSONDB
                             extensions["on"] = new JArray();
                         }
                         ((JArray)extensions["on"]).Add(_parseOnExtension(parameters));
-                        break;
-                    case "link":
-                        if (extensions["link"] == null)
-                        {
-                            extensions["link"] = new JArray();
-                        }
-                        ((JArray)extensions["link"]).Add(_parseLinkExtension(parameters));
                         break;
                 }
             }
@@ -365,23 +364,24 @@ namespace JSONDB
             return ParsedClause;
         }
 
-        protected static string _parseOnExtension(string clause)
+        protected static JObject _parseOnExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) => {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-            });
+            JObject ParsedClause = new JObject();
+            var extensionParts = clause.Split(',');
 
-            if (ParsedClause.Count == 0)
+            if (extensionParts.Length < 2)
             {
-                throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"on()\" extension.");
-            }
-            if (ParsedClause.Count > 1)
-            {
-                throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"on()\" extension, only one required.");
+                throw new Exception("JSONDB Query Parse Error: At least two parameters expected for the \"on()\" extension.");
             }
 
-            return ParsedClause[0].ToString();
+            var actionParts = new Regex("(\\w+)\\((.*)\\)").Replace(extensionParts[1], "$1.$2").Split('.');
+
+            ParsedClause["column"] = extensionParts[0].ToString();
+            ParsedClause["action"] = new JObject();
+            ParsedClause["action"]["name"] = actionParts[0].ToString().Trim();
+            ParsedClause["action"]["parameters"] = new JArray(actionParts[1].Split(';'));
+
+            return ParsedClause;
         }
 
         protected static JArray _parseLinkExtension(string clause)
