@@ -57,6 +57,7 @@ namespace JSONDB
                 }
 
                 JObject json_array = Database.GetTableData(table_path);
+                JObject QueryResult = new JObject();
 
                 try
                 {
@@ -83,18 +84,21 @@ namespace JSONDB
                     }
                     Benchmark.Mark("jsondb_(query)_end");
 
-                    JObject QueryResult = new JObject();
+                    QueryResult["error"] = false;
                     QueryResult["result"] = (JToken)res;
                     QueryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
                     QueryResult["memory_usage"] = Benchmark.MemoryUsage("jsondb_(query)_start", "jsondb_(query)_end");
-
-                    return QueryResult;
                 }
                 catch (Exception e)
                 {
                     QueryExecuted = false;
-                    throw e;
+                    QueryResult["error"] = true;
+                    QueryResult["result"] = e.Message;
+                    QueryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
+                    QueryResult["memory_usage"] = Benchmark.MemoryUsage("jsondb_(query)_start", "jsondb_(query)_end");
                 }
+
+                return QueryResult;
             }
             else
             {
@@ -584,7 +588,7 @@ namespace JSONDB
 
             try
             {
-                Util.WriteTextFile(path, data.ToString());
+                Database.WriteTableData(path, data);
                 return new JValue(true);
             }
             catch (Exception)
