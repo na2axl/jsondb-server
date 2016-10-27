@@ -389,6 +389,28 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Write data in a table file.
+        /// </summary>
+        /// <param name="table_path">The path to the tabe</param>
+        /// <param name="data">The data to write</param>
+        public static void WriteTableData(string table_path, JObject data)
+        {
+            if (Util.IsWritable(table_path))
+            {
+                Util.WriteTextFile(table_path, data.ToString());
+            }
+            else
+            {
+                int end = DateTime.Now.Millisecond + 100;
+                while (true)
+                {
+                    if (DateTime.Now.Millisecond >= end) break;
+                }
+                WriteTableData(table_path, data);
+            }
+        }
+
+        /// <summary>
         /// Send a query to the database.
         /// </summary>
         /// <param name="query">The query</param>
