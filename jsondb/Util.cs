@@ -189,6 +189,27 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Test if a file is available for writing.
+        /// </summary>
+        /// <param name="path">The path to the file</param>
+        /// <returns>true if the file is writable, false otherwise</returns>
+        public static bool IsWritable(string path)
+        {
+            try
+            {
+                FileStream stream = File.Open(path, FileMode.Open);
+                bool canWrite = stream.CanWrite;
+                stream.Close();
+                return canWrite;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+        }
+
+        /// <summary>
         /// Write a text file.
         /// </summary>
         /// <param name="path">The path of the file</param>
@@ -199,7 +220,6 @@ namespace JSONDB
             {
                 File.CreateText(path).Close();
             }
-
             File.WriteAllText(path, contents);
         }
 
