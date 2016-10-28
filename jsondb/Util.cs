@@ -625,25 +625,27 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Compute difference between two or more JArrays
+        /// Compute difference between two or more JArrays.
         /// </summary>
         /// <param name="arrays">JArrays</param>
         /// <returns>The computed difference</returns>
         public static JArray Diff(params JArray[] arrays)
         {
             JArray ret = new JArray();
+            JObject ignore = new JObject();
 
             for (int j = 0, m = arrays.Length; j < m; j++)
             {
                 for (int i = 0, l = arrays[j].Count; i < l; i++)
                 {
-                    if (Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()) == -1)
+                    if (Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()) == -1 && ignore[arrays[j][i].ToString()] == null)
                     {
                         ret.Add(arrays[j][i]);
                     }
                     else
                     {
                         ret.RemoveAt(Array.IndexOf(ret.ToArray(), arrays[j][i].ToString()));
+                        ignore[arrays[j][i].ToString()] = true;
                     }
                 }
             }
@@ -652,25 +654,27 @@ namespace JSONDB
         }
 
         /// <summary>
-        /// Compute difference between two or more JObjects.
+        /// Compute difference by keys between two or more JObjects.
         /// </summary>
         /// <param name="arrays">JObjects</param>
         /// <returns>The computed difference</returns>
         public static JObject DiffKey(params JObject[] arrays)
         {
             JObject ret = new JObject();
+            JObject ignore = new JObject();
 
             foreach (var array in arrays)
             {
                 foreach (var item in array)
                 {
-                    if (ret[item.Key] == null)
+                    if (ret[item.Key] == null && ignore[item.Key] == null)
                     {
                         ret[item.Key] = item.Value;
                     }
                     else
                     {
                         ret.Remove(item.Key);
+                        ignore[item.Key] = true;
                     }
                 }
             }
