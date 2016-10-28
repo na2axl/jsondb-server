@@ -117,6 +117,15 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Get the username of the current connected client.
+        /// </summary>
+        /// <returns></returns>
+        public string GetUsername()
+        {
+            return Username;
+        }
+
+        /// <summary>
         /// Check if a database is set
         /// </summary>
         /// <returns>true if a database is set and false otherwise</returns>
