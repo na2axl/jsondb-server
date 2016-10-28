@@ -3,6 +3,7 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Media;
 
 namespace JSONDB.UI
 {
@@ -38,7 +39,8 @@ namespace JSONDB.UI
     /// </summary>
     public partial class MessageWindow : Window
     {
-        private MessageWindowResult ClickedButton;
+        private MessageWindowResult ClickedButton { get; set; }
+        private SystemSound SoundToPlay { get; set; }
 
         public MessageWindow(Window o, string message, string title, MessageWindowButton buttons, MessageWindowImage image)
         {
@@ -62,20 +64,24 @@ namespace JSONDB.UI
 
             Bitmap Img = null;
 
-            // Set which image to show
+            // Set the image to show and the sound to play
             switch (image)
             {
                 case MessageWindowImage.Information:
                     Img = AppResources.MessageWindowInformation;
+                    SoundToPlay = SystemSounds.Asterisk;
                     break;
                 case MessageWindowImage.Warning:
                     Img = AppResources.MessageWindowWarning;
+                    SoundToPlay = SystemSounds.Exclamation;
                     break;
                 case MessageWindowImage.Error:
                     Img = AppResources.MessageWindowError;
+                    SoundToPlay = SystemSounds.Hand;
                     break;
                 case MessageWindowImage.Success:
                     Img = AppResources.MessageWindowSuccess;
+                    SoundToPlay = SystemSounds.Beep;
                     break;
                 default:
                     break;
@@ -153,6 +159,7 @@ namespace JSONDB.UI
 
         public MessageWindowResult Open()
         {
+            SoundToPlay.Play();
             ShowDialog();
             return ClickedButton;
         }
