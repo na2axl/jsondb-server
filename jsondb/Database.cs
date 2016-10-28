@@ -395,7 +395,19 @@ namespace JSONDB
         /// <param name="data">The data to write</param>
         public static void WriteTableData(string table_path, JObject data)
         {
-            Util.WriteTextFile(table_path, data.ToString());
+            if (Util.IsWritable(table_path))
+            {
+                Util.WriteTextFile(table_path, data.ToString());
+            }
+            else
+            {
+                int end = DateTime.Now.Millisecond + 100;
+                while (true)
+                {
+                    if (DateTime.Now.Millisecond >= end) break;
+                }
+                WriteTableData(table_path, data);
+            }
         }
 
         /// <summary>
