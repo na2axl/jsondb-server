@@ -55,6 +55,15 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Get the list of servers.
+        /// </summary>
+        /// <returns>THe list of servers</returns>
+        public static string[] ServersList()
+        {
+            return Util.GetDirectoriesList(Util.MakePath(Util.AppRoot(), "servers"));
+        }
+
+        /// <summary>
         /// Connect to a server.
         /// </summary>
         /// <param name="server">The name of the server to connect on</param>
