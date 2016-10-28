@@ -550,9 +550,127 @@ namespace JSONDB
             throw new NotImplementedException();
         }
 
-        private object _update(JObject json_array)
+        private object _update(JObject data)
         {
-            throw new NotImplementedException();
+            JArray result = Util.Values((JObject)data["data"]);
+
+            if (ParsedQuery["extensions"]["where"] != null)
+            {
+                if (((JArray)ParsedQuery["extensions"]["where"]).Count > 0)
+                {
+                    JArray res = new JArray();
+                    for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                    {
+                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    }
+                    result = res;
+                }
+            }
+
+            if (ParsedQuery["extensions"]["with"] == null)
+            {
+                throw new Exception("JSONDB Error: Can't execute the \"update()\" query without values. The \"with()\" extension is required.");
+            }
+
+            int fields_nb = ((JArray)ParsedQuery["parameters"]).Count;
+            int values_nb = ((JArray)ParsedQuery["extensions"]["with"]).Count;
+
+            if (fields_nb != values_nb)
+            {
+                throw new Exception("JSONDB Error: Can't execute the \"update()\" query. Invalid number of parameters (trying to update \"" + fields_nb + "\" columns with \"" + values_nb + "\" values).");
+            }
+
+            JObject values = Util.Combine((JArray)ParsedQuery["parameters"], (JArray)ParsedQuery["extensions"]["with"]);
+
+            bool pk_error = false;
+            JObject non_pk = Util.Flip(Util.Diff((JArray)data["prototype"], (JArray)data["properties"]["primary_keys"]));
+            foreach (var item in (JObject)data["data"])
+            {
+                JObject array_data = Util.DiffKey((JObject)item.Value, non_pk);
+                pk_error = (pk_error || (JObject.DeepEquals(Util.DiffKey(values, non_pk), array_data) && array_data.Count > 0));
+                if (pk_error)
+                {
+                    throw new Exception("JSONDB Error: Can't insert value. Duplicate values \"" + String.Join(", ", Util.Values(array_data)) + "\" for primary keys \"" + String.Join(", ", data["properties"]["primary_keys"]) + "\".");
+                }
+            }
+
+            bool uk_error = false;
+            for (int i = 0, l = ((JArray)data["properties"]["unique_keys"]).Count; i < l; i++)
+            {
+                string uk = data["properties"]["unique_keys"][i].ToString();
+                JObject array = new JObject();
+                array[uk] = values[uk];
+                foreach (var item in (JObject)data["data"])
+                {
+                    JObject array_data = new JObject();
+                    array_data[uk] = item.Value[uk];
+                    uk_error = (uk_error || (array[uk] != null && JObject.DeepEquals(array, array_data)));
+                    if (uk_error)
+                    {
+                        throw new Exception("JSONDB Error: Can't insert value. Duplicate values \"" + array[uk] + "\" for unique key \"" + uk + "\".");
+                    }
+                }
+            }
+
+            for (int i = 0, l = result.Count; i < l; i++)
+            {
+                JObject res_line = (JObject)result[i];
+                foreach (var row in values)
+                {
+                    result[i][row.Key] = _parseValue(row.Value, (JObject)data["properties"][row.Key]);
+                }
+                foreach (var key in (JObject)data["data"])
+                {
+                    JObject data_line = (JObject)key.Value;
+                    if ((int)data_line["#rowid"] == (int)res_line["#rowid"])
+                    {
+                        data["data"][key.Key] = result[i];
+                        break;
+                    }
+                }
+            }
+
+            foreach (var lid in (JObject)data["data"])
+            {
+                data["data"][lid.Key] = Util.KeySort((JObject)lid.Value, (after, now) =>
+                {
+                    return Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString());
+                });
+            }
+
+            data["data"] = Util.KeySort((JObject)data["data"], (after, now) =>
+            {
+                return (int)data["data"][now]["#rowid"] > (int)data["data"][after]["#rowid"];
+            });
+
+            int last_ai = 0;
+            foreach (var item in (JObject)data["properties"])
+            {
+                var prop = item.Value;
+                if (prop.Type == JTokenType.Object && prop["auto_increment"] != null && (bool)prop["auto_increment"])
+                {
+                    foreach (var lid in (JObject)data["data"])
+                    {
+                        last_ai = Math.Max((int)lid.Value[item.Key], last_ai);
+                    }
+                    break;
+                }
+            }
+
+            data["properties"]["last_insert_id"] = last_ai;
+
+            string path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt");
+
+            try
+            {
+                Cache.Update(path, data.ToString());
+                Database.WriteTableData(path, data);
+                return new JValue(true);
+            }
+            catch (Exception)
+            {
+                return new JValue(false);
+            }
         }
 
         private JValue _insert(JObject data)
