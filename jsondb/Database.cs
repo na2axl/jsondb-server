@@ -126,6 +126,29 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Get the list of databases in a server.
+        /// </summary>
+        /// <param name="server">The name of the server</param>
+        /// <returns>The list of databases</returns>
+        public static string[] GetDatabaseList(string server)
+        {
+            return Util.GetDirectoriesList(Util.MakePath(Util.AppRoot(), "servers", server));
+        }
+
+        /// <summary>
+        /// Get the list of tables in a database.
+        /// </summary>
+        /// <returns>The list of tables</returns>
+        public string[] GetTableList()
+        {
+            if (DatabaseName == String.Empty)
+            {
+                return new string[0];
+            }
+            return Util.GetFilesList(Util.MakePath(ServerName, DatabaseName));
+        }
+
+        /// <summary>
         /// Check if a database is set
         /// </summary>
         /// <returns>true if a database is set and false otherwise</returns>
@@ -173,7 +196,7 @@ namespace JSONDB
             if (Exists(name))
             {
                 Benchmark.Mark("Database_(createDatabase)_end");
-                throw new Exception("Database Error: Can't create the database \"" + name + "\" in the server \"" + ServerName + "\", the database already exist.");
+                throw new Exception("Database Error: Can't create the database \"" + name + "\" in the server, the database already exist.");
             }
 
             Util.MakeDirectory(path);
@@ -181,7 +204,7 @@ namespace JSONDB
             if (!Util.Exists(path))
             {
                 Benchmark.Mark("Database_(createDatabase)_end");
-                throw new Exception("Database Error: Can't create the database \"" + name + "\" in the server \"" + ServerName + "\".");
+                throw new Exception("Database Error: Can't create the database \"" + name + "\" in the server.");
             }
             Benchmark.Mark("Database_(createDatabase)_end");
 
