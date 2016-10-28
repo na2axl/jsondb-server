@@ -4,23 +4,6 @@ namespace JSONDB
 {
     public static class JSONDB
     {
-
-        public enum PreparedQueryParameterType
-        {
-            PARAM_STRING = 0,
-            PARAM_INT = 1,
-            PARAM_BOOL = 2,
-            PARAM_NULL = 3,
-            PARAM_ARRAY = 7
-        }
-
-        public enum QueryDataFetchMethod
-        {
-            FETCH_ARRAY = 4,
-            FETCH_OBJECT = 4,
-            FETCH_CLASS = 6
-        }
-
         /// <summary>
         /// Create a new server.
         /// </summary>
@@ -95,6 +78,5 @@ namespace JSONDB
         {
             return new Database(server, username, password);
         }
-
     }
 }
