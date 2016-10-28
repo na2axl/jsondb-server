@@ -91,7 +91,7 @@ namespace JSONDB
             // Checking query's parts validity
             for (int i = 1, l = queryParts.Length; i < l; ++i)
             {
-                var part = queryParts[i].Trim();
+                var part = queryParts[i];
                 if (null == part || part == String.Empty)
                 {
                     throw new Exception("JSONDB Query Parse Error: Unexpected \".\" after extension \"" + part + "\".");
@@ -109,7 +109,7 @@ namespace JSONDB
             }
 
             // Getting the action's parameters
-            ParsedQuery["parameters"] = new Regex("\\w+\\((.+)\\)").Replace(queryParts[1], "$1").Trim();
+            ParsedQuery["parameters"] = new Regex("\\w+\\((.*)\\)").Replace(queryParts[1], "$1").Trim();
             ParsedQuery["parameters"] = new Regex("\\(([^)]*)\\)").Replace(ParsedQuery["parameters"].ToString(), (match) => {
                 return new Regex(",").Replace(match.Value, ";");
             });
@@ -544,7 +544,7 @@ namespace JSONDB
             else if (trim_value[0] == '\'' && trim_value[trim_value.Length - 1] == '\'')
             {
                 return new Regex("\\{\\{quot\\}\\}|\\{\\{comm\\}\\}|\\{\\{dot\\}\\}|\\{\\{pto\\}\\}|\\{\\{ptc\\}\\}|\\{\\{semi\\}\\}").Replace(
-                    new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, "").Trim(),
+                    new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, ""),
                     (match) =>
                     {
                         switch (match.Value)
