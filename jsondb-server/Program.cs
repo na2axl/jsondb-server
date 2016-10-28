@@ -19,11 +19,6 @@ namespace JSONDB.Server
         private static bool UserIsConnected = false;
 
         /// <summary>
-        /// The username of the user connected through the console.
-        /// </summary>
-        private static string Username = String.Empty;
-
-        /// <summary>
         /// The name of the currently used server.
         /// </summary>
         private static string ServerName = String.Empty;
@@ -132,7 +127,7 @@ namespace JSONDB.Server
                 {
                     if (UserIsConnected)
                     {
-                        Console.Write("$ " + Username + "@" + ServerName + " >  ");
+                        Console.Write("$ " + DB.GetUsername() + "@" + ServerName + " >  ");
                     }
                     else
                     {
@@ -140,10 +135,35 @@ namespace JSONDB.Server
                     }
 
                     var command = Console.ReadLine();
+                    Console.WriteLine();
 
-                    if (command.ToLower().StartsWith("mkserver"))
+                    if (command.Trim() == String.Empty)
+                    {
+                        // Do nothing...
+                    }
+                    else if (command.ToLower().StartsWith("help"))
+                    {
+                        Console.WriteLine("Use help [commandName] for a detailed help about a command.");
+                        Console.WriteLine();
+                        Console.WriteLine("mkserver          Create a new server.");
+                        Console.WriteLine("connect           Connect to a server.");
+                        Console.WriteLine("mkdatabase        Create a new database.");
+                        Console.WriteLine("cd                Change the current working database.");
+                        Console.WriteLine("mktable           Create a new table in the current working database.");
+                        Console.WriteLine("query             Execute a query.");
+                        Console.WriteLine("desc server       Show the list of databases in the current working server.");
+                        Console.WriteLine("desc database     Show the list of tables in the current working database.");
+                        Console.WriteLine("disconnect        Disconnect from a server.");
+                        Console.WriteLine("close             Disconnect and close the console.");
+                        Console.WriteLine("clear             Clear the console.");
+                    }
+                    else if (command.ToLower().StartsWith("mkserver"))
                     {
                         ExecMkServer(command);
+                    }
+                    else if (command.ToLower().StartsWith("desc"))
+                    {
+                        ExecDesc(command);
                     }
                     else if (command.ToLower().StartsWith("connect"))
                     {
@@ -206,6 +226,146 @@ namespace JSONDB.Server
             }
         }
 
+        private static void ExecDesc(string command)
+        {
+            string descWhat = command.Remove(0, 4).Trim();
+            int max_length = 0;
+
+            switch (descWhat)
+            {
+                case "server":
+                    if (UserIsConnected)
+                    {
+                        string[] databases = Database.GetDatabaseList(ServerName);
+                        max_length = 4;
+                        foreach (var database in databases)
+                        {
+                            max_length = Math.Max(max_length, database.Length);
+                        }
+                        max_length += 2;
+                        Console.Write("+");
+                        for (int i = 0; i < max_length; i++)
+                        {
+                            Console.Write("-");
+                        }
+                        Console.Write("+");
+                        Console.WriteLine();
+                        Console.Write("|");
+                        for (int i = 0; i < (max_length / 2) - 2; i++)
+                        {
+                            Console.Write(" ");
+                        }
+                        Console.Write("Name");
+                        for (int i = (max_length / 2) + 2; i < max_length; i++)
+                        {
+                            Console.Write(" ");
+                        }
+                        Console.Write("|");
+                        Console.WriteLine();
+                        Console.Write("+");
+                        for (int i = 0; i < max_length; i++)
+                        {
+                            Console.Write("-");
+                        }
+                        Console.Write("+");
+                        Console.WriteLine();
+                        foreach (var database in databases)
+                        {
+                            Console.Write("| ");
+                            Console.Write(database);
+                            for (int i = 1 + database.Length; i < max_length; i++)
+                            {
+                                Console.Write(" ");
+                            }
+                            Console.Write("|");
+                            Console.WriteLine();
+                        }
+                        Console.Write("+");
+                        for (int i = 0; i < max_length; i++)
+                        {
+                            Console.Write("-");
+                        }
+                        Console.Write("+");
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine("You are not connected to a server. Use the command \"connect\" first.");
+                    }
+                    break;
+                case "database":
+                    if (UserIsConnected)
+                    {
+                        if (DB.IsWorkingDatabase())
+                        {
+                            string[] tables = DB.GetTableList();
+                            max_length = 4;
+                            foreach (var table in tables)
+                            {
+                                max_length = Math.Max(max_length, table.Length);
+                            }
+                            max_length += 2;
+                            Console.Write("+");
+                            for (int i = 0; i < max_length; i++)
+                            {
+                                Console.Write("-");
+                            }
+                            Console.Write("+");
+                            Console.WriteLine();
+                            Console.Write("|");
+                            for (int i = 0; i < (max_length / 2) - 2; i++)
+                            {
+                                Console.Write(" ");
+                            }
+                            Console.Write("Name");
+                            for (int i = (max_length / 2) + 2; i < max_length; i++)
+                            {
+                                Console.Write(" ");
+                            }
+                            Console.Write("|");
+                            Console.WriteLine();
+                            Console.Write("+");
+                            for (int i = 0; i < max_length; i++)
+                            {
+                                Console.Write("-");
+                            }
+                            Console.Write("+");
+                            Console.WriteLine();
+                            foreach (var table in tables)
+                            {
+                                Console.Write("| ");
+                                Console.Write(table);
+                                for (int i = 1 + table.Length; i < max_length; i++)
+                                {
+                                    Console.Write(" ");
+                                }
+                                Console.Write("|");
+                                Console.WriteLine();
+                            }
+                            Console.Write("+");
+                            for (int i = 0; i < max_length; i++)
+                            {
+                                Console.Write("-");
+                            }
+                            Console.Write("+");
+                            Console.WriteLine();
+                        }
+                        else
+                        {
+                            Console.WriteLine("No database selected. Use the command \"cd DatabaseName\" first. For the list of databases, use the command \"desc server\".");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("You are not connected to a server. Use the command \"connect\" first.");
+                    }
+                    break;
+                default:
+                    Console.WriteLine("Bad command, use \"server\", \"database\" or \"table\", with the command \"desc\".");
+                    break;
+            }
+        }
+
         private static void ExecMkDatabase(string command)
         {
             string database = command.Remove(0, 10).Trim();
@@ -229,21 +389,28 @@ namespace JSONDB.Server
 
         private static void ExecQuery(string command)
         {
-            string query = command.Remove(0, 5).Trim();
+            if (UserIsConnected)
+            {
+                string query = command.Remove(0, 5).Trim();
 
-            while (query == String.Empty)
-            {
-                Console.WriteLine(" -> ");
-                query = Console.ReadLine().Trim();
-            }
+                while (query == String.Empty)
+                {
+                    Console.WriteLine(" -> ");
+                    query = Console.ReadLine().Trim();
+                }
 
-            try
-            {
-                Console.WriteLine(DB.Query(query).ToString());
+                try
+                {
+                    Console.WriteLine(DB.Query(query).ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unable to execute the query: " + e.Message);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine("Unable to execute the query: " + e.Message);
+                Console.WriteLine("You are not connected to a server, use the command \"connect\" first before send a query.");
             }
         }
 
@@ -345,7 +512,6 @@ namespace JSONDB.Server
 
         private static void ExecDisconnect(string command)
         {
-            Username = String.Empty;
             ServerName = String.Empty;
             DB.Disconnect();
             UserIsConnected = false;
@@ -479,12 +645,11 @@ namespace JSONDB.Server
                     {
                         if (ServerList[server]["username"].ToString() == Util.Crypt(username) && ServerList[server]["password"].ToString() == Util.Crypt(password))
                         {
-                            Username = username;
                             ServerName = server;
 
                             try
                             {
-                                DB = JSONDB.Connect(ServerName, Username, password, database);
+                                DB = JSONDB.Connect(ServerName, username, password, database);
                                 UserIsConnected = true;
                             }
                             catch (Exception e)
