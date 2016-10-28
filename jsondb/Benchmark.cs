@@ -1,39 +1,47 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace JSONDB
 {
+    struct BenchPoint
+    {
+        public long Time { get; set; }
+        public int Memory { get; set; }
+    }
+
     class Benchmark
     {
-        private static JObject Marker = new JObject();
+        private static Dictionary<string, BenchPoint> Marker = new Dictionary<string, BenchPoint>();
 
         public static void Mark(string name)
         {
-            JObject Point = new JObject();
-            Point["e"] = DateTime.Now.Millisecond;
-            Point["m"] = 0;
+            BenchPoint Point = new BenchPoint();
+            Point.Time = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
+            Point.Memory = 0;
+
+            if (Marker == null) Marker = new Dictionary<string, BenchPoint>();
 
             Marker[name] = Point;
         }
 
-        public static int ElapsedTime(string point1, string point2)
+        public static long ElapsedTime(string point1, string point2)
         {
             if (point1 == null)
             {
                 return 0;
             }
 
-            if (Marker[point1] == null)
+            if (!Marker.ContainsKey(point1))
             {
                 Mark(point1);
             }
-            if (Marker[point2] == null)
+            if (!Marker.ContainsKey(point2))
             {
                 Mark(point2);
             }
 
-            int s = (int)Marker[point1]["e"];
-            int e = (int)Marker[point2]["e"];
+            long s = Marker[point1].Time;
+            long e = Marker[point2].Time;
 
             return e - s;
         }
@@ -45,17 +53,17 @@ namespace JSONDB
                 return 0;
             }
 
-            if (Marker[point1] == null)
+            if (!Marker.ContainsKey(point1))
             {
                 Mark(point1);
             }
-            if (Marker[point2] == null)
+            if (!Marker.ContainsKey(point2))
             {
                 Mark(point2);
             }
 
-            int s = (int)Marker[point1]["m"];
-            int e = (int)Marker[point2]["m"];
+            int s = Marker[point1].Memory;
+            int e = Marker[point2].Memory;
 
             return e - s;
         }
