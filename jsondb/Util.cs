@@ -605,6 +605,26 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Merge two or more JArrays in one.
+        /// </summary>
+        /// <param name="arrays">JArrays to merge</param>
+        /// <returns>The result of the merge</returns>
+        public static JArray Merge(params JArray[] arrays)
+        {
+            JArray ret = new JArray();
+
+            foreach (var array in arrays)
+            {
+                var settings = new JsonMergeSettings();
+                settings.MergeArrayHandling = MergeArrayHandling.Union;
+                settings.MergeNullValueHandling = MergeNullValueHandling.Merge;
+                ret.Merge(array, settings);
+            }
+
+            return ret;
+        }
+
+        /// <summary>
         /// Compute difference between two or more JArrays
         /// </summary>
         /// <param name="arrays">JArrays</param>
