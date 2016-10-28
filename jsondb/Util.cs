@@ -108,6 +108,40 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Get the list of subdirectories in a directory.
+        /// </summary>
+        /// <param name="path">The path of the directory</param>
+        /// <returns>The list of directories</returns>
+        public static string[] GetDirectoriesList(string path)
+        {
+            string[] dir = Directory.GetDirectories(path);
+
+            for (int i = 0, l = dir.Length; i < l; i++)
+            {
+                dir[i] = Path.GetFileNameWithoutExtension(dir[i]);
+            }
+
+            return dir;
+        }
+
+        /// <summary>
+        /// Get the list of files in a directory.
+        /// </summary>
+        /// <param name="path">The path of the directory</param>
+        /// <returns>The list of files</returns>
+        public static string[] GetFilesList(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+
+            for (int i = 0, l = files.Length; i < l; i++)
+            {
+                files[i] = Path.GetFileNameWithoutExtension(files[i]);
+            }
+
+            return files;
+        }
+
+        /// <summary>
         /// Check if a file or a directory exist at the given path.
         /// </summary>
         /// <param name="path">The path to check</param>
