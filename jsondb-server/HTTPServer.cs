@@ -49,7 +49,7 @@ namespace JSONDB.Server
                 var res = e.Response;
 
                 var path = req.RawUrl;
-                if (path == "/")
+                if (path.EndsWith("/"))
                 {
                     path += "index.html";
                 }
