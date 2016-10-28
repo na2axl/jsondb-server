@@ -130,10 +130,27 @@ namespace JSONDB
         private int _getLastValidRowID(JObject data, bool min)
         {
             int last = 0;
-            var dataIterator = data.GetEnumerator();
-            while (dataIterator.MoveNext())
+            foreach (var item in data)
             {
-                var line = dataIterator.Current.Value;
+                var line = item.Value;
+                if (last == 0)
+                {
+                    last = (int)line["#rowid"];
+                }
+                else
+                {
+                    last = min ? Math.Min(last, (int)line["#rowid"]) : Math.Max(last, (int)line["#rowid"]);
+                }
+            }
+            return last;
+        }
+
+        private int _getLastValidRowID(JArray data, bool min)
+        {
+            int last = 0;
+            for (int i = 0, l = data.Count; i < l; i++)
+            {
+                var line = data[i];
                 if (last == 0)
                 {
                     last = (int)line["#rowid"];
@@ -279,6 +296,11 @@ namespace JSONDB
         {
             JArray result = Util.Values((JObject)data["data"]);
 
+            if (((JArray)ParsedQuery["parameters"]).Count == 0)
+            {
+                throw new Exception("Query Error: No columns to select in the query.");
+            }
+
             if (ParsedQuery["extensions"]["where"] != null)
             {
                 if (((JArray)ParsedQuery["extensions"]["where"]).Count > 0)
@@ -286,7 +308,7 @@ namespace JSONDB
                     JArray res = new JArray();
                     for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
                     {
-                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                        res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
                     }
                     result = res;
                 }
@@ -451,7 +473,7 @@ namespace JSONDB
                     JArray res = new JArray();
                     for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
                     {
-                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                        res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
                     }
                     result = res;
                 }
@@ -545,9 +567,67 @@ namespace JSONDB
             }
         }
 
-        private object _delete(JObject json_array)
+        private object _delete(JObject data)
         {
-            throw new NotImplementedException();
+            JObject current_data = (JObject)data["data"].DeepClone();
+            JArray to_delete = Util.Values(current_data);
+
+            if (ParsedQuery["extensions"]["where"] != null)
+            {
+                if (((JArray)ParsedQuery["extensions"]["where"]).Count > 0)
+                {
+                    JArray res = new JArray();
+                    for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                    {
+                        res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    }
+                    to_delete = res;
+                }
+            }
+
+            JObject final_data = (JObject)current_data.DeepClone();
+            for (int i = 0, l = to_delete.Count; i < l; i++)
+            {
+                foreach (var item in current_data)
+                {
+                    if (JToken.DeepEquals(item.Value, to_delete[i]))
+                    {
+                        final_data.Remove(item.Key);
+                    }
+                }
+            }
+
+            foreach (var lid in final_data)
+            {
+                final_data[lid.Key] = Util.KeySort((JObject)lid.Value, (after, now) =>
+                {
+                    return Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString());
+                });
+            }
+
+            final_data = Util.KeySort(final_data, (after, now) =>
+            {
+                return (int)final_data[now]["#rowid"] > (int)final_data[after]["#rowid"];
+            });
+
+            data["data"] = final_data;
+            if (to_delete.Count > 0)
+            {
+                data["properties"]["last_valid_row_id"] = _getLastValidRowID(to_delete, false) - 1;
+            }
+
+            string path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt");
+
+            try
+            {
+                Cache.Update(path, data.ToString());
+                Database.WriteTableData(path, data);
+                return new JValue(true);
+            }
+            catch (Exception)
+            {
+                return new JValue(false);
+            }
         }
 
         private object _update(JObject data)
@@ -561,7 +641,7 @@ namespace JSONDB
                     JArray res = new JArray();
                     for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
                     {
-                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                        res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
                     }
                     result = res;
                 }
