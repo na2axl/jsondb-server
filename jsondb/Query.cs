@@ -93,6 +93,9 @@ namespace JSONDB
                         case "count":
                             res = _count(json_array);
                             break;
+                        case "delete":
+                            res = _delete(json_array);
+                            break;
                     }
 
                     Util.UnlockFile(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt"));
@@ -540,6 +543,11 @@ namespace JSONDB
             {
                 return new JValue(false);
             }
+        }
+
+        private object _delete(JObject json_array)
+        {
+            throw new NotImplementedException();
         }
 
         private object _update(JObject json_array)
