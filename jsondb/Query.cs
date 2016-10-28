@@ -56,13 +56,25 @@ namespace JSONDB
                     throw new Exception("Query Error: Can't execute the query. The table \"" + Table + "\" doesn't exists in database \"" + DBConnection.GetDatabase() + "\" or file access denied.");
                 }
 
-                JObject json_array = Database.GetTableData(table_path);
+                // Wait until the file is unlocked and check the state each 100ms
+                while (Util.FileIsLocked(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt")))
+                {
+                    long end = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds + 100;
+                    while (true)
+                    {
+                        long now = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
+                        if (now >= end) break;
+                    }
+                }
+
+                Benchmark.Mark("jsondb_(query)_start");
+                Util.LockFile(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt"));
+
+                JObject json_array = JObject.Parse(Cache.Get(table_path));
                 JObject QueryResult = new JObject();
 
                 try
                 {
-                    QueryExecuted = true;
-                    Benchmark.Mark("jsondb_(query)_start");
                     object res = null;
                     switch (ParsedQuery["action"].ToString())
                     {
@@ -82,8 +94,11 @@ namespace JSONDB
                             res = _count(json_array);
                             break;
                     }
+
+                    Util.UnlockFile(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt"));
                     Benchmark.Mark("jsondb_(query)_end");
 
+                    QueryExecuted = true;
                     QueryResult["error"] = false;
                     QueryResult["result"] = (JToken)res;
                     QueryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
@@ -91,6 +106,9 @@ namespace JSONDB
                 }
                 catch (Exception e)
                 {
+                    Util.UnlockFile(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt"));
+                    Benchmark.Mark("jsondb_(query)_end");
+
                     QueryExecuted = false;
                     QueryResult["error"] = true;
                     QueryResult["result"] = e.Message;
@@ -412,14 +430,116 @@ namespace JSONDB
             return result;
         }
 
-        private object _count(JObject json_array)
+        private JArray _count(JObject data)
         {
-            throw new NotImplementedException();
+            JArray rows = (JArray)data["prototype"].DeepClone();
+            JArray result = Util.Values((JObject)data["data"]);
+            JArray final = new JArray();
+
+            if (Array.IndexOf(ParsedQuery["parameters"].ToArray(), "*") == -1)
+            {
+                rows = (JArray)ParsedQuery["parameters"];
+            }
+
+            if (ParsedQuery["extensions"]["where"] != null)
+            {
+                if (((JArray)ParsedQuery["extensions"]["where"]).Count > 0)
+                {
+                    JArray res = new JArray();
+                    for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                    {
+                        res = Util.Concat(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    }
+                    result = res;
+                }
+            }
+
+            if (ParsedQuery["extensions"]["group"] != null)
+            {
+                JArray used = new JArray();
+                for (int i = 0, l = result.Count; i < l; i++)
+                {
+                    var array_data_p = result[i];
+                    string current_column = ParsedQuery["extensions"]["group"][0].ToString();
+                    string current_data = array_data_p[current_column].ToString();
+                    var current_counter = 0;
+                    if (Array.IndexOf(used.ToArray(), current_data) == -1)
+                    {
+                        for (int j = 0; j < l; j++)
+                        {
+                            var array_data_c = result[j];
+                            if (array_data_c[current_column].ToString() == current_data)
+                            {
+                                ++current_counter;
+                            }
+                        }
+                        JObject add = new JObject();
+                        if (ParsedQuery["extensions"]["as"] != null)
+                        {
+                            add[ParsedQuery["extensions"]["as"][0].ToString()] = current_counter;
+                        }
+                        else
+                        {
+                            add["count(" + String.Join(",", (JArray)ParsedQuery["parameters"]) + ")"] = current_counter;
+                        }
+                        add[current_column] = current_data;
+                        final.Add(add);
+                        used.Add(current_data);
+                    }
+                }
+            }
+            else
+            {
+                JObject counter = new JObject();
+                for (int i = 0, l = result.Count; i < l; i++)
+                {
+                    var array_data = result[i];
+                    for (int j = 0, m = rows.Count; j < m; j++)
+                    {
+                        string row = rows[j].ToString();
+                        if (array_data[row] != null)
+                        {
+                            counter[row] = counter[row] != null ? 1 + (int)counter[row] : counter[row] = 1;
+                        }
+                    }
+                }
+                var count = counter.Count > 0 ? (int)Util.Values(counter).Max() : 0;
+
+                JObject temp = new JObject();
+                if (ParsedQuery["extensions"]["as"] != null)
+                {
+                    Console.WriteLine(ParsedQuery.ToString());
+                    temp[ParsedQuery["extensions"]["as"][0].ToString()] = count;
+                }
+                else
+                {
+                    temp["count(" + String.Join(",", (JArray)ParsedQuery["parameters"]) + ")"] = count;
+                }
+
+                final.Add(temp);
+            }
+
+            return final;
         }
 
-        private object _truncate(JObject json_array)
+        private JValue _truncate(JObject data)
         {
-            throw new NotImplementedException();
+            data["properties"]["last_insert_id"] = 0;
+            data["properties"]["last_valid_row_id"] = 0;
+            data["data"] = new JObject();
+
+            string path = Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt");
+
+            try
+            {
+                Cache.Update(path, data.ToString());
+                Database.WriteTableData(path, data);
+                return new JValue(true);
+            }
+            catch (Exception)
+            {
+                return new JValue(false);
+            }
         }
 
         private object _update(JObject json_array)
@@ -588,6 +708,7 @@ namespace JSONDB
 
             try
             {
+                Cache.Update(path, data.ToString());
                 Database.WriteTableData(path, data);
                 return new JValue(true);
             }
