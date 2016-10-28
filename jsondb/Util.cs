@@ -210,6 +210,46 @@ namespace JSONDB
         }
 
         /// <summary>
+        /// Lock a file for read/write operations
+        /// </summary>
+        /// <param name="path">The path to the file to lock</param>
+        public static void LockFile(string path)
+        {
+            if (Exists(path))
+            {
+                if (!Exists(path + ".lock"))
+                {
+                    File.Create(path + ".lock").Close();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Unlock a locked file.
+        /// </summary>
+        /// <param name="path">The path to the file to unlock</param>
+        public static void UnlockFile(string path)
+        {
+            if (Exists(path))
+            {
+                if (Exists(path + ".lock"))
+                {
+                    File.Delete(path + ".lock");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check if a file is locked.
+        /// </summary>
+        /// <param name="path">The path to the file to check</param>
+        /// <returns>true if the file is locked and false otherwise</returns>
+        public static bool FileIsLocked(string path)
+        {
+            return Exists(path + ".lock");
+        }
+
+        /// <summary>
         /// Write a text file.
         /// </summary>
         /// <param name="path">The path of the file</param>
