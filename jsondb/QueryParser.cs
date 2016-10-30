@@ -71,6 +71,30 @@ namespace JSONDB.Library
             // Start the Benchmark
             Benchmark.Mark("jsondb_query_parse_start");
 
+            // Quote all escaped reserved characters
+            query = new Regex("\\'|\\,|\\\\.|\\\\(|\\\\)|\\;", RegexOptions.IgnoreCase).Replace(query,
+                (match) =>
+                {
+                    switch (match.Value)
+                    {
+                        case "\\'":
+                            return "{{quot}}";
+                        case "\\,":
+                            return "{{comm}}";
+                        case "\\.":
+                            return "{{dot}}";
+                        case "\\(":
+                            return "{{pto}}";
+                        case "\\)":
+                            return "{{ptc}}";
+                        case "\\;":
+                            return "{{semi}}";
+                        default:
+                            return match.Value;
+                    }
+                }
+            );
+
             // Initialize variables
             JObject ParsedQuery = new JObject();
             var queryParts = query.Split('.');
