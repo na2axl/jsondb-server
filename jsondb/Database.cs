@@ -149,7 +149,16 @@ namespace JSONDB.Library
         }
 
         /// <summary>
-        /// Check if a database is set
+        /// Check if the user is connected.
+        /// </summary>
+        /// <returns>true id the user is connected, false otherwise</returns>
+        public bool IsConnected()
+        {
+            return ServerName != String.Empty;
+        }
+
+        /// <summary>
+        /// Check if a database is set.
         /// </summary>
         /// <returns>true if a database is set and false otherwise</returns>
         public bool IsWorkingDatabase()
