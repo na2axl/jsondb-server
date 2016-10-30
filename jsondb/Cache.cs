@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
-    class Cache
+    internal class Cache
     {
         /// <summary>
         /// An array of all cached data.

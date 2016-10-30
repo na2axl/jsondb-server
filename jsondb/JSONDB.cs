@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
     public static class JSONDB
     {

@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
     public class Configuration
     {

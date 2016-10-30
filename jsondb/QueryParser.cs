@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
     public class QueryParser
     {

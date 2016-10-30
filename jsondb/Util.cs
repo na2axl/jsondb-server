@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using WebSocketSharp.Server;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
     public class Util
     {

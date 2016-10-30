@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace JSONDB
+namespace JSONDB.Library
 {
     struct BenchPoint
     {
