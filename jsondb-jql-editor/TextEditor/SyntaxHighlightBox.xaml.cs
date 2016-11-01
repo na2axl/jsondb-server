@@ -335,30 +335,14 @@ namespace JSONDB.JQLEditor.TextEditor
                     // Undo
                     if (e.Key == Key.Z)
                     {
-                        HideSuggestionList();
-                        var thisStack = stack.UnPush();
-                        if (thisStack != null)
-                        {
-                            cancelNextStack = true;
-                            TextState State = stack.Undo(((TextStack)thisStack).State);
-                            Text = State.Text;
-                            CaretIndex = State.CaretIndex;
-                        }
+                        Undo();
                         e.Handled = true;
                     }
 
                     // Redo
                     else if (e.Key == Key.Y)
                     {
-                        HideSuggestionList();
-                        var thisStack = stack.RePush();
-                        if (thisStack != null)
-                        {
-                            cancelNextStack = true;
-                            TextState State = stack.Redo(((TextStack)thisStack).State);
-                            Text = State.Text;
-                            CaretIndex = State.CaretIndex;
-                        }
+                        Redo();
                         e.Handled = true;
                     }
 
@@ -926,6 +910,38 @@ namespace JSONDB.JQLEditor.TextEditor
         // ----------------------------------------------------------
         // Utilities
         // ----------------------------------------------------------
+
+        /// <summary>
+        /// Undo an operation in the stack.
+        /// </summary>
+        public new void Undo()
+        {
+            HideSuggestionList();
+            var thisStack = stack.UnPush();
+            if (thisStack != null)
+            {
+                cancelNextStack = true;
+                TextState State = stack.Undo(((TextStack)thisStack).State);
+                Text = State.Text;
+                CaretIndex = State.CaretIndex;
+            }
+        }
+
+        /// <summary>
+        /// Redo an operation in the stack.
+        /// </summary>
+        public new void Redo()
+        {
+            HideSuggestionList();
+            var thisStack = stack.RePush();
+            if (thisStack != null)
+            {
+                cancelNextStack = true;
+                TextState State = stack.Redo(((TextStack)thisStack).State);
+                Text = State.Text;
+                CaretIndex = State.CaretIndex;
+            }
+        }
 
         /// <summary>
         /// Filter the Intellisense list to display only items who matches the text entered.
