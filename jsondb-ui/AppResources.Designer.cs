@@ -61,11 +61,61 @@ namespace JSONDB.UI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copyright (c) 2016 Centers Technologies..
+        /// </summary>
+        internal static string AppCopyright {
+            get {
+                return ResourceManager.GetString("AppCopyright", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to JSONDB Server.
         /// </summary>
         internal static string AppName {
             get {
                 return ResourceManager.GetString("AppName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.0.0.
+        /// </summary>
+        internal static string AppVersion {
+            get {
+                return ResourceManager.GetString("AppVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ConsoleLogo {
+            get {
+                object obj = ResourceManager.GetObject("ConsoleLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to                     GNU GENERAL PUBLIC LICENSE
+        ///                       Version 3, 29 June 2007
+        ///
+        /// Copyright (C) 2007 Free Software Foundation, Inc. &lt;http://fsf.org/&gt;
+        /// Everyone is permitted to copy and distribute verbatim copies
+        /// of this license document, but changing it is not allowed.
+        ///
+        ///                            Preamble
+        ///
+        ///  The GNU General Public License is a free, copyleft license for
+        ///software and other kinds of works.
+        ///
+        ///  The licenses for most software and other practical works are designed
+        ///to [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string LICENSE {
+            get {
+                return ResourceManager.GetString("LICENSE", resourceCulture);
             }
         }
         
@@ -116,6 +166,16 @@ namespace JSONDB.UI {
             get {
                 object obj = ResourceManager.GetObject("ProgramIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ProgramLogo {
+            get {
+                object obj = ResourceManager.GetObject("ProgramLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

@@ -117,11 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AppCopyright" xml:space="preserve">
+    <value>Copyright (c) 2016 Centers Technologies.</value>
+    <comment>The copyright of the application</comment>
+  </data>
   <data name="AppName" xml:space="preserve">
     <value>JSONDB Server</value>
-    <comment>The name of the application.</comment>
+    <comment>The name of the application</comment>
+  </data>
+  <data name="AppVersion" xml:space="preserve">
+    <value>1.0.0</value>
+    <comment>The version of the application</comment>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="ConsoleLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\ConsoleLogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\LICENSE.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="MessageWindowError" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\MessageWindowError.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -136,6 +150,9 @@
   </data>
   <data name="ProgramIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\ProgramIcon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProgramLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\ProgramLogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ServerStartedIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\ServerStartedIcon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
