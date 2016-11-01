@@ -1,0 +1,86 @@
+﻿<Window x:Class="JSONDB.JQLEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:JSONDB.JQLEditor"
+        xmlns:TextEditor="clr-namespace:JSONDB.JQLEditor.TextEditor"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="600" Width="800">
+
+    <DockPanel>
+        <StackPanel Margin="0" DockPanel.Dock="Top">
+            <Menu Background="#e5e5e5">
+                <MenuItem x:Name="MenuFile" Height="20" Header="_File">
+                    <MenuItem x:Name="MenuFileNew" Header="_New" />
+                    <MenuItem x:Name="MenuFileOpen" Header="_Open" />
+                    <MenuItem x:Name="MenuFileSave" Header="_Save" />
+                    <MenuItem x:Name="MenuFileSaveAs" Header="_Save As..." />
+                    <Separator />
+                    <MenuItem x:Name="MenuFileQuit" Header="_Quit" />
+                </MenuItem>
+                <MenuItem x:Name="MenuEdit" Height="20" Header="_Edit">
+                </MenuItem>
+                <MenuItem x:Name="MenuView" Height="20" Header="_View">
+                </MenuItem>
+                <MenuItem x:Name="MenuTools" Height="20" Header="_Tools">
+                    <MenuItem x:Name="MenuToolsConnections" Header="_Connections" />
+                    <Separator />
+                    <MenuItem x:Name="MenuToolsSettins" Header="_Settings" />
+                </MenuItem>
+                <MenuItem x:Name="MenuHelp" Height="20" Header="_Help">
+                    <MenuItem x:Name="MenuHelpUpdate" Header="_Check For Updates" />
+                    <Separator />
+                    <MenuItem x:Name="MenuHelpAbout" Header="_About" />
+                </MenuItem>
+            </Menu>
+        </StackPanel>
+        <ToolBarPanel Background="#e5e5e5" DockPanel.Dock="Top">
+            <DockPanel>
+                <ToolBarTray Background="#e5e5e5" Margin="0" HorizontalAlignment="Left">
+                    <ToolBar Background="#e5e5e5">
+                        <Button Content="New" Margin="5,0,0,0" Padding="2" Click="ValidateQueries" ToolBar.OverflowMode="AsNeeded">
+                        </Button>
+                        <Button Content="Open" Padding="2">
+                        </Button>
+                        <Button Content="Save" Padding="2">
+                        </Button>
+                        <Button Content="Save As" Padding="2">
+                        </Button>
+                        <Separator Margin="5,0" />
+                        <Button Content="Undo" Padding="2"></Button>
+                        <Button Content="Redo" Padding="2">
+                        </Button>
+                        <Separator Margin="5,0" />
+                        <ComboBox Margin="5,0" Padding="2" Text="Database1">
+                            <ComboBoxItem Content="Database1"/>
+                            <ComboBoxItem Content="Database2"/>
+                            <ComboBoxItem Content="Database3"/>
+                            <ComboBoxItem Content="Database4"/>
+                        </ComboBox>
+                        <ComboBox Margin="5,0" Padding="2" Text="Table1">
+                            <ComboBoxItem Content="Table1"/>
+                            <ComboBoxItem Content="Table2"/>
+                            <ComboBoxItem Content="Table3"/>
+                            <ComboBoxItem Content="Table4"/>
+                        </ComboBox>
+                        <Button Content="Run" Margin="0,0,5,0" Padding="2" Click="ValidateQueries"></Button>
+                        <Button Content="Validate" Margin="0,0,5,0" Padding="2" Click="ValidateQueries"></Button>
+                    </ToolBar>
+                </ToolBarTray>
+                <ToolBarTray Background="#e5e5e5" Margin="0" HorizontalAlignment="Left">
+                    <ToolBar Background="#e5e5e5">
+                        <Button Content="Disconnect" Margin="5,0,0,0" Padding="2"></Button>
+                        <Button Content="Connect" Margin="0,0,5,0" Padding="2"></Button>
+                    </ToolBar>
+                </ToolBarTray>
+            </DockPanel>
+        </ToolBarPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <TextEditor:SyntaxHighlightBox x:Name="TextEditor" Margin="0,0,0,25" DockPanel.Dock="Top" Padding="10,5" Background="#e5e5e5" Foreground="#ffffff" BorderThickness="0,1,0,1" />
+            <StatusBar Background="#e5e5e5" DockPanel.Dock="Top" Margin="0,-25,0,0" VerticalContentAlignment="Center" Height="25">
+                <StatusBarItem Content="Ready" x:Name="StatusMessage" VerticalContentAlignment="Center"/>
+            </StatusBar>
+        </DockPanel>
+    </DockPanel>
+</Window>

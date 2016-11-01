@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Syntax name="JQL">
+  <HighlightLineRule name="Comment">
+    <LineStart>//</LineStart>
+    <IgnoreCase>false</IgnoreCase>
+    <Foreground>#8E908C</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Italic</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </HighlightLineRule>
+
+  <AdvancedHighlightRule name="Identifier">
+    <Expression>\b([`]?\w+[`]?)\b</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#6C71C4</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="JQL Query">
+    <Expression>(?:\w+)(?:[\r\n\t ]*)\.(select|update|truncate|delete|count|insert|SELECT|UPDATE|TRUNCATE|DELETE|COUNT|INSERT)\(</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#0066CC</Foreground>
+    <FontWeight>Bold</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Table Name">
+    <Expression>(\w+)(?:[\r\n\t ]*\.(?:select|update|truncate|delete|count|insert|SELECT|UPDATE|TRUNCATE|DELETE|COUNT|INSERT))\(</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#000000</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Italic</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="JQL Extension">
+    <Expression>\)(?:[\r\n\t ]*)\.(on|as|where|order|with|group|in|limit|and|ON|AS|WHERE|ORDER|WITH|GROUP|IN|LIMIT|AND)\(</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#0080FF</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Keyword">
+    <Expression>(null|false|true|asc|desc|NULL|FALSE|TRUE|ASC|DESC)</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#8959A8</Foreground>
+    <FontWeight>Bold</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Function">
+    <Expression>[^\.](?:\b)(\w+)\((?:[^\n\r\f\\\)]|\\(?:\r\n?|\n|\f)|\\[\s\S])*\)</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#0080FF</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Operator">
+    <Expression>(&gt;|&lt;|=|!|%)</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#718C00</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Number">
+    <Expression>\b([0-9]+)\b</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>false</IgnoreCase>
+    <Foreground>#CB4B16</Foreground>
+    <FontWeight>Bold</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="String">
+    <Expression>\'(?:[^\n\r\f\\\'\\\(\\\)\\\.\\\;\\\,]|\\(?:\r\n?|\n|\f)|\\[\s\S])*\'</Expression>
+    <HighlightExpressionIndex>0</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#339933</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+</Syntax>

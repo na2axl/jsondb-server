@@ -1,0 +1,63 @@
+﻿<TextBox x:Class="JSONDB.JQLEditor.TextEditor.SyntaxHighlightBox"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:local="clr-namespace:JSONDB.JQLEditor.TextEditor" TextWrapping="NoWrap" Foreground="#00000000">
+
+    <TextBox.Style>
+        <Style TargetType="{x:Type local:SyntaxHighlightBox}">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="AcceptsTab" Value="True" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="10pt" />
+            <Setter Property="Padding" Value="10,5" />
+        </Style>
+    </TextBox.Style>
+
+    <TextBox.Template>
+        <ControlTemplate TargetType="{x:Type local:SyntaxHighlightBox}">
+            <!--Visual-->
+            <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}"
+                    BorderBrush="{TemplateBinding BorderBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Margin="{TemplateBinding Padding}">
+                        <local:DrawingControl x:Name="PART_LineNumbersCanvas"  Grid.Column="0" ClipToBounds="True" />
+                    </Grid>
+
+                    <Line Grid.Column="1" Margin="5,0,0,0" Stroke="Gray" StrokeThickness="1" Y2="1" Stretch="Fill" RenderOptions.EdgeMode="Aliased" x:Name="lineNumbersSeparator" />
+
+                    <Grid Grid.Column="2">
+                        <ScrollViewer x:Name="PART_ContentHost" Background="{TemplateBinding Foreground}"></ScrollViewer>
+
+                        <!--Render canvas-->
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <local:DrawingControl x:Name="PART_RenderCanvas"  ClipToBounds="True" TextOptions.TextRenderingMode="ClearType" TextOptions.TextFormattingMode="Display" />
+                            <Canvas Grid.Column="1" x:Name="PART_SuggestionCanvas" Background="Transparent" IsHitTestVisible="True">
+                                <ListBox x:Name="PART_SuggestionList" Width="Auto" MaxHeight="200" TextElement.FontSize="9pt">
+                                </ListBox>
+                            </Canvas>
+                        </Grid>
+
+                    </Grid>
+
+                </Grid>
+            </Border>
+
+            <!--Triggers-->
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsLineNumbersMarginVisible" Value="false">
+                    <Setter TargetName="PART_LineNumbersCanvas" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="lineNumbersSeparator" Property="Visibility" Value="Collapsed" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </TextBox.Template>
+
+</TextBox>
