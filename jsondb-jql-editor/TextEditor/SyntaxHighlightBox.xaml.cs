@@ -349,7 +349,7 @@ namespace JSONDB.JQLEditor.TextEditor
                     // Save the current file
                     else if (e.Key == Key.S)
                     {
-                        if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+                        if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift || App.CurrentWorkingFile == String.Empty)
                         {
                             // Save as new
                             SaveDocumentAs();
@@ -365,12 +365,8 @@ namespace JSONDB.JQLEditor.TextEditor
                     // Open a file
                     else if (e.Key == Key.O)
                     {
-                        // Ask for save changes before
-                        if (!changesSaved)
-                        {
-                            MessageBox.Show("The current file is not saved. Do you want to open a new one?");
-                        }
-
+                        OpenDocument();
+                        e.Handled = true;
                     }
 
                     // New document
@@ -930,6 +926,7 @@ namespace JSONDB.JQLEditor.TextEditor
             saveDialog.AddExtension = true;
             saveDialog.CheckPathExists = true;
             saveDialog.SupportMultiDottedExtensions = true;
+            saveDialog.Filter = "JQL File|*.jql";
             saveDialog.DefaultExt = ".jql";
             saveDialog.OverwritePrompt = true;
             saveDialog.Title = "Save As...";
@@ -940,6 +937,43 @@ namespace JSONDB.JQLEditor.TextEditor
             };
             saveDialog.ShowDialog();
             return saveDialog.FileName;
+        }
+
+        /// <summary>
+        /// Open a file choosen by the user.
+        /// </summary>
+        /// <returns>The path to the file.</returns>
+        public string OpenDocument()
+        {
+            System.Windows.Forms.OpenFileDialog openDialog = new System.Windows.Forms.OpenFileDialog();
+            openDialog.AddExtension = true;
+            openDialog.CheckFileExists = true;
+            openDialog.Filter = "JQL File|*.jql";
+            openDialog.CheckPathExists = true;
+            openDialog.SupportMultiDottedExtensions = true;
+            openDialog.DefaultExt = ".jql";
+            openDialog.Title = "Open File";
+            openDialog.FileOk += (fs, fe) =>
+            {
+                Text = Util.ReadTextFile(openDialog.FileName);
+                changesSaved = true;
+            };
+            openDialog.ShowDialog();
+            return openDialog.FileName;
+        }
+
+        /// <summary>
+        /// Open the file at the given path.
+        /// </summary>
+        /// <param name="path"></param>
+        public void OpenDocumentAt(string path)
+        {
+            if (!path.EndsWith(".jql"))
+            {
+                path = path + ".jql";
+            }
+            Text = Util.ReadTextFile(path);
+            changesSaved = true;
         }
 
         /// <summary>
