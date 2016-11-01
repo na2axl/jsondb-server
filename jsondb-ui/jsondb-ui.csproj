@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JSONDB.UI</RootNamespace>
-    <AssemblyName>JSONDB Server</AssemblyName>
+    <AssemblyName>jsondb-ui</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>UI.App</StartupObject>
+    <StartupObject>JSONDB.UI.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -101,10 +101,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    <Compile Include="App.cs" />
     <Compile Include="AppSettings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -134,10 +131,6 @@
     </Page>
     <Compile Include="AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -178,7 +171,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="packages.config" />
+    <Content Include="Resources\LICENSE.txt" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -190,9 +186,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\jsondb-elevated-client\jsondb-elevated-client.csproj">
+      <Project>{4879947e-304a-4cba-a3df-7e1a540766a4}</Project>
+      <Name>jsondb-elevated-client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\jsondb-jql-editor\jsondb-jql-editor.csproj">
+      <Project>{5778f282-a4c8-4a97-a790-9e7005c5f9e7}</Project>
+      <Name>jsondb-jql-editor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\jsondb-server\jsondb-server.csproj">
       <Project>{d57376c5-e465-41fa-aab6-3f268630f87b}</Project>
       <Name>jsondb-server</Name>
@@ -223,9 +229,16 @@
   <ItemGroup>
     <None Include="Resources\MessageWindowWarning.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ConsoleLogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ProgramLogo.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)jsondb-server\node_modules" "$(TargetDir)node_modules" /E /Y</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
