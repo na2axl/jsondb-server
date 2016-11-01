@@ -39,7 +39,7 @@ namespace JSONDB.UI
     /// </summary>
     public partial class MessageWindow : Window
     {
-        private MessageWindowResult ClickedButton { get; set; }
+        private MessageWindowResult ClickedButton { get; set; } = MessageWindowResult.None;
         private SystemSound SoundToPlay { get; set; }
 
         public MessageWindow(Window o, string message, string title, MessageWindowButton buttons, MessageWindowImage image)
