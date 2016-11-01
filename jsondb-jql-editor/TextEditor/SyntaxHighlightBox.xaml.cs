@@ -943,6 +943,14 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         /// <summary>
+        /// Clean the current document.
+        /// </summary>
+        public void CleanDocument()
+        {
+            Text = String.Empty;
+        }
+
+        /// <summary>
         /// Undo an operation in the stack.
         /// </summary>
         public new void Undo()
