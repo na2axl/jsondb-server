@@ -2,6 +2,9 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Collections;
 
 namespace JSONDB.Library
 {
@@ -292,7 +295,8 @@ namespace JSONDB.Library
                         subQueryParts[j] = subQueryParts[j].Trim('\t', ' ');
 
                         // Remove comments
-                        if (subQueryParts[j].StartsWith("//")) {
+                        if (subQueryParts[j].StartsWith("//"))
+                        {
                             subQueryParts[j] = String.Empty;
                         }
                     }
@@ -309,7 +313,14 @@ namespace JSONDB.Library
 
             for (int q = 0, l = queriesLines.Count; q < l; q++)
             {
-                ParsedQueries[q] = Parse(queriesLines[q].ToString());
+                try
+                {
+                    ParsedQueries[q] = Parse(queriesLines[q].ToString());
+                }
+                catch (Exception e)
+                {
+                    throw new MultilineQueryParseException(e.Message, q+1);
+                }
             }
 
             return ParsedQueries;
@@ -706,11 +717,91 @@ namespace JSONDB.Library
                 {
                     return res;
                 }
-                else
-                {
-                    return 0;
-                }
             }
+
+            throw new Exception("JSONDB Query Parse Error: Unable to parse the value \"" + trim_value + "\".");
+        }
+    }
+
+    public class MultilineQueryParseException : Exception
+    {
+        private int _line;
+        private Exception _base;
+
+        public int Line
+        {
+            get { return _line; }
+        }
+
+        public override string Message
+        {
+            get
+            {
+                return _base.Message;
+            }
+        }
+
+        public override IDictionary Data
+        {
+            get
+            {
+                return _base.Data;
+            }
+        }
+
+        public override string HelpLink
+        {
+            get
+            {
+                return _base.HelpLink;
+            }
+
+            set
+            {
+                _base.HelpLink = value;
+            }
+        }
+
+        public override string Source
+        {
+            get
+            {
+                return _base.Source;
+            }
+
+            set
+            {
+                _base.Source = value;
+            }
+        }
+
+        public override string StackTrace
+        {
+            get
+            {
+                return _base.StackTrace;
+            }
+        }
+
+        public MultilineQueryParseException(string message, int line)
+        {
+            _base = new Exception(message);
+            _line = line;
+        }
+
+        public override Exception GetBaseException()
+        {
+            return _base.GetBaseException();
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            _base.GetObjectData(info, context);
+        }
+
+        public override string ToString()
+        {
+            return Message + " At the query #" + Line + ".";
         }
     }
 }
