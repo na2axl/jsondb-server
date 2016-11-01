@@ -5,8 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JSONDB.UI"
         mc:Ignorable="d"
-        Title="About JSONDB Server" Height="300" Width="500" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
-    <Grid Margin="0">
-        
-    </Grid>
+        Title="About JSONDB Server" Width="500" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ShowInTaskbar="False">
+    <DockPanel Margin="20">
+        <DockPanel Margin="10,0" VerticalAlignment="Top" DockPanel.Dock="Top">
+            <DockPanel DockPanel.Dock="Left" HorizontalAlignment="Left">
+                <Image x:Name="JSONDBLogo" HorizontalAlignment="Left" Height="80" Margin="0,0,10,0" VerticalAlignment="Top" Width="80" DockPanel.Dock="Left"/>
+                <Label x:Name="JSONDBLogoText" Content="JSONDB" HorizontalAlignment="Left" Height="80" VerticalContentAlignment="Center" FontWeight="Bold" Foreground="#555555" VerticalAlignment="Top" FontSize="25px" FontFamily="Roboto" DockPanel.Dock="Left"/>
+            </DockPanel>
+            <DockPanel Margin="10,0" DockPanel.Dock="Right" VerticalAlignment="Center" HorizontalAlignment="Right">
+                <Label x:Name="VersionText" Margin="0" Padding="0" HorizontalContentAlignment="Right" DockPanel.Dock="Top" VerticalAlignment="Top" />
+                <Label x:Name="CopyrightText" Margin="0" Padding="0" HorizontalContentAlignment="Right" DockPanel.Dock="Top" VerticalAlignment="Top" />
+            </DockPanel>
+        </DockPanel>
+        <DockPanel Margin="20,20,20,20" DockPanel.Dock="Top">
+            <Label Content="License:" DockPanel.Dock="Top" Margin="0,5" Padding="0" />
+            <Border DockPanel.Dock="Top" BorderBrush="#555555" BorderThickness="1" >
+                <ScrollViewer Height="255">
+                    <TextBlock TextAlignment="Justify" x:Name="LicenseText" Padding="5" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                </ScrollViewer>
+            </Border>
+        </DockPanel>
+    </DockPanel>
 </Window>
