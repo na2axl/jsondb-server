@@ -349,29 +349,15 @@ namespace JSONDB.JQLEditor.TextEditor
                     // Save the current file
                     else if (e.Key == Key.S)
                     {
-                        if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift || App.CurrentWorkingFile == String.Empty)
+                        if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
                         {
                             // Save as new
-                            System.Windows.Forms.SaveFileDialog saveDialog = new System.Windows.Forms.SaveFileDialog();
-                            saveDialog.AddExtension = true;
-                            saveDialog.CheckPathExists = true;
-                            saveDialog.SupportMultiDottedExtensions = true;
-                            saveDialog.DefaultExt = ".jql";
-                            saveDialog.OverwritePrompt = true;
-                            saveDialog.Title = "Save As...";
-                            saveDialog.FileOk += (fs, fe) =>
-                            {
-                                Util.WriteTextFile(saveDialog.FileName, Text);
-                                App.CurrentWorkingFile = saveDialog.FileName;
-                                changesSaved = true;
-                            };
-                            saveDialog.ShowDialog();
+                            SaveDocumentAs();
                         }
                         else
                         {
-                            // Overwrite current opened file
-                            Util.WriteTextFile(App.CurrentWorkingFile, Text);
-                            changesSaved = true;
+                            // Overwrite current
+                            SaveDocument(App.CurrentWorkingFile);
                         }
                         e.Handled = true;
                     }
@@ -910,6 +896,51 @@ namespace JSONDB.JQLEditor.TextEditor
         // ----------------------------------------------------------
         // Utilities
         // ----------------------------------------------------------
+
+        /// <summary>
+        /// Check if the current document is saved.
+        /// </summary>
+        /// <returns>true if the document is already saved, false otherwise.</returns>
+        public bool DocumentIsSaved()
+        {
+            return changesSaved;
+        }
+
+        /// <summary>
+        /// Save the current document at the given path.
+        /// </summary>
+        /// <param name="path">The path where to save the document.</param>
+        public void SaveDocument(string path)
+        {
+            if (!path.EndsWith(".jql"))
+            {
+                path = path + ".jql";
+            }
+            Util.WriteTextFile(path, Text);
+            changesSaved = true;
+        }
+
+        /// <summary>
+        /// Save the current document as a new file.
+        /// </summary>
+        /// <returns>The path to the saved file.</returns>
+        public string SaveDocumentAs()
+        {
+            System.Windows.Forms.SaveFileDialog saveDialog = new System.Windows.Forms.SaveFileDialog();
+            saveDialog.AddExtension = true;
+            saveDialog.CheckPathExists = true;
+            saveDialog.SupportMultiDottedExtensions = true;
+            saveDialog.DefaultExt = ".jql";
+            saveDialog.OverwritePrompt = true;
+            saveDialog.Title = "Save As...";
+            saveDialog.FileOk += (fs, fe) =>
+            {
+                Util.WriteTextFile(saveDialog.FileName, Text);
+                changesSaved = true;
+            };
+            saveDialog.ShowDialog();
+            return saveDialog.FileName;
+        }
 
         /// <summary>
         /// Undo an operation in the stack.
