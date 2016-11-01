@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using JSONDB.Library;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -457,7 +458,7 @@ namespace JSONDB.Server
 
             try
             {
-                JSONDB.CreateServer(server, username, password);
+                Library.JSONDB.CreateServer(server, username, password);
                 Console.WriteLine("Server created.");
             }
             catch (Exception e)
@@ -649,7 +650,7 @@ namespace JSONDB.Server
 
                             try
                             {
-                                DB = JSONDB.Connect(ServerName, username, password, database);
+                                DB = Library.JSONDB.Connect(ServerName, username, password, database);
                                 UserIsConnected = true;
                             }
                             catch (Exception e)
