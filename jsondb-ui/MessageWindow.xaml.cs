@@ -7,7 +7,6 @@ using System.Media;
 
 namespace JSONDB.UI
 {
-
     public enum MessageWindowButton
     {
         None = 0,
@@ -33,7 +32,7 @@ namespace JSONDB.UI
         No = 12,
         None = -1
     }
-    
+
     /// <summary>
     /// Interaction logic for MessageWindow.xaml
     /// </summary>
@@ -60,7 +59,7 @@ namespace JSONDB.UI
             Title = title;
 
             // Set the message text
-            MessageBoxText.Content = message;
+            MessageBoxText.Text = message;
 
             Bitmap Img = null;
 

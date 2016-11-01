@@ -5,17 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JSONDB.UI"
         mc:Ignorable="d"
-        Title="" WindowStartupLocation="CenterOwner" MinWidth="400" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="WidthAndHeight">
+        Title="" WindowStartupLocation="CenterOwner" Width="400" ResizeMode="NoResize" ShowInTaskbar="False" SizeToContent="Height">
     <DockPanel>
-        <DockPanel x:Name="MessagePanel" VerticalAlignment="Top" Margin="20,20,20,0" DockPanel.Dock="Top" Height="80" >
-            <Image x:Name="MessageBoxImage" Margin="10,0" DockPanel.Dock="Left"  VerticalAlignment="Center" />
-            <Label x:Name="MessageBoxText" Margin="10,0,0,0" DockPanel.Dock="Left" VerticalAlignment="Center" />
+        <DockPanel x:Name="MessagePanel" VerticalAlignment="Top" Margin="10" DockPanel.Dock="Top" >
+            <Image x:Name="MessageBoxImage" Margin="0,0,10,0" DockPanel.Dock="Left" Height="80" VerticalAlignment="Center" />
+            <TextBlock x:Name="MessageBoxText" Margin="10,0,0,0" DockPanel.Dock="Left" VerticalAlignment="Center" TextWrapping="Wrap" />
         </DockPanel>
-        <DockPanel x:Name="ButtonsPanel" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" DockPanel.Dock="Top">
-            <Button x:Name="ButtonOK" Height="30" Width="75" Content="OK" Margin="10" />
-            <Button x:Name="ButtonYes" Height="30" Width="75" Content="Yes" Margin="10" />
-            <Button x:Name="ButtonNo" Height="30" Width="75" Content="No" Margin="10" />
-            <Button x:Name="ButtonCancel" Height="30" Width="75" Content="Cancel" Margin="10" />
+        <DockPanel x:Name="ButtonsPanel" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="10" DockPanel.Dock="Top">
+            <Button x:Name="ButtonOK" Height="30" Width="75" Content="OK" Margin="0" />
+            <Button x:Name="ButtonYes" Height="30" Width="75" Content="Yes" Margin="10,0,0,0" />
+            <Button x:Name="ButtonNo" Height="30" Width="75" Content="No" Margin="10,0,0,0" />
+            <Button x:Name="ButtonCancel" Height="30" Width="75" Content="Cancel" Margin="10,0,0,0" />
         </DockPanel>
     </DockPanel>
 </Window>

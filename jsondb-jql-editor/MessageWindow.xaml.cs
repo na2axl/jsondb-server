@@ -1,13 +1,12 @@
-﻿using System.Windows;
-using System.Windows.Media.Imaging;
-using System.IO;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Media;
+using System.Windows;
+using System.Windows.Media.Imaging;
 
-namespace JSONDB.UI
+namespace JSONDB.JQLEditor
 {
-
     public enum MessageWindowButton
     {
         None = 0,
@@ -60,7 +59,7 @@ namespace JSONDB.UI
             Title = title;
 
             // Set the message text
-            MessageBoxText.Content = message;
+            MessageBoxText.Text = message;
 
             Bitmap Img = null;
 
