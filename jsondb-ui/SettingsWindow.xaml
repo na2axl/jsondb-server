@@ -5,21 +5,33 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JSONDB.UI"
         mc:Ignorable="d"
-        Title="JSONDB Server Settings" Height="250" Width="400" ResizeMode="CanMinimize" WindowStartupLocation="CenterOwner">
-    <Grid>
-        <GroupBox x:Name="serverAdressSetting" Header="_Server Address" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="10">
-            <Grid>
-                <Label x:Name="label" VerticalAlignment="Top" Height="25" Margin="10">
-                    <CheckBox x:Name="UseCustomServerAdress" Content="Use a custom server adress" Margin="0" Checked="CustomServerCheckboxChecked" Unchecked="CustomServerCheckboxUnchecked" />
-                </Label>
-                <TextBox x:Name="CustomServerAdress" HorizontalAlignment="Left" Height="25" Margin="10,45,10,10" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="320" />
-                <Button x:Name="TestServerAddressButton" Content="Test Address" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="10,80,10,10" Width="100" Click="TestServerAddress" />
-            </Grid>
-        </GroupBox>
-        <DockPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="10">
+        Title="JSONDB Server Settings" SizeToContent="Height" Width="400" ResizeMode="CanMinimize" WindowStartupLocation="CenterOwner">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <GroupBox x:Name="serverAdressSetting" Header="_Server Address" VerticalAlignment="Top" Margin="10" DockPanel.Dock="Top">
+                <DockPanel>
+                    <Label x:Name="UseCustomAddressLabel" VerticalAlignment="Top" Margin="10" Padding="0" DockPanel.Dock="Top">
+                        <CheckBox x:Name="UseCustomServerAddress" Content="Use a custom server adress" Margin="0" Checked="CustomServerCheckboxChecked" Unchecked="CustomServerCheckboxUnchecked" />
+                    </Label>
+                    <TextBox x:Name="CustomServerAddress" Height="25" Margin="10,0" TextWrapping="Wrap" VerticalContentAlignment="Center" VerticalAlignment="Top" DockPanel.Dock="Top" />
+                    <Button x:Name="TestServerAddressButton" Content="Test Address" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="10" Width="100" Click="TestServerAddress" DockPanel.Dock="Top" />
+                </DockPanel>
+            </GroupBox>
+            <GroupBox x:Name="FileAssociationSetting" Header="_File Association" VerticalAlignment="Top" Margin="10" DockPanel.Dock="Top">
+                <DockPanel>
+                    <Label x:Name="AssociateJDBTFilesLabel" VerticalAlignment="Top" Margin="10" Padding="0" DockPanel.Dock="Top">
+                        <CheckBox x:Name="AssociateJDBTFiles" Content="Associate .jdbt files with the editor" Margin="0" />
+                    </Label>
+                    <Label x:Name="AssociateJQLFilesLabel" VerticalAlignment="Top" Margin="10,0,10,10" Padding="0" DockPanel.Dock="Top">
+                        <CheckBox x:Name="AssociateJQLFiles" Content="Associate .jql files with the editor" Margin="0" />
+                    </Label>
+                </DockPanel>
+            </GroupBox>
+        </DockPanel>
+        <DockPanel HorizontalAlignment="Right" Margin="10" DockPanel.Dock="Top">
             <Button x:Name="saveSettingsButton" Content="Save" Height="30" VerticalAlignment="Top" Width="75" Margin="10" HorizontalAlignment="Right" Click="SaveSettings" />
             <Button x:Name="defaultSettingsButton" Content="Default" Height="30" VerticalAlignment="Top" Width="75" Margin="10" HorizontalAlignment="Right" Click="DefaultSettings" />
             <Button x:Name="cancelSettingsButton" Content="Cancel" Height="30" VerticalAlignment="Top" Width="75" Margin="10" HorizontalAlignment="Right" Click="CancelSettings" />
         </DockPanel>
-    </Grid>
+    </DockPanel>
 </Window>
