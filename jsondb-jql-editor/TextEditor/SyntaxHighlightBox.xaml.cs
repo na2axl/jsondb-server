@@ -1017,6 +1017,14 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         /// <summary>
+        /// Reset the stack.
+        /// </summary>
+        public void ResetUndoRedoStack()
+        {
+            stack.Reset();
+        }
+
+        /// <summary>
         /// Filter the Intellisense list to display only items who matches the text entered.
         /// </summary>
         public void FilterSuggestionList()
