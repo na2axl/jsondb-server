@@ -310,16 +310,20 @@ namespace JSONDB.Library
 
             // Parse all queries
             JObject[] ParsedQueries = new JObject[queriesLines.Count];
+            i = 0;
 
             for (int q = 0, l = queriesLines.Count; q < l; q++)
             {
-                try
+                if (queriesLines[q].ToString().Trim().Length > 0)
                 {
-                    ParsedQueries[q] = Parse(queriesLines[q].ToString());
-                }
-                catch (Exception e)
-                {
-                    throw new MultilineQueryParseException(e.Message, q + 1);
+                    try
+                    {
+                        ParsedQueries[i] = Parse(queriesLines[q].ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        throw new MultilineQueryParseException(e.Message, q + 1);
+                    }
                 }
             }
 
