@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace JSONDB.JQLEditor.TextEditor
 {
@@ -42,7 +38,7 @@ namespace JSONDB.JQLEditor.TextEditor
         {
             T output = cmd.Do(input);
             _Undo.Push(cmd);
-            _Redo.Clear(); // Once we issue a new command, the redo stack clears
+            _Redo.Clear();
             return output;
         }
 
@@ -79,7 +75,7 @@ namespace JSONDB.JQLEditor.TextEditor
         public void Push(IStack<T> cmd)
         {
             _Undo.Push(cmd);
-            _Redo.Clear(); // Anytime we push a new command, the redo stack clears
+            _Redo.Clear();
         }
 
         public IStack<T> UnPush()
