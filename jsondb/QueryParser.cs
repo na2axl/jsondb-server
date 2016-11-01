@@ -271,7 +271,7 @@ namespace JSONDB.Library
                             return match.Value;
                     }
                 }
-            );
+            ).Trim('\r', '\n', ' ');
 
             // Split
             string[] queriesArray = new Regex(";(?:[\\r\\n]*)").Split(queriesBlock);
@@ -280,14 +280,14 @@ namespace JSONDB.Library
             JArray queriesLines = new JArray();
             int i = 0;
 
-            foreach (var query in queriesArray)
+            foreach (string query in queriesArray)
             {
                 if (query.Length > 0)
                 {
                     queriesLines.Add(query);
 
                     // Split
-                    string[] subQueryParts = new Regex("[\\r\\n]").Split(queriesLines[i].ToString());
+                    string[] subQueryParts = new Regex("[\\r\\n]+").Split(queriesLines[i].ToString());
 
                     for (int j = 0, l = subQueryParts.Length; j < l; j++)
                     {
@@ -319,7 +319,7 @@ namespace JSONDB.Library
                 }
                 catch (Exception e)
                 {
-                    throw new MultilineQueryParseException(e.Message, q+1);
+                    throw new MultilineQueryParseException(e.Message, q + 1);
                 }
             }
 
@@ -348,13 +348,13 @@ namespace JSONDB.Library
             {
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"order()\" extension, only two required.");
             }
-            if (ParsedClause[1] != null && Array.IndexOf(new JArray("asc", "desc").ToArray(), ParsedClause[1].ToString().ToLower()) == -1)
+            if (ParsedClause.Count == 2 && Array.IndexOf(new JArray("asc", "desc").ToArray(), ParsedClause[1].ToString().ToLower()) == -1)
             {
                 throw new Exception("JSONDB Query Parse Error: The second parameter of the \"order()\" extension can only have values: \"asc\" or \"desc\".");
             }
-            if (ParsedClause[1] == null)
+            if (ParsedClause.Count == 1)
             {
-                ParsedClause[1] = "asc";
+                ParsedClause.Add("asc");
             }
 
             return ParsedClause;
@@ -432,9 +432,9 @@ namespace JSONDB.Library
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"limit()\" extension, only two required.");
             }
 
-            if (ParsedClause[1] == null)
+            if (ParsedClause.Count == 1)
             {
-                ParsedClause[1] = ParsedClause[0];
+                ParsedClause.Add(ParsedClause[0]);
                 ParsedClause[0] = 0;
             }
 
