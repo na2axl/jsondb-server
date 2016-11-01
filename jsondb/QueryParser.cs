@@ -146,7 +146,7 @@ namespace JSONDB.Library
             }
 
             // Getting the action's parameters
-            ParsedQuery["parameters"] = new Regex("\\w+\\((.*)\\)").Replace(queryParts[1], "$1").Trim();
+            ParsedQuery["parameters"] = new Regex("^\\w+\\((.*)\\)$").Replace(queryParts[1], "$1").Trim();
             ParsedQuery["parameters"] = new Regex("\\(([^)]*)\\)").Replace(ParsedQuery["parameters"].ToString(), (match) =>
             {
                 return new Regex(",").Replace(match.Value, ";");
@@ -331,7 +331,13 @@ namespace JSONDB.Library
             JArray ParsedClause = new JArray(clause.Split(','));
             Array.ForEach(ParsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                int index = Array.IndexOf(ParsedClause.ToArray(), field);
+                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                ParsedClause[index] = field;
+                if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
+                {
+                    throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
+                }
             });
 
             if (ParsedClause.Count == 0)
@@ -342,7 +348,7 @@ namespace JSONDB.Library
             {
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"order()\" extension, only two required.");
             }
-            if (ParsedClause[1] == null && Array.IndexOf(new JArray("asc", "desc").ToArray(), ParsedClause[1].ToString().ToLower()) == -1)
+            if (ParsedClause[1] != null && Array.IndexOf(new JArray("asc", "desc").ToArray(), ParsedClause[1].ToString().ToLower()) == -1)
             {
                 throw new Exception("JSONDB Query Parse Error: The second parameter of the \"order()\" extension can only have values: \"asc\" or \"desc\".");
             }
@@ -381,10 +387,14 @@ namespace JSONDB.Library
                 if (condition.IndexOf(op) > -1 || Array.IndexOf(condition.Split(','), op) > -1 || Array.IndexOf(condition.ToCharArray(), op) > -1 || Array.IndexOf(condition.Split(' '), op) > -1)
                 {
                     var index = condition.IndexOf(op);
-                    JArray row_val = new JArray(condition.Remove(index, op.Length).Insert(index, ".").Split('.'));
+                    string[] row_val = Regex.Split(condition, op);
+                    if (!Regex.IsMatch(row_val[0].Trim(), "^\\w+$"))
+                    {
+                        throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + row_val[0] + "\".");
+                    }
                     filters["operator"] = op;
-                    filters["field"] = new Regex("'\"`").Replace(row_val[0].ToString(), "").Trim();
-                    filters["value"] = _parseValue(row_val[1].ToString());
+                    filters["field"] = new Regex("['\"`]").Replace(row_val[0], "").Trim();
+                    filters["value"] = _parseValue(row_val[1]);
                     break;
                 }
             }
@@ -441,7 +451,13 @@ namespace JSONDB.Library
             JArray ParsedClause = new JArray(clause.Split(','));
             Array.ForEach(ParsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                int index = Array.IndexOf(ParsedClause.ToArray(), field);
+                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                ParsedClause[index] = field;
+                if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
+                {
+                    throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
+                }
             });
 
             if (ParsedClause.Count == 0)
@@ -474,7 +490,13 @@ namespace JSONDB.Library
             JArray ParsedClause = new JArray(clause.Split(','));
             Array.ForEach(ParsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                int index = Array.IndexOf(ParsedClause.ToArray(), field);
+                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                ParsedClause[index] = field;
+                if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
+                {
+                    throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
+                }
             });
 
             if (ParsedClause.Count == 0)
@@ -490,7 +512,13 @@ namespace JSONDB.Library
             JArray ParsedClause = new JArray(clause.Split(','));
             Array.ForEach(ParsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                int index = Array.IndexOf(ParsedClause.ToArray(), field);
+                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
+                ParsedClause[index] = field;
+                if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
+                {
+                    throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
+                }
             });
 
             if (ParsedClause.Count == 0)
@@ -508,16 +536,21 @@ namespace JSONDB.Library
         protected static JObject _parseOnExtension(string clause)
         {
             JObject ParsedClause = new JObject();
-            var extensionParts = clause.Split(',');
+            string[] extensionParts = clause.Split(',');
 
             if (extensionParts.Length < 2)
             {
                 throw new Exception("JSONDB Query Parse Error: At least two parameters expected for the \"on()\" extension.");
             }
 
-            var actionParts = new Regex("(\\w+)\\((.*)\\)").Replace(extensionParts[1], "$1.$2").Split('.');
+            string[] actionParts = new Regex("(\\w+)\\((.*)\\)").Replace(extensionParts[1], "$1.$2").Split('.');
 
-            ParsedClause["column"] = extensionParts[0].ToString();
+            if (!Regex.IsMatch(extensionParts[0], "^\\w+$"))
+            {
+                throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + extensionParts[0] + "\".");
+            }
+
+            ParsedClause["column"] = extensionParts[0];
             ParsedClause["action"] = new JObject();
             ParsedClause["action"]["name"] = actionParts[0].ToString().Trim();
             ParsedClause["action"]["parameters"] = new JArray(actionParts[1].Split(';'));
@@ -680,31 +713,34 @@ namespace JSONDB.Library
             {
                 return JObject.Parse(_parseValue(trim_value.Replace(":JSONDB::TO_ARRAY:", "")).ToString());
             }
-            else if (trim_value[0] == '\'' && trim_value[trim_value.Length - 1] == '\'')
+            else if (trim_value[0] == '\'')
             {
-                return new Regex("\\{\\{quot\\}\\}|\\{\\{comm\\}\\}|\\{\\{dot\\}\\}|\\{\\{pto\\}\\}|\\{\\{ptc\\}\\}|\\{\\{semi\\}\\}").Replace(
-                    new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, ""),
-                    (match) =>
-                    {
-                        switch (match.Value)
+                if (trim_value[trim_value.Length - 1] == '\'')
+                {
+                    return new Regex("\\{\\{quot\\}\\}|\\{\\{comm\\}\\}|\\{\\{dot\\}\\}|\\{\\{pto\\}\\}|\\{\\{ptc\\}\\}|\\{\\{semi\\}\\}").Replace(
+                        new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, ""),
+                        (match) =>
                         {
-                            case "{{quot}}":
-                                return "'";
-                            case "{{comm}}":
-                                return ",";
-                            case "{{dot}}":
-                                return ".";
-                            case "{{pto}}":
-                                return "(";
-                            case "{{ptc}}":
-                                return ")";
-                            case "{{semi}}":
-                                return ";";
-                            default:
-                                return match.Value;
+                            switch (match.Value)
+                            {
+                                case "{{quot}}":
+                                    return "'";
+                                case "{{comm}}":
+                                    return ",";
+                                case "{{dot}}":
+                                    return ".";
+                                case "{{pto}}":
+                                    return "(";
+                                case "{{ptc}}":
+                                    return ")";
+                                case "{{semi}}":
+                                    return ";";
+                                default:
+                                    return match.Value;
+                            }
                         }
-                    }
-                );
+                    );
+                }
             }
             else if (new Regex("\\w+\\(.*\\)").IsMatch(trim_value))
             {
