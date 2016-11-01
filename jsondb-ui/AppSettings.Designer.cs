@@ -46,5 +46,29 @@ namespace JSONDB.UI {
                 this["UseCustomServerAdress"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool JDBTAssociation {
+            get {
+                return ((bool)(this["JDBTAssociation"]));
+            }
+            set {
+                this["JDBTAssociation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool JQLAssociation {
+            get {
+                return ((bool)(this["JQLAssociation"]));
+            }
+            set {
+                this["JQLAssociation"] = value;
+            }
+        }
     }
 }
