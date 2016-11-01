@@ -121,6 +121,18 @@
   <data name="JQLSyntax" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>TextEditor\Syntax\JQL.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="MessageWindowError" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\MessageWindowError.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MessageWindowInformation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\MessageWindowInformation.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MessageWindowSuccess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\MessageWindowSuccess.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MessageWindowWarning" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\MessageWindowWarning.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="SyntaxSchema" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>TextEditor\Syntax\Schema.xsd;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
