@@ -137,7 +137,7 @@ namespace JSONDB.Library
 
             // Getting the query's main action
             ParsedQuery["action"] = new Regex("\\(.*\\)").Replace(queryParts[1], "");
-            if (Array.IndexOf(SupportedQueries.ToArray(), ParsedQuery["action"]) == -1)
+            if (Array.IndexOf(SupportedQueries.ToArray(), ParsedQuery["action"].ToString().ToLower()) == -1)
             {
                 throw new Exception("JSONDB Query Parse Error: The query \"" + ParsedQuery["action"] + "\" isn't supported by JSONDB.");
             }
@@ -290,6 +290,11 @@ namespace JSONDB.Library
                     {
                         // Remove child indentations
                         subQueryParts[j] = subQueryParts[j].Trim('\t', ' ');
+
+                        // Remove comments
+                        if (subQueryParts[j].StartsWith("//")) {
+                            subQueryParts[j] = String.Empty;
+                        }
                     }
 
                     // Join query parts
