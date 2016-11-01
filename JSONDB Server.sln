@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jsondb", "jsondb\jsondb.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jsondb-ui", "jsondb-ui\jsondb-ui.csproj", "{4A3447C3-A9A7-4503-A7D3-61DCFCE84DCD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jsondb-jql-editor", "jsondb-jql-editor\jsondb-jql-editor.csproj", "{5778F282-A4C8-4A97-A790-9E7005C5F9E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jsondb-elevated-client", "jsondb-elevated-client\jsondb-elevated-client.csproj", "{4879947E-304A-4CBA-A3DF-7E1A540766A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,8 +59,36 @@ Global
 		{4A3447C3-A9A7-4503-A7D3-61DCFCE84DCD}.Release|x64.Build.0 = Release|x64
 		{4A3447C3-A9A7-4503-A7D3-61DCFCE84DCD}.Release|x86.ActiveCfg = Release|x86
 		{4A3447C3-A9A7-4503-A7D3-61DCFCE84DCD}.Release|x86.Build.0 = Release|x86
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|x64.Build.0 = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Debug|x86.Build.0 = Debug|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|x64.ActiveCfg = Release|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|x64.Build.0 = Release|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|x86.ActiveCfg = Release|Any CPU
+		{5778F282-A4C8-4A97-A790-9E7005C5F9E7}.Release|x86.Build.0 = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|x64.Build.0 = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Debug|x86.Build.0 = Debug|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|x64.ActiveCfg = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|x64.Build.0 = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|x86.ActiveCfg = Release|Any CPU
+		{4879947E-304A-4CBA-A3DF-7E1A540766A4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal
