@@ -6,19 +6,19 @@
         xmlns:local="clr-namespace:JSONDB.UI"
         mc:Ignorable="d"
         Title="New Server" Height="300" Width="300" ResizeMode="CanMinimize" WindowStartupLocation="CenterOwner">
-    <Grid>
-        <DockPanel VerticalAlignment="Top">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top">
             <Label Content="Server Name:" Margin="10,10,10,0" DockPanel.Dock="Top" />
             <TextBox x:Name="ServerNameBox" Height="25" Margin="10,0,10,0" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
             <Separator Margin="10,10,10,0" DockPanel.Dock="Top" />
             <Label Content="Username:" Margin="10,10,10,0" DockPanel.Dock="Top" />
             <TextBox x:Name="UsernameBox" Height="25" Margin="10,0,10,0" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
             <Label Content="Password:" Margin="10,10,10,0" DockPanel.Dock="Top" />
-            <TextBox x:Name="PasswordBox" Height="25" Margin="10,0,10,0" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
+            <TextBox x:Name="PasswordBox" Height="25" Margin="10,0,10,10" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
         </DockPanel>
-        <DockPanel VerticalAlignment="Bottom" HorizontalAlignment="Right">
+        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Right">
             <Button x:Name="CreateButton" Content="Create" Height="30" Width="75" Margin="10" Click="CreateServer" />
             <Button x:Name="CancelButton" Content="Cancel" Height="30" Width="75" Margin="10" Click="CloseWindow" />
         </DockPanel>
-    </Grid>
+    </DockPanel>
 </Window>

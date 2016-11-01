@@ -42,13 +42,13 @@ namespace JSONDB.UI
         private void CreateServer(object sender, RoutedEventArgs e)
         {
             LockUI();
-            if (JSONDB.ServerExists(ServerNameBox.Text))
+            if (Library.JSONDB.ServerExists(ServerNameBox.Text))
             {
                 new MessageWindow(this, "A server with this name already exist.", Title, MessageWindowButton.OK, MessageWindowImage.Error).Open();
             }
             else
             {
-                JSONDB.CreateServer(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Text);
+                Library.JSONDB.CreateServer(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Text);
                 new MessageWindow(this, "The server is successfully created.", Title, MessageWindowButton.OK, MessageWindowImage.Success).Open();
                 Close();
             }
