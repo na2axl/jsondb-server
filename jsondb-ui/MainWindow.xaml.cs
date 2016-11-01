@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Media;
 using Hardcodet.Wpf.TaskbarNotification;
-using System.Windows.Controls;
 
 namespace JSONDB.UI
 {
@@ -22,9 +21,6 @@ namespace JSONDB.UI
             TaskIcon.ToolTipText = AppResources.AppName;
             TaskIcon.TrayMouseDoubleClick += TrayMouseDoubleClick;
 
-            // Start the server
-            App.StartServer();
-
             // Initialize the UI
             InitializeComponent();
 
@@ -39,6 +35,7 @@ namespace JSONDB.UI
             if (WindowState == WindowState.Minimized)
             {
                 WindowState = WindowState.Normal;
+                Activate();
                 Focus();
             }
             else

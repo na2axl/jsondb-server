@@ -6,9 +6,9 @@
         xmlns:local="clr-namespace:JSONDB.UI"
         mc:Ignorable="d"
         Title="JSONDB Server" Height="140" Width="450" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen">
-    <Grid Margin="0">
-        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Height="20" Margin="0" Width="442" >
-            <Menu VerticalAlignment="Center" HorizontalAlignment="Left" Height="20" Margin="0" Width="442">
+    <DockPanel Margin="0">
+        <StackPanel Margin="0" DockPanel.Dock="Top">
+            <Menu>
                 <MenuItem x:Name="MenuFile" Height="20" Header="_File">
                     <MenuItem x:Name="MenuFileStartServer" Header="_Start Server" Click="ServerStart" />
                     <MenuItem x:Name="MenuFileRestartServer" Header="_Restart Server" IsEnabled="False" Click="ServerRestart" />
@@ -30,8 +30,8 @@
                 </MenuItem>
             </Menu>
         </StackPanel>
-        <DockPanel HorizontalAlignment="Center" LastChildFill="False" VerticalAlignment="Bottom" Width="442" Height="89">
-            <Ellipse x:Name="serverStateIcon" Fill="Transparent" Height="15" Margin="20,38,10,36" Stroke="Transparent" VerticalAlignment="Center" Width="15" RenderTransformOrigin="0.5,0.5">
+        <DockPanel LastChildFill="False" DockPanel.Dock="Top">
+            <Ellipse x:Name="serverStateIcon" Fill="Transparent" Height="15" Margin="20,0,10,0" Stroke="Transparent" VerticalAlignment="Center" Width="15" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Left">
                 <Ellipse.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform ScaleX="-1"/>
@@ -41,9 +41,9 @@
                     </TransformGroup>
                 </Ellipse.RenderTransform>
             </Ellipse>
-            <Button x:Name="serverStateManager" Height="30" Content="Start Server" Margin="10,30,10,29" HorizontalAlignment="Left" VerticalAlignment="Center" Width="95" Click="ServerStateToggle" />
-            <Button x:Name="serverRestarter" Height="30" Content="Restart Server" Margin="10,30,10,29" VerticalAlignment="Center" Width="105" Click="ServerRestart" />
-            <TextBlock x:Name="serverStateNotifierText" TextWrapping="Wrap" Margin="25,37,20,36" Text="Server Stopped" VerticalAlignment="Center" Width="110" TextAlignment="Right" TextBlock.FontWeight="Bold" />
+            <Button x:Name="serverStateManager" Height="30" Content="Start Server" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="95" Click="ServerStateToggle" DockPanel.Dock="Left" />
+            <Button x:Name="serverRestarter" Height="30" Content="Restart Server" Margin="10,0,10,0" VerticalAlignment="Center" Width="105" Click="ServerRestart" DockPanel.Dock="Left" />
+            <TextBlock x:Name="serverStateNotifierText" TextWrapping="Wrap" Margin="10,0,10,0" Text="Server Stopped" VerticalAlignment="Center" Width="110" TextAlignment="Right" TextBlock.FontWeight="Bold" DockPanel.Dock="Left" />
         </DockPanel>
-    </Grid>
+    </DockPanel>
 </Window>
