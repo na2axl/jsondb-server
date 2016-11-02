@@ -410,6 +410,19 @@ namespace JSONDB.JQLEditor.TextEditor
                         e.Handled = true;
                     }
                 }
+
+                // Undo/Redo
+                if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+                {
+                    if (e.Key == Key.Z)
+                    {
+                        Undo();
+                    }
+                    else if (e.Key == Key.Y)
+                    {
+                        Redo();
+                    }
+                }
             };
         }
 
@@ -994,7 +1007,26 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>The non zero based index of the active line</returns>
         public int GetIndexOfActiveLine()
         {
-            return Regex.Split(Text.Substring(0, CaretIndex + 1 < Text.Length ? CaretIndex + 1 : CaretIndex).TrimEnd(Environment.NewLine.ToCharArray()), Environment.NewLine).Length;
+            return Regex.Split(Text.Substring(0, CaretIndex + 1 < Text.Length ? CaretIndex + 1 : CaretIndex), Environment.NewLine).Length;
+        }
+
+        /// <summary>
+        /// Get the text of the active line.
+        /// </summary>
+        /// <returns>The text of the active line</returns>
+        public string GetTextOfActiveLine()
+        {
+            return Regex.Split(Text, Environment.NewLine)[GetIndexOfActiveLine()];
+        }
+
+        /// <summary>
+        /// Get the text at the given line.
+        /// </summary>
+        /// <param name="line">The non zero based line number</param>
+        /// <returns>The text at the given line</returns>
+        public string GetTextAtLine(int line)
+        {
+            return Regex.Split(Text, Environment.NewLine)[line - 1];
         }
 
         /// <summary>
@@ -1108,6 +1140,8 @@ namespace JSONDB.JQLEditor.TextEditor
             int firstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, activeLineIndex - 1);
             int colIndex = Text.Substring(firstCharIndex, CaretIndex - firstCharIndex).Length + 1;
             int charNB = Text.Length;
+
+            string activeLineText = GetTextAtLine(activeLineIndex);
 
             return String.Format("Ln {0}    Col {1}    Ch {2}/{3}",
                 activeLineIndex,
