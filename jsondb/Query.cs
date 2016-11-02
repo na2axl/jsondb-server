@@ -28,14 +28,7 @@ namespace JSONDB.Library
         {
             QueryString = query;
 
-            try
-            {
-                ParsedQuery = QueryParser.Parse(QueryString);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            ParsedQuery = QueryParser.Parse(QueryString);
 
             QueryPrepared = false;
             QueryExecuted = false;
