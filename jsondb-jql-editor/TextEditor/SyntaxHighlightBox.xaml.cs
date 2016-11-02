@@ -928,16 +928,18 @@ namespace JSONDB.JQLEditor.TextEditor
                 string SuggestionLabelPart = LineString.Substring(LastDotPosition + 1);
 
                 // Refresh the list first
-                PopulateSuggestionList(LineString.Substring(0, LastDotPosition + 1), FirstCharIndex + LastDotPosition + 1);
+                for (int i = 0, l = suggestionList.Items.Count; i < l; i++)
+                {
+                    IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
+                    item.Visibility = Visibility.Visible;
+                }
 
                 for (int i = 0, l = suggestionList.Items.Count; i < l; i++)
                 {
                     IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
                     if (!Regex.IsMatch(item.DisplayText, "^" + Regex.Escape(SuggestionLabelPart)))
                     {
-                        suggestionList.Items.RemoveAt(i);
-                        i--;
-                        l--;
+                        item.Visibility = Visibility.Collapsed;
                     }
                     else
                     {
@@ -983,9 +985,13 @@ namespace JSONDB.JQLEditor.TextEditor
             Select(currentBlock.Index, currentBlock.Length + 2);
         }
 
+        /// <summary>
+        /// Get the index of the active line.
+        /// </summary>
+        /// <returns>The non zero based index of the active line</returns>
         public int GetIndexOfActiveLine()
         {
-            return Regex.Split(Text.Substring(0, CaretIndex).TrimEnd(Environment.NewLine.ToCharArray()), Environment.NewLine).Length;
+            return Regex.Split(Text.Substring(0, CaretIndex+1).TrimEnd(Environment.NewLine.ToCharArray()), Environment.NewLine).Length;
         }
 
         /// <summary>
@@ -1086,6 +1092,28 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         // ----------------------------------------------------------
+        // Others
+        // ----------------------------------------------------------
+
+        /// <summary>
+        /// String representation of the text box.
+        /// </summary>
+        /// <returns>Information about the current text state</returns>
+        public override string ToString()
+        {
+            int activeLineIndex = GetIndexOfActiveLine();
+            int firstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, activeLineIndex - 1);
+            int colIndex = Text.Substring(firstCharIndex, CaretIndex - firstCharIndex).Length + 1;
+            int charNB = Text.Length;
+
+            return String.Format("Ln {0}    Col {1}    Ch {2}/{3}",
+                activeLineIndex,
+                colIndex,
+                firstCharIndex,
+                charNB);
+        }
+
+        // ----------------------------------------------------------
         // Dependency Properties
         // ----------------------------------------------------------
 
@@ -1162,7 +1190,7 @@ namespace JSONDB.JQLEditor.TextEditor
 
             public override string ToString()
             {
-                return string.Format("L:{0}/{1} C:{2}/{3} {4}",
+                return String.Format("L:{0}/{1} C:{2}/{3} {4}",
                     LineStartIndex,
                     LineEndIndex,
                     CharStartIndex,
