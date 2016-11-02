@@ -169,11 +169,14 @@ namespace JSONDB.JQLEditor.TextEditor
                 // Auto open the Intellisense list...
                 if (e.Text == "." && !SuggestionListIsVisible())
                 {
-                    int LastCaretPos = CaretIndex;
-                    Text = Text.Insert(LastCaretPos, ".");
-                    CaretIndex = LastCaretPos + 1;
-                    ShowSuggestionList();
-                    e.Handled = true;
+                    if (SelectedText == String.Empty)
+                    {
+                        int LastCaretPos = CaretIndex;
+                        Text = Text.Insert(LastCaretPos, ".");
+                        CaretIndex = LastCaretPos + 1;
+                        ShowSuggestionList();
+                        e.Handled = true;
+                    }
                 }
 
                 // Auto closing...
@@ -815,6 +818,9 @@ namespace JSONDB.JQLEditor.TextEditor
             }
         }
 
+        /// <summary>
+        /// Update the Intellisense list.
+        /// </summary>
         private void UpdateSuggestionListPosition()
         {
             Point position = GetRectFromCharacterIndex(CaretIndex).BottomRight;
@@ -888,7 +894,7 @@ namespace JSONDB.JQLEditor.TextEditor
         public new void Undo()
         {
             HideSuggestionList();
-            var thisStack = stack.UnPush();
+            var thisStack = stack.UnPush(new TextStack(Text, CaretIndex));
             if (thisStack != null)
             {
                 cancelNextStack = true;
@@ -904,7 +910,7 @@ namespace JSONDB.JQLEditor.TextEditor
         public new void Redo()
         {
             HideSuggestionList();
-            var thisStack = stack.RePush();
+            var thisStack = stack.RePush(new TextStack(Text, CaretIndex));
             if (thisStack != null)
             {
                 cancelNextStack = true;
