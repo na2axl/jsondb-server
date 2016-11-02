@@ -61,35 +61,35 @@ namespace JSONDB.JQLEditor
             // Set the message text
             MessageBoxText.Text = message;
 
-            Bitmap Img = null;
+            Bitmap ImageToShow = null;
 
             // Set the image to show and the sound to play
             switch (image)
             {
                 case MessageWindowImage.Information:
-                    Img = AppResources.MessageWindowInformation;
+                    ImageToShow = AppResources.MessageWindowInformation;
                     SoundToPlay = SystemSounds.Asterisk;
                     break;
                 case MessageWindowImage.Warning:
-                    Img = AppResources.MessageWindowWarning;
+                    ImageToShow = AppResources.MessageWindowWarning;
                     SoundToPlay = SystemSounds.Exclamation;
                     break;
                 case MessageWindowImage.Error:
-                    Img = AppResources.MessageWindowError;
+                    ImageToShow = AppResources.MessageWindowError;
                     SoundToPlay = SystemSounds.Hand;
                     break;
                 case MessageWindowImage.Success:
-                    Img = AppResources.MessageWindowSuccess;
+                    ImageToShow = AppResources.MessageWindowSuccess;
                     SoundToPlay = SystemSounds.Beep;
                     break;
                 default:
                     break;
             }
 
-            if (Img != null)
+            if (ImageToShow != null)
             {
                 MemoryStream memory = new MemoryStream();
-                Img.Save(memory, ImageFormat.Png);
+                ImageToShow.Save(memory, ImageFormat.Png);
                 memory.Position = 0;
                 BitmapImage bitmapImage = new BitmapImage();
                 bitmapImage.BeginInit();
