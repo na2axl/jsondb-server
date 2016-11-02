@@ -384,23 +384,33 @@ namespace JSONDB.Library
         protected static JObject _parseWhereExtensionCondition(string condition)
         {
             JObject filters = new JObject();
+            bool opFound = false;
 
             for (int i = 0, l = Operators.Count; i < l; i++)
             {
                 var op = Operators[i].ToString();
-                if (condition.IndexOf(op) > -1 || Array.IndexOf(condition.Split(','), op) > -1 || Array.IndexOf(condition.ToCharArray(), op) > -1 || Array.IndexOf(condition.Split(' '), op) > -1)
+                if (condition.IndexOf(op) > -1 || Array.IndexOf(condition.ToCharArray(), op) > -1 || Array.IndexOf(condition.Split(' '), op) > -1)
                 {
-                    var index = condition.IndexOf(op);
-                    string[] row_val = Regex.Split(condition, op);
-                    if (!Regex.IsMatch(row_val[0].Trim(), "^\\w+$"))
+                    int index = condition.IndexOf(op);
+                    string identifier = condition.Substring(0, index).Trim();
+                    string value = condition.Substring(index + op.Length).Trim();
+
+                    string[] row_val =  Regex.Split(condition, "\\s" + op + "\\s");
+                    if (!Regex.IsMatch(identifier, "^\\w+$"))
                     {
-                        throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + row_val[0] + "\".");
+                        throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + identifier + "\".");
                     }
                     filters["operator"] = op;
-                    filters["field"] = new Regex("['\"`]").Replace(row_val[0], "").Trim();
-                    filters["value"] = _parseValue(row_val[1]);
+                    filters["field"] = new Regex("['\"`]").Replace(identifier, "").Trim();
+                    filters["value"] = _parseValue(value);
+                    opFound = true;
                     break;
                 }
+            }
+
+            if (!opFound)
+            {
+                throw new Exception("JSONDB Query Parse Error: Unable to parse the condition \"" + condition + "\"");
             }
 
             return filters;
