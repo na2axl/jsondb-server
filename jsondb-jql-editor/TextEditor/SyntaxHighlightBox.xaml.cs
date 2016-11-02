@@ -1078,7 +1078,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 FlowDirection.LeftToRight,
                 new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
                 FontSize,
-                Brushes.Black);
+                TextColor);
 
             ft.Trimming = TextTrimming.None;
             ft.LineHeight = lineHeight;
@@ -1124,7 +1124,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 FlowDirection.LeftToRight,
                 new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
                 FontSize,
-                Brushes.Black);
+                TextColor);
 
             ft.Trimming = TextTrimming.None;
             ft.LineHeight = lineHeight;
@@ -1163,6 +1163,9 @@ namespace JSONDB.JQLEditor.TextEditor
         public static readonly DependencyProperty IsLineNumbersMarginVisibleProperty = DependencyProperty.Register(
             "IsLineNumbersMarginVisible", typeof(bool), typeof(SyntaxHighlightBox), new PropertyMetadata(true));
 
+        public static readonly DependencyProperty TextColorProperty = DependencyProperty.Register(
+            "TextColor", typeof(Brush), typeof(SyntaxHighlightBox), new PropertyMetadata(Brushes.Black));
+
         // ----------------------------------------------------------
         // Properties
         // ----------------------------------------------------------
@@ -1178,6 +1181,12 @@ namespace JSONDB.JQLEditor.TextEditor
         {
             get { return (bool)GetValue(IsLineNumbersMarginVisibleProperty); }
             set { SetValue(IsLineNumbersMarginVisibleProperty, value); }
+        }
+
+        public Brush TextColor
+        {
+            get { return (Brush)GetValue(TextColorProperty); }
+            set { SetValue(TextColorProperty, value); }
         }
 
         private string Tab

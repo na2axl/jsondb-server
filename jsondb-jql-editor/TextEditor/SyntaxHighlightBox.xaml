@@ -12,6 +12,7 @@
             <Setter Property="FontFamily" Value="Consolas" />
             <Setter Property="FontSize" Value="10pt" />
             <Setter Property="Padding" Value="10,5" />
+            <Setter Property="TextColor" Value="Black" />
         </Style>
     </TextBox.Style>
 
