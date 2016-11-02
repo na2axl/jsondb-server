@@ -41,7 +41,7 @@
   </AdvancedHighlightRule>
 
   <AdvancedHighlightRule name="JQL Extension">
-    <Expression>\)(?:[\r\n\t ]*)\.(on|as|where|order|with|group|in|limit|and|ON|AS|WHERE|ORDER|WITH|GROUP|IN|LIMIT|AND)\(</Expression>
+    <Expression>(?:[\r\n\t ]*)\.(on|as|where|order|with|group|in|limit|and|ON|AS|WHERE|ORDER|WITH|GROUP|IN|LIMIT|AND)\(</Expression>
     <HighlightExpressionIndex>1</HighlightExpressionIndex>
     <IgnoreCase>true</IgnoreCase>
     <Foreground>#0080FF</Foreground>
