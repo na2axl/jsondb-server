@@ -6,22 +6,78 @@
         xmlns:local="clr-namespace:JSONDB.JQLEditor"
         xmlns:TextEditor="clr-namespace:JSONDB.JQLEditor.TextEditor"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800">
+        Title="JQL Editor" Height="600" Width="800">
 
+    <Window.CommandBindings>
+        <CommandBinding Command="local:EditorCommands.Exit" CanExecute="CanExecuteAlwaysTrue" Executed="Exit_Execute" />
+        <CommandBinding Command="local:EditorCommands.New" CanExecute="CanExecuteAlwaysTrue" Executed="New_Execute" />
+        <CommandBinding Command="local:EditorCommands.Open" CanExecute="CanExecuteAlwaysTrue" Executed="Open_Execute" />
+        <CommandBinding Command="local:EditorCommands.Save" CanExecute="CanExecuteAlwaysTrue" Executed="Save_Execute" />
+        <CommandBinding Command="local:EditorCommands.SaveAs" CanExecute="CanExecuteAlwaysTrue" Executed="SaveAs_Execute" />
+        <CommandBinding Command="local:EditorCommands.Undo" CanExecute="CanExecuteAlwaysTrue" Executed="Undo_Execute" />
+        <CommandBinding Command="local:EditorCommands.Redo" CanExecute="CanExecuteAlwaysTrue" Executed="Redo_Execute" />
+        <CommandBinding Command="Delete" CanExecute="CanExecuteAlwaysTrue" />
+    </Window.CommandBindings>
+
+    <Window.Resources>
+
+        <Style TargetType="Menu">
+            <Setter Property="Background" Value="#e5e5e5" />
+        </Style>
+
+        <Style TargetType="ToolBar">
+            <Setter Property="Background" Value="#e5e5e5" />
+        </Style>
+
+        <Style TargetType="ToolBarPanel">
+            <Setter Property="Background" Value="#e5e5e5" />
+        </Style>
+
+        <Style TargetType="ToolBarTray">
+            <Setter Property="Background" Value="#e5e5e5" />
+        </Style>
+
+        <Style TargetType="StatusBar">
+            <Setter Property="Background" Value="#e5e5e5" />
+        </Style>
+
+    </Window.Resources>
+    
     <DockPanel>
         <StackPanel Margin="0" DockPanel.Dock="Top">
-            <Menu Background="#e5e5e5">
+            <Menu>
                 <MenuItem x:Name="MenuFile" Height="20" Header="_File">
-                    <MenuItem x:Name="MenuFileNew" Header="_New" />
-                    <MenuItem x:Name="MenuFileOpen" Header="_Open" />
-                    <MenuItem x:Name="MenuFileSave" Header="_Save" />
-                    <MenuItem x:Name="MenuFileSaveAs" Header="_Save As..." />
+                    <MenuItem x:Name="MenuFileNew" Header="_New" Command="local:EditorCommands.New" />
+                    <MenuItem x:Name="MenuFileOpen" Header="_Open" Command="local:EditorCommands.Open" />
+                    <MenuItem x:Name="MenuFileSave" Header="_Save" Command="local:EditorCommands.Save" />
+                    <MenuItem x:Name="MenuFileSaveAs" Header="_Save As..." Command="local:EditorCommands.SaveAs" />
                     <Separator />
-                    <MenuItem x:Name="MenuFileQuit" Header="_Quit" />
+                    <MenuItem x:Name="MenuFileQuit" Header="_Exit" Command="local:EditorCommands.Exit" />
                 </MenuItem>
                 <MenuItem x:Name="MenuEdit" Height="20" Header="_Edit">
+                    <MenuItem x:Name="MenuEditClean" Header="_Clean Document" Click="CleanDocument" />
+                    <Separator />
+                    <MenuItem x:Name="MenuEditUndo" Header="_Undo" Command="local:EditorCommands.Undo" />
+                    <MenuItem x:Name="MenuEditRedo" Header="_Redo" Command="local:EditorCommands.Redo" />
+                    <Separator />
+                    <MenuItem x:Name="MenuEditCopy" Header="_Copy" Command="Copy" />
+                    <MenuItem x:Name="MenuEditCut" Header="_Cut" Command="Cut" />
+                    <MenuItem x:Name="MenuEditPaste" Header="_Paste" Command="Paste" />
+                    <MenuItem x:Name="MenuEditDelete" Header="_Delete" Command="Delete" Click="Delete" />
+                    <Separator />
+                    <MenuItem x:Name="MenuEditSelectAll" Header="_Select All" Command="SelectAll" Click="SelectAll" />
+                    <MenuItem x:Name="MenuEditSelectNone" Header="_Select None" Click="SelectNone" />
                 </MenuItem>
                 <MenuItem x:Name="MenuView" Height="20" Header="_View">
+                    <MenuItem x:Name="MenuViewThemes" Header="_Themes">
+                        <MenuItem x:Name="MenuViewThemesBlack" Header="_Black" Click="SetBlackTheme" />
+                        <MenuItem x:Name="MenuViewThemesWhite" Header="_White" Click="SetWhiteTheme" />
+                    </MenuItem>
+                    <MenuItem x:Name="MenuViewShowLineNumbers" Header="_Show Line Numbers" IsCheckable="True" Click="ShowLineNumbers" />
+                </MenuItem>
+                <MenuItem x:Name="MenuQuery" Height="20" Header="_Query">
+                    <MenuItem x:Name="MenuQueryValidate" Header="_Validate" Click="ValidateQueries" />
+                    <MenuItem x:Name="MenuQueryRun" Header="_Run" />
                 </MenuItem>
                 <MenuItem x:Name="MenuTools" Height="20" Header="_Tools">
                     <MenuItem x:Name="MenuToolsConnections" Header="_Connections" />
@@ -35,21 +91,21 @@
                 </MenuItem>
             </Menu>
         </StackPanel>
-        <ToolBarPanel Background="#e5e5e5" DockPanel.Dock="Top">
+        <ToolBarPanel DockPanel.Dock="Top">
             <DockPanel>
-                <ToolBarTray Background="#e5e5e5" Margin="0" HorizontalAlignment="Left">
-                    <ToolBar Background="#e5e5e5">
-                        <Button Content="New" Margin="5,0,0,0" Padding="2" Click="ValidateQueries" ToolBar.OverflowMode="AsNeeded">
+                <ToolBarTray Margin="0" HorizontalAlignment="Left">
+                    <ToolBar>
+                        <Button Content="New" Margin="5,0,0,0" Padding="2" Click="NewFile" ToolBar.OverflowMode="AsNeeded">
                         </Button>
-                        <Button Content="Open" Padding="2">
+                        <Button Content="Open" Padding="2" Click="OpenFile">
                         </Button>
-                        <Button Content="Save" Padding="2">
+                        <Button Content="Save" Padding="2" Click="SaveFile">
                         </Button>
-                        <Button Content="Save As" Padding="2">
+                        <Button Content="Save As" Padding="2" Click="SaveFileAs">
                         </Button>
                         <Separator Margin="5,0" />
-                        <Button Content="Undo" Padding="2"></Button>
-                        <Button Content="Redo" Padding="2">
+                        <Button Content="Undo" Padding="2" Click="Undo"></Button>
+                        <Button Content="Redo" Padding="2" Click="Redo">
                         </Button>
                         <Separator Margin="5,0" />
                         <ComboBox Margin="5,0" Padding="2" Text="Database1">
@@ -68,8 +124,8 @@
                         <Button Content="Validate" Margin="0,0,5,0" Padding="2" Click="ValidateQueries"></Button>
                     </ToolBar>
                 </ToolBarTray>
-                <ToolBarTray Background="#e5e5e5" Margin="0" HorizontalAlignment="Left">
-                    <ToolBar Background="#e5e5e5">
+                <ToolBarTray Margin="0" HorizontalAlignment="Left">
+                    <ToolBar>
                         <Button Content="Disconnect" Margin="5,0,0,0" Padding="2"></Button>
                         <Button Content="Connect" Margin="0,0,5,0" Padding="2"></Button>
                     </ToolBar>
@@ -77,9 +133,10 @@
             </DockPanel>
         </ToolBarPanel>
         <DockPanel DockPanel.Dock="Top">
-            <TextEditor:SyntaxHighlightBox x:Name="TextEditor" Margin="0,0,0,25" DockPanel.Dock="Top" Padding="10,5" Background="#e5e5e5" Foreground="#ffffff" BorderThickness="0,1,0,1" />
-            <StatusBar Background="#e5e5e5" DockPanel.Dock="Top" Margin="0,-25,0,0" VerticalContentAlignment="Center" Height="25">
+            <TextEditor:SyntaxHighlightBox IsLineNumbersMarginVisible="False" x:Name="TextEditor" Margin="0,0,0,25" DockPanel.Dock="Top" Padding="10,0,0,0" Foreground="White" Background="#e5e5e5" TextColor="Black" BorderThickness="0,1,0,0" />
+            <StatusBar x:Name="StatusBar" Padding="5,0" DockPanel.Dock="Top" Margin="0,-25,0,0" VerticalContentAlignment="Center" Height="25">
                 <StatusBarItem Content="Ready" x:Name="StatusMessage" VerticalContentAlignment="Center"/>
+                <StatusBarItem x:Name="StatusEditorInfo" HorizontalAlignment="Right" />
             </StatusBar>
         </DockPanel>
     </DockPanel>
