@@ -163,6 +163,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="Resources\ProgramIcon.ico" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -207,9 +208,6 @@
       <Project>{98078549-a243-4062-b2d1-242b49bf71bc}</Project>
       <Name>jsondb</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ProgramIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\ServerStartedIcon.ico" />
