@@ -34,7 +34,7 @@
     <Expression>(\w+)(?:[\r\n\t ]*\.(?:select|update|truncate|delete|count|insert|SELECT|UPDATE|TRUNCATE|DELETE|COUNT|INSERT))\(</Expression>
     <HighlightExpressionIndex>1</HighlightExpressionIndex>
     <IgnoreCase>true</IgnoreCase>
-    <Foreground>#000000</Foreground>
+    <Foreground>#FF9900</Foreground>
     <FontWeight>Normal</FontWeight>
     <FontStyle>Italic</FontStyle>
     <TextDecoration>Normal</TextDecoration>
