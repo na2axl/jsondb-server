@@ -70,7 +70,7 @@ namespace JSONDB.UI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to JSONDB Server.
+        ///   Looks up a localized string similar to JSONDB Server Manager.
         /// </summary>
         internal static string AppName {
             get {
@@ -93,6 +93,16 @@ namespace JSONDB.UI {
         internal static System.Drawing.Bitmap ConsoleLogo {
             get {
                 object obj = ResourceManager.GetObject("ConsoleLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap JQLEditorLogo {
+            get {
+                object obj = ResourceManager.GetObject("JQLEditorLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

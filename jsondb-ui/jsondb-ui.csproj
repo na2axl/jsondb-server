@@ -172,6 +172,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Resources\JQLEditorLogo.png" />
     <Content Include="Resources\LICENSE.txt" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
