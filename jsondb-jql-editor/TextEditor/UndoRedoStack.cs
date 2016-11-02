@@ -78,12 +78,12 @@ namespace JSONDB.JQLEditor.TextEditor
             _Redo.Clear();
         }
 
-        public IStack<T> UnPush()
+        public IStack<T> UnPush(IStack<T> now)
         {
             if (_Undo.Count > 0)
             {
                 IStack<T> cmd = _Undo.Pop();
-                _Redo.Push(cmd);
+                _Redo.Push(now);
                 return cmd;
             }
             else
@@ -92,12 +92,12 @@ namespace JSONDB.JQLEditor.TextEditor
             }
         }
 
-        public IStack<T> RePush()
+        public IStack<T> RePush(IStack<T> now)
         {
             if (_Redo.Count > 0)
             {
                 IStack<T> cmd = _Redo.Pop();
-                _Undo.Push(cmd);
+                _Undo.Push(now);
                 return cmd;
             }
             else
