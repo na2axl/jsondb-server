@@ -1186,7 +1186,7 @@ namespace JSONDB.JQLEditor.TextEditor
         public Brush TextColor
         {
             get { return (Brush)GetValue(TextColorProperty); }
-            set { SetValue(TextColorProperty, value); }
+            set { SetValue(TextColorProperty, value); InvalidateBlocks(0); InvalidateVisual(); }
         }
 
         private string Tab
