@@ -879,7 +879,7 @@ namespace JSONDB.JQLEditor.TextEditor
             if (thisStack != null)
             {
                 cancelNextStack = true;
-                TextState State = stack.Undo(((TextStack)thisStack).State);
+                TextState State = thisStack.Do(((TextStack)thisStack).State);
                 Text = State.Text;
                 CaretIndex = State.CaretIndex;
             }
@@ -895,7 +895,7 @@ namespace JSONDB.JQLEditor.TextEditor
             if (thisStack != null)
             {
                 cancelNextStack = true;
-                TextState State = stack.Redo(((TextStack)thisStack).State);
+                TextState State = thisStack.Do(((TextStack)thisStack).State);
                 Text = State.Text;
                 CaretIndex = State.CaretIndex;
             }
@@ -934,12 +934,14 @@ namespace JSONDB.JQLEditor.TextEditor
                     item.Visibility = Visibility.Visible;
                 }
 
+                int h = 0;
                 for (int i = 0, l = suggestionList.Items.Count; i < l; i++)
                 {
                     IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
                     if (!Regex.IsMatch(item.DisplayText, "^" + Regex.Escape(SuggestionLabelPart)))
                     {
                         item.Visibility = Visibility.Collapsed;
+                        h++;
                     }
                     else
                     {
@@ -947,7 +949,8 @@ namespace JSONDB.JQLEditor.TextEditor
                     }
                 }
 
-                if (!SuggestionListHasItems())
+                // If all items are hidden
+                if (h == suggestionList.Items.Count)
                 {
                     HideSuggestionList();
                 }
@@ -991,7 +994,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>The non zero based index of the active line</returns>
         public int GetIndexOfActiveLine()
         {
-            return Regex.Split(Text.Substring(0, CaretIndex+1).TrimEnd(Environment.NewLine.ToCharArray()), Environment.NewLine).Length;
+            return Regex.Split(Text.Substring(0, CaretIndex + 1 < Text.Length ? CaretIndex + 1 : CaretIndex).TrimEnd(Environment.NewLine.ToCharArray()), Environment.NewLine).Length;
         }
 
         /// <summary>
@@ -1109,7 +1112,7 @@ namespace JSONDB.JQLEditor.TextEditor
             return String.Format("Ln {0}    Col {1}    Ch {2}/{3}",
                 activeLineIndex,
                 colIndex,
-                firstCharIndex,
+                CaretIndex,
                 charNB);
         }
 
