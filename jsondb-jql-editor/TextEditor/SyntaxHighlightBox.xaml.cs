@@ -1,8 +1,8 @@
-﻿using JSONDB.Library;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -66,7 +66,6 @@ namespace JSONDB.JQLEditor.TextEditor
         private int maxLineCountInBlock;
         private UndoRedoStack<TextState> stack = new UndoRedoStack<TextState>();
         private bool cancelNextStack = false;
-        private bool changesSaved = true;
 
         // ----------------------------------------------------------
         // Ctor and event handlers
@@ -194,9 +193,6 @@ namespace JSONDB.JQLEditor.TextEditor
 
             TextChanged += (s, e) =>
             {
-                // Text changed
-                changesSaved = false;
-
                 // Manually manage the Undo/Redo stack
                 if (!cancelNextStack)
                 {
@@ -327,59 +323,6 @@ namespace JSONDB.JQLEditor.TextEditor
                     }
 
                     e.Handled = true;
-                }
-
-                // Cammand keys (Ctrl+...)
-                if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-                {
-                    // Undo
-                    if (e.Key == Key.Z)
-                    {
-                        Undo();
-                        e.Handled = true;
-                    }
-
-                    // Redo
-                    else if (e.Key == Key.Y)
-                    {
-                        Redo();
-                        e.Handled = true;
-                    }
-
-                    // Save the current file
-                    else if (e.Key == Key.S)
-                    {
-                        if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift || App.CurrentWorkingFile == String.Empty)
-                        {
-                            // Save as new
-                            SaveDocumentAs();
-                        }
-                        else
-                        {
-                            // Overwrite current
-                            SaveDocument(App.CurrentWorkingFile);
-                        }
-                        e.Handled = true;
-                    }
-
-                    // Open a file
-                    else if (e.Key == Key.O)
-                    {
-                        OpenDocument();
-                        e.Handled = true;
-                    }
-
-                    // New document
-                    else if (e.Key == Key.N)
-                    {
-
-                    }
-
-                    // Quit editor
-                    else if (e.Key == Key.Q)
-                    {
-
-                    }
                 }
 
                 // Only if the Intellisense list is hidden or we have focus
@@ -894,86 +837,28 @@ namespace JSONDB.JQLEditor.TextEditor
         // ----------------------------------------------------------
 
         /// <summary>
-        /// Check if the current document is saved.
+        /// Get the content of the document.
         /// </summary>
-        /// <returns>true if the document is already saved, false otherwise.</returns>
-        public bool DocumentIsSaved()
+        /// <returns>The current document's content</returns>
+        public string GetDocumentContents()
         {
-            return changesSaved;
+            return Text;
         }
 
         /// <summary>
-        /// Save the current document at the given path.
+        /// Set the content of the document.
         /// </summary>
-        /// <param name="path">The path where to save the document.</param>
-        public void SaveDocument(string path)
+        /// <param name="text">The new document's content</param>
+        /// <param name="saveCaretPosition">The caret have the same position after insertion</param>
+        public void SetDocumentContents(string text, bool saveCaretPosition = false)
         {
-            if (!path.EndsWith(".jql"))
+            int LastCaretPos = 0;
+            if (saveCaretPosition)
             {
-                path = path + ".jql";
+                LastCaretPos = CaretIndex;
             }
-            Util.WriteTextFile(path, Text);
-            changesSaved = true;
-        }
-
-        /// <summary>
-        /// Save the current document as a new file.
-        /// </summary>
-        /// <returns>The path to the saved file.</returns>
-        public string SaveDocumentAs()
-        {
-            System.Windows.Forms.SaveFileDialog saveDialog = new System.Windows.Forms.SaveFileDialog();
-            saveDialog.AddExtension = true;
-            saveDialog.CheckPathExists = true;
-            saveDialog.SupportMultiDottedExtensions = true;
-            saveDialog.Filter = "JQL File|*.jql";
-            saveDialog.DefaultExt = ".jql";
-            saveDialog.OverwritePrompt = true;
-            saveDialog.Title = "Save As...";
-            saveDialog.FileOk += (fs, fe) =>
-            {
-                Util.WriteTextFile(saveDialog.FileName, Text);
-                changesSaved = true;
-            };
-            saveDialog.ShowDialog();
-            return saveDialog.FileName;
-        }
-
-        /// <summary>
-        /// Open a file choosen by the user.
-        /// </summary>
-        /// <returns>The path to the file.</returns>
-        public string OpenDocument()
-        {
-            System.Windows.Forms.OpenFileDialog openDialog = new System.Windows.Forms.OpenFileDialog();
-            openDialog.AddExtension = true;
-            openDialog.CheckFileExists = true;
-            openDialog.Filter = "JQL File|*.jql";
-            openDialog.CheckPathExists = true;
-            openDialog.SupportMultiDottedExtensions = true;
-            openDialog.DefaultExt = ".jql";
-            openDialog.Title = "Open File";
-            openDialog.FileOk += (fs, fe) =>
-            {
-                Text = Util.ReadTextFile(openDialog.FileName);
-                changesSaved = true;
-            };
-            openDialog.ShowDialog();
-            return openDialog.FileName;
-        }
-
-        /// <summary>
-        /// Open the file at the given path.
-        /// </summary>
-        /// <param name="path"></param>
-        public void OpenDocumentAt(string path)
-        {
-            if (!path.EndsWith(".jql"))
-            {
-                path = path + ".jql";
-            }
-            Text = Util.ReadTextFile(path);
-            changesSaved = true;
+            Text = text;
+            CaretIndex = LastCaretPos;
         }
 
         /// <summary>
@@ -1017,7 +902,7 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         /// <summary>
-        /// Reset the stack.
+        /// Reset the undo/redo stack.
         /// </summary>
         public void ResetUndoRedoStack()
         {
