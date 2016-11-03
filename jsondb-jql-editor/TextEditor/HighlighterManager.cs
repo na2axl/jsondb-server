@@ -26,13 +26,16 @@ namespace JSONDB.JQLEditor.TextEditor
         private HighlighterManager()
         {
             Highlighters = new Dictionary<string, IHighlighter>();
+        }
 
+        public IHighlighter LoadXML(string xml)
+        {
             var syntaxStream = new MemoryStream();
             StreamWriter syntaxWriter = new StreamWriter(syntaxStream);
 
-            for (int i = 0, l = AppResources.JQLSyntax.Length; i < l; i++)
+            for (int i = 0, l = xml.Length; i < l; i++)
             {
-                syntaxWriter.Write(AppResources.JQLSyntax[i]);
+                syntaxWriter.Write(xml[i]);
             }
             syntaxWriter.Flush();
             syntaxStream.Position = 0;
@@ -53,6 +56,8 @@ namespace JSONDB.JQLEditor.TextEditor
             XElement root = xmldoc.Root;
             String name = root.Attribute("name").Value.Trim();
             Highlighters.Add(name, new XmlHighlighter(root));
+
+            return Highlighters[name];
         }
 
         /// <summary>
