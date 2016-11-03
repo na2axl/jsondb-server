@@ -105,6 +105,31 @@ namespace JSONDB.JQLEditor {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+        ///
+        ///&lt;Syntax name=&quot;JSON&quot;&gt;
+        ///
+        ///  &lt;HighlightLineRule name=&quot;Comment&quot;&gt;
+        ///    &lt;LineStart&gt;//&lt;/LineStart&gt;
+        ///    &lt;IgnoreCase&gt;false&lt;/IgnoreCase&gt;
+        ///    &lt;Foreground&gt;#8E908C&lt;/Foreground&gt;
+        ///    &lt;FontWeight&gt;Normal&lt;/FontWeight&gt;
+        ///    &lt;FontStyle&gt;Italic&lt;/FontStyle&gt;
+        ///    &lt;TextDecoration&gt;Normal&lt;/TextDecoration&gt;
+        ///  &lt;/HighlightLineRule&gt;
+        ///
+        ///  &lt;AdvancedHighlightRule name=&quot;Keyword&quot;&gt;
+        ///    &lt;Expression&gt;(null|false|true|NULL|FALSE|TRUE)&lt;/Expression&gt;
+        ///    &lt;HighlightExpressionIndex&gt;1&lt;/HighlightExpressionIndex&gt;
+        ///    &lt;Igno [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string JSONSyntax {
+            get {
+                return ResourceManager.GetString("JSONSyntax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowError {

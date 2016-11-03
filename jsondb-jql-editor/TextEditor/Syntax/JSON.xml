@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Syntax name="JSON">
+
+  <HighlightLineRule name="Comment">
+    <LineStart>//</LineStart>
+    <IgnoreCase>false</IgnoreCase>
+    <Foreground>#8E908C</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Italic</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </HighlightLineRule>
+
+  <AdvancedHighlightRule name="Keyword">
+    <Expression>(null|false|true|NULL|FALSE|TRUE)</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#8959A8</Foreground>
+    <FontWeight>Bold</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Number">
+    <Expression>\b([0-9]+)\b</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>false</IgnoreCase>
+    <Foreground>#CB4B16</Foreground>
+    <FontWeight>Bold</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="String">
+    <Expression>\"(?:[^\n\r\f\\\"]|\\(?:\r\n?|\n|\f)|\\[\s\S])*\"</Expression>
+    <HighlightExpressionIndex>0</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#339933</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+  <AdvancedHighlightRule name="Identifier">
+    <Expression>(.*):</Expression>
+    <HighlightExpressionIndex>1</HighlightExpressionIndex>
+    <IgnoreCase>true</IgnoreCase>
+    <Foreground>#6C71C4</Foreground>
+    <FontWeight>Normal</FontWeight>
+    <FontStyle>Normal</FontStyle>
+    <TextDecoration>Normal</TextDecoration>
+  </AdvancedHighlightRule>
+
+</Syntax>
