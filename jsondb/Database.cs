@@ -53,7 +53,7 @@ namespace JSONDB.Library
             if (Users[server]["username"].ToString() != Util.Crypt(username) || Users[server]["password"].ToString() != Util.Crypt(password))
             {
                 Benchmark.Mark("Database_(connect)_end");
-                throw new Exception("Database Error: User's authentication failed for user \"" + username + "\" and password \"" + password + "\" on server \"" + server + "\". Access denied.");
+                throw new Exception("Database Error: User's authentication failed for user \"" + username + "\" on server \"" + server + "\" (Using password: " + (password.Length > 0 ? "Yes" : "No") + "). Access denied.");
             }
 
             ServerName = Util.MakePath(Util.AppRoot(), "servers", server);
