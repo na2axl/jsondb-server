@@ -76,6 +76,9 @@
     <Compile Include="MessageWindow.xaml.cs">
       <DependentUpon>MessageWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="QueryResultsWindow.xaml.cs">
+      <DependentUpon>QueryResultsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TextEditor\DrawingControl.cs" />
     <Compile Include="TextEditor\HighlighterManager.cs" />
     <Compile Include="TextEditor\IStack.cs" />
@@ -101,6 +104,10 @@
     <Page Include="MessageWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="QueryResultsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="TextEditor\SyntaxHighlightBox.xaml">
       <SubType>Designer</SubType>
