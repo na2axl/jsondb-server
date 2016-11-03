@@ -34,5 +34,17 @@ namespace JSONDB.JQLEditor {
                 this["ShowLineNumbers"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("White")]
+        public string EditorTheme {
+            get {
+                return ((string)(this["EditorTheme"]));
+            }
+            set {
+                this["EditorTheme"] = value;
+            }
+        }
     }
 }

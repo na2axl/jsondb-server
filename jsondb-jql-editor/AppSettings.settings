@@ -5,5 +5,8 @@
     <Setting Name="ShowLineNumbers" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="EditorTheme" Type="System.String" Scope="User">
+      <Value Profile="(Default)">White</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
