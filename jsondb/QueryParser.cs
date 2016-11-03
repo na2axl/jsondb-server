@@ -273,6 +273,9 @@ namespace JSONDB.Library
                 }
             ).Trim('\r', '\n', ' ');
 
+            // Remove comments
+            queriesBlock = new Regex("//.*[\\r\\n]?").Replace(queriesBlock, "");
+            
             // Split
             string[] queriesArray = new Regex(";(?:[\\r\\n]*)").Split(queriesBlock);
 
@@ -293,12 +296,6 @@ namespace JSONDB.Library
                     {
                         // Remove child indentations
                         subQueryParts[j] = subQueryParts[j].Trim('\t', ' ');
-
-                        // Remove comments
-                        if (subQueryParts[j].StartsWith("//"))
-                        {
-                            subQueryParts[j] = String.Empty;
-                        }
                     }
 
                     // Join query parts
