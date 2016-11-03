@@ -3,7 +3,9 @@ using JSONDB.Library;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -23,8 +25,14 @@ namespace JSONDB.JQLEditor
             Loading
         }
 
+        // Changes State
         private bool changesSaved = true;
+
+        // Application Settings
         private AppSettings Settings;
+
+        // Windows
+        private QueryResultsWindow resultsWindow;
 
         public MainWindow()
         {
@@ -44,15 +52,30 @@ namespace JSONDB.JQLEditor
             ButtonPasteImage.Source = BitmapToImageSource(AppResources.PasteIcon);
             ButtonUndoImage.Source = BitmapToImageSource(AppResources.UndoIcon);
             ButtonRedoImage.Source = BitmapToImageSource(AppResources.RedoIcon);
+            ButtonRefreshDatabaseImage.Source = BitmapToImageSource(AppResources.RefreshIcon);
             ButtonRunImage.Source = BitmapToImageSource(AppResources.RunIcon);
             ButtonValidateImage.Source = BitmapToImageSource(AppResources.ValidateIcon);
 
-            // Defaults
+            // Editor theme
+            switch (Settings.EditorTheme)
+            {
+                case "Black":
+                    SetBlackTheme(null, null);
+                    break;
+                default:
+                case "White":
+                    SetWhiteTheme(null, null);
+                    break;
+            }
+
+            // Line numbers
             MenuViewShowLineNumbers.IsChecked = Settings.ShowLineNumbers;
+
+            // Buttons states
             ButtonDisconnect.IsEnabled = App.IsConnected();
 
             // Set the syntax highighter
-            TextEditor.CurrentHighlighter = HighlighterManager.Instance.Highlighters["JQL"];
+            TextEditor.CurrentHighlighter = HighlighterManager.Instance.LoadXML(AppResources.JQLSyntax);
 
             // Show/Hide line numbers
             TextEditor.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
@@ -105,6 +128,12 @@ namespace JSONDB.JQLEditor
 
             // Focus on the editor
             TextEditor.Focus();
+
+            // Load SubWindows
+            Loaded += (s, e) =>
+            {
+                resultsWindow = new QueryResultsWindow(this);
+            };
         }
 
         private ImageSource BitmapToImageSource(System.Drawing.Bitmap bmp)
@@ -122,6 +151,19 @@ namespace JSONDB.JQLEditor
             memory.Close();
 
             return imageSource;
+        }
+
+        /// <summary>
+        /// Select a query block.
+        /// </summary>
+        /// <param name="blockNumber">The query's block ID to select.</param>
+        public void SelectQueryBlock(int blockNumber)
+        {
+            string[] blocks = Regex.Split(TextEditor.GetDocumentContents(), "(?:[^\\\\]);");
+
+            Match currentBlock = Regex.Match(TextEditor.GetDocumentContents(), Regex.Escape(blocks[blockNumber].Trim(Environment.NewLine.ToCharArray())));
+
+            TextEditor.Select(currentBlock.Index, currentBlock.Length + 2);
         }
 
         /// <summary>
@@ -228,7 +270,7 @@ namespace JSONDB.JQLEditor
                 {
                     if (autoSelect)
                     {
-                        TextEditor.SelectQueryBlock(err.Line - 1);
+                        SelectQueryBlock(err.Line - 1);
                     }
                     SetStatus(err.ToString(), StatusMessageState.Error);
                 }
@@ -461,7 +503,48 @@ namespace JSONDB.JQLEditor
 
         private void Run_Execute(object sender, ExecutedRoutedEventArgs e)
         {
-            // Not Implemented
+            if (!App.IsConnected())
+            {
+                MessageWindowResult choice = new MessageWindow(
+                    this,
+                    "You are not connected to a server, do you want to connect now ?",
+                    "Not connected",
+                    MessageWindowButton.YesNoCancel,
+                    MessageWindowImage.Information).Open();
+
+                switch (choice)
+                {
+                    case MessageWindowResult.Yes:
+                        ConnectToServer(sender, e);
+                        break;
+                    case MessageWindowResult.No:
+                        new MessageWindow(
+                            this,
+                            "Can run queries, you are not connected to a server.",
+                            "Error",
+                            MessageWindowButton.OK,
+                            MessageWindowImage.Error).Open();
+                        break;
+                }
+            }
+
+            if (App.IsConnected())
+            {
+                try
+                {
+                    resultsWindow.Populate(App.DBConnection.MultiQuery(TextEditor.GetDocumentContents()));
+                    resultsWindow.Show();
+                }
+                catch (Exception ex)
+                {
+                    new MessageWindow(
+                        this,
+                        ex.Message,
+                        "Error",
+                        MessageWindowButton.OK,
+                        MessageWindowImage.Error).Open();
+                }
+            }
         }
 
         private void Validate_Execute(object sender, ExecutedRoutedEventArgs e)
@@ -474,6 +557,12 @@ namespace JSONDB.JQLEditor
             TextEditor.Foreground = (Brush)(new BrushConverter().ConvertFrom("#333333"));
             TextEditor.Background = (Brush)(new BrushConverter().ConvertFrom("#252121"));
             TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            Settings.EditorTheme = "Black";
+            Settings.Save();
+            if (resultsWindow != null)
+            {
+                resultsWindow.UpdateTheme();
+            }
         }
 
         private void SetWhiteTheme(object sender, RoutedEventArgs e)
@@ -481,6 +570,12 @@ namespace JSONDB.JQLEditor
             TextEditor.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
             TextEditor.Background = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
             TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
+            Settings.EditorTheme = "White";
+            Settings.Save();
+            if (resultsWindow != null)
+            {
+                resultsWindow.UpdateTheme();
+            }
         }
 
         private void ShowLineNumbers(object sender, RoutedEventArgs e)
@@ -488,6 +583,10 @@ namespace JSONDB.JQLEditor
             TextEditor.IsLineNumbersMarginVisible = MenuViewShowLineNumbers.IsChecked;
             Settings.ShowLineNumbers = TextEditor.IsLineNumbersMarginVisible;
             Settings.Save();
+            if (resultsWindow != null)
+            {
+                resultsWindow.UpdateTheme();
+            }
         }
 
         private void CanExecuteRedo(object sender, CanExecuteRoutedEventArgs e)
@@ -576,6 +675,7 @@ namespace JSONDB.JQLEditor
             w.ShowDialog();
 
             ButtonDisconnect.IsEnabled = App.IsConnected();
+            RefreshDatabaseList(sender, e);
         }
 
         private void DisconnectFromServer(object sender, RoutedEventArgs e)
@@ -595,6 +695,35 @@ namespace JSONDB.JQLEditor
             }
 
             ButtonDisconnect.IsEnabled = App.IsConnected();
+        }
+
+        private void RefreshDatabaseList(object sender, RoutedEventArgs e)
+        {
+            if (App.IsConnected())
+            {
+                string[] db_list = Util.GetDirectoriesList(App.DBConnection.GetServer());
+
+                DatabaseList.Items.Clear();
+                foreach (string db in db_list)
+                {
+                    ComboBoxItem item = new ComboBoxItem();
+                    item.Content = db;
+                    item.Selected += (ds, de) =>
+                    {
+                        App.DBConnection.SetDatabase(db);
+                    };
+                    DatabaseList.Items.Add(item);
+                }
+            }
+            else
+            {
+                new MessageWindow(
+                    this,
+                    "You are not connected to a server.",
+                    "Not Connected",
+                    MessageWindowButton.OK,
+                    MessageWindowImage.Error).Open();
+            }
         }
     }
 

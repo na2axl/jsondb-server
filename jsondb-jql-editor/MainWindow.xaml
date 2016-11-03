@@ -134,18 +134,13 @@
                             <Image x:Name="ButtonRedoImage" />
                         </Button>
                         <Separator Margin="5,0" />
-                        <ComboBox Margin="5,0" Padding="2" Text="Database1">
-                            <ComboBoxItem Content="Database1"/>
-                            <ComboBoxItem Content="Database2"/>
-                            <ComboBoxItem Content="Database3"/>
-                            <ComboBoxItem Content="Database4"/>
+                        <ComboBox Margin="5,0" Padding="2" x:Name="DatabaseList">
+                            <ComboBoxItem Content="(Not Connected)" Selector.IsSelected="True" />
                         </ComboBox>
-                        <ComboBox Margin="5,0" Padding="2" Text="Table1">
-                            <ComboBoxItem Content="Table1"/>
-                            <ComboBoxItem Content="Table2"/>
-                            <ComboBoxItem Content="Table3"/>
-                            <ComboBoxItem Content="Table4"/>
-                        </ComboBox>
+                        <Button Margin="0,0,5,0" Padding="2" Click="RefreshDatabaseList">
+                            <Image x:Name="ButtonRefreshDatabaseImage" />
+                        </Button>
+                        <Separator Margin="5,0" />
                         <Button Margin="0,0,5,0" Padding="2" Command="local:EditorCommands.Run">
                             <Image x:Name="ButtonRunImage" />
                         </Button>
