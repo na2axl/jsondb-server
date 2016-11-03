@@ -41,8 +41,8 @@
     <TextDecoration>Normal</TextDecoration>
   </AdvancedHighlightRule>
 
-  <AdvancedHighlightRule name="Identifier">
-    <Expression>(.*):</Expression>
+    <AdvancedHighlightRule name="Identifier">
+    <Expression>("\w+"):</Expression>
     <HighlightExpressionIndex>1</HighlightExpressionIndex>
     <IgnoreCase>true</IgnoreCase>
     <Foreground>#6C71C4</Foreground>
