@@ -889,6 +889,24 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         /// <summary>
+        /// Check if the user can do an undo operation.
+        /// </summary>
+        /// <returns>true if it's possible, and false otherwise.</returns>
+        public new bool CanUndo()
+        {
+            return stack.UndoCount > 0;
+        }
+
+        /// <summary>
+        /// Check if the user can do a redo operation.
+        /// </summary>
+        /// <returns>true if it's possible, and false otherwise.</returns>
+        public new bool CanRedo()
+        {
+            return stack.RedoCount > 0;
+        }
+
+        /// <summary>
         /// Undo an operation in the stack.
         /// </summary>
         public new void Undo()
