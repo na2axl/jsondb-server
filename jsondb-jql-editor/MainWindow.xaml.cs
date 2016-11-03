@@ -1,10 +1,12 @@
 ﻿using JSONDB.JQLEditor.TextEditor;
 using JSONDB.Library;
 using System;
-using System.Windows;
-using System.Windows.Media;
 using System.ComponentModel;
+using System.IO;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace JSONDB.JQLEditor
 {
@@ -22,14 +24,37 @@ namespace JSONDB.JQLEditor
         }
 
         private bool changesSaved = true;
+        private AppSettings Settings;
 
         public MainWindow()
         {
+            // Load Application Settings
+            Settings = new AppSettings();
+
             // Initialize the UI
             InitializeComponent();
 
+            // Load UI Icons
+            ButtonNewFileImage.Source = BitmapToImageSource(AppResources.NewFileIcon);
+            ButtonOpenFileImage.Source = BitmapToImageSource(AppResources.OpenFileIcon);
+            ButtonSaveFileImage.Source = BitmapToImageSource(AppResources.SaveFileIcon);
+            ButtonSaveAsImage.Source = BitmapToImageSource(AppResources.SaveFileAsIcon);
+            ButtonCopyImage.Source = BitmapToImageSource(AppResources.CopyIcon);
+            ButtonCutImage.Source = BitmapToImageSource(AppResources.CutIcon);
+            ButtonPasteImage.Source = BitmapToImageSource(AppResources.PasteIcon);
+            ButtonUndoImage.Source = BitmapToImageSource(AppResources.UndoIcon);
+            ButtonRedoImage.Source = BitmapToImageSource(AppResources.RedoIcon);
+            ButtonRunImage.Source = BitmapToImageSource(AppResources.RunIcon);
+            ButtonValidateImage.Source = BitmapToImageSource(AppResources.ValidateIcon);
+
+            // Defaults
+            ButtonDisconnect.IsEnabled = App.IsConnected();
+
             // Set the syntax highighter
             TextEditor.CurrentHighlighter = HighlighterManager.Instance.Highlighters["JQL"];
+
+            // Show/Hide line numbers
+            TextEditor.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
 
             // If we have to open a file
             if (App.CurrentWorkingFile != String.Empty)
@@ -79,6 +104,23 @@ namespace JSONDB.JQLEditor
 
             // Focus on the editor
             TextEditor.Focus();
+        }
+
+        private ImageSource BitmapToImageSource(System.Drawing.Bitmap bmp)
+        {
+            MemoryStream memory = new MemoryStream();
+            BitmapImage imageSource = new BitmapImage();
+
+            bmp.Save(memory, AppResources.MessageWindowError.RawFormat);
+            memory.Position = 0;
+            imageSource = new BitmapImage();
+            imageSource.BeginInit();
+            imageSource.StreamSource = memory;
+            imageSource.CacheOption = BitmapCacheOption.OnLoad;
+            imageSource.EndInit();
+            memory.Close();
+
+            return imageSource;
         }
 
         /// <summary>
@@ -179,7 +221,7 @@ namespace JSONDB.JQLEditor
                 try
                 {
                     QueryParser.MultilineParse(TextEditor.Text);
-                    SetStatus("No Errors", StatusMessageState.Information);
+                    SetStatus("No Error", StatusMessageState.Information);
                 }
                 catch (MultilineQueryParseException err)
                 {
@@ -196,7 +238,7 @@ namespace JSONDB.JQLEditor
             }
             else
             {
-                SetStatus("No Query.", StatusMessageState.Information);
+                SetStatus("No Query", StatusMessageState.Information);
             }
         }
 
@@ -416,6 +458,16 @@ namespace JSONDB.JQLEditor
             Redo(sender, e);
         }
 
+        private void Run_Execute(object sender, ExecutedRoutedEventArgs e)
+        {
+            // Not Implemented
+        }
+
+        private void Validate_Execute(object sender, ExecutedRoutedEventArgs e)
+        {
+            ValidateQueries(sender, e);
+        }
+
         private void SetBlackTheme(object sender, RoutedEventArgs e)
         {
             TextEditor.Foreground = (Brush)(new BrushConverter().ConvertFrom("#333333"));
@@ -433,6 +485,115 @@ namespace JSONDB.JQLEditor
         private void ShowLineNumbers(object sender, RoutedEventArgs e)
         {
             TextEditor.IsLineNumbersMarginVisible = MenuViewShowLineNumbers.IsChecked;
+            Settings.ShowLineNumbers = TextEditor.IsLineNumbersMarginVisible;
+            Settings.Save();
+        }
+
+        private void CanExecuteRedo(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (IsLoaded)
+            {
+                e.CanExecute = TextEditor.CanRedo();
+
+                if (e.CanExecute)
+                {
+                    ButtonRedoImage.Opacity = 1;
+                }
+                else
+                {
+                    ButtonRedoImage.Opacity = 0.5;
+                }
+
+                ButtonRedoImage.InvalidateVisual();
+            }
+            else
+            {
+                e.CanExecute = false;
+            }
+        }
+
+        private void CanExecuteUndo(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (IsLoaded)
+            {
+                e.CanExecute = TextEditor.CanUndo();
+
+                if (e.CanExecute)
+                {
+                    ButtonUndoImage.Opacity = 1;
+                }
+                else
+                {
+                    ButtonUndoImage.Opacity = 0.5;
+                }
+
+                ButtonUndoImage.InvalidateVisual();
+            }
+            else
+            {
+                e.CanExecute = false;
+            }
+        }
+
+        private void ButtonCopyEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (IsLoaded)
+            {
+                if ((bool)e.NewValue)
+                {
+                    ButtonCopyImage.Opacity = 1;
+                }
+                else
+                {
+                    ButtonCopyImage.Opacity = 0.5;
+                }
+
+                ButtonCopyImage.InvalidateVisual();
+            }
+        }
+
+        private void ButtonCutEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (IsLoaded)
+            {
+                if ((bool)e.NewValue)
+                {
+                    ButtonCutImage.Opacity = 1;
+                }
+                else
+                {
+                    ButtonCutImage.Opacity = 0.5;
+                }
+
+                ButtonCutImage.InvalidateVisual();
+            }
+        }
+
+        private void ConnectToServer(object sender, RoutedEventArgs e)
+        {
+            ConnectionWindow w = new ConnectionWindow(this);
+            w.ShowDialog();
+
+            ButtonDisconnect.IsEnabled = App.IsConnected();
+        }
+
+        private void DisconnectFromServer(object sender, RoutedEventArgs e)
+        {
+            MessageWindowResult choice = new MessageWindow(
+                this,
+                "You will be disconnected from the server. Are you sure?",
+                "Disconnect from server",
+                MessageWindowButton.YesNo,
+                MessageWindowImage.Information).Open();
+
+            switch (choice)
+            {
+                case MessageWindowResult.Yes:
+                    App.Disconnect();
+                    break;
+            }
+
+            ButtonDisconnect.IsEnabled = App.IsConnected();
         }
     }
 
@@ -513,6 +674,30 @@ namespace JSONDB.JQLEditor
             new InputGestureCollection()
             {
                 new KeyGesture(Key.Y, ModifierKeys.Control)
+            }
+        );
+
+        public static readonly RoutedUICommand Run = new RoutedUICommand
+        (
+            "Run",
+            "Run",
+            typeof(EditorCommands),
+            new InputGestureCollection()
+            {
+                new KeyGesture(Key.R, ModifierKeys.Control),
+                new KeyGesture(Key.F5)
+            }
+        );
+
+        public static readonly RoutedUICommand Validate = new RoutedUICommand
+        (
+            "Validate",
+            "Validate",
+            typeof(EditorCommands),
+            new InputGestureCollection()
+            {
+                new KeyGesture(Key.R, ModifierKeys.Control | ModifierKeys.Shift),
+                new KeyGesture(Key.F6)
             }
         );
     }

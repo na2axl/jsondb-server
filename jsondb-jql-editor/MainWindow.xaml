@@ -14,8 +14,10 @@
         <CommandBinding Command="local:EditorCommands.Open" CanExecute="CanExecuteAlwaysTrue" Executed="Open_Execute" />
         <CommandBinding Command="local:EditorCommands.Save" CanExecute="CanExecuteAlwaysTrue" Executed="Save_Execute" />
         <CommandBinding Command="local:EditorCommands.SaveAs" CanExecute="CanExecuteAlwaysTrue" Executed="SaveAs_Execute" />
-        <CommandBinding Command="local:EditorCommands.Undo" CanExecute="CanExecuteAlwaysTrue" Executed="Undo_Execute" />
-        <CommandBinding Command="local:EditorCommands.Redo" CanExecute="CanExecuteAlwaysTrue" Executed="Redo_Execute" />
+        <CommandBinding Command="local:EditorCommands.Undo" CanExecute="CanExecuteUndo" Executed="Undo_Execute" />
+        <CommandBinding Command="local:EditorCommands.Redo" CanExecute="CanExecuteRedo" Executed="Redo_Execute" />
+        <CommandBinding Command="local:EditorCommands.Run" CanExecute="CanExecuteAlwaysTrue" Executed="Run_Execute" />
+        <CommandBinding Command="local:EditorCommands.Validate" CanExecute="CanExecuteAlwaysTrue" Executed="Validate_Execute" />
         <CommandBinding Command="Delete" CanExecute="CanExecuteAlwaysTrue" />
     </Window.CommandBindings>
 
@@ -27,6 +29,13 @@
 
         <Style TargetType="ToolBar">
             <Setter Property="Background" Value="#e5e5e5" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="0,5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="Image">
+            <Setter Property="Margin" Value="1" />
         </Style>
 
         <Style TargetType="ToolBarPanel">
@@ -76,8 +85,8 @@
                     <MenuItem x:Name="MenuViewShowLineNumbers" Header="_Show Line Numbers" IsCheckable="True" Click="ShowLineNumbers" />
                 </MenuItem>
                 <MenuItem x:Name="MenuQuery" Height="20" Header="_Query">
-                    <MenuItem x:Name="MenuQueryValidate" Header="_Validate" Click="ValidateQueries" />
-                    <MenuItem x:Name="MenuQueryRun" Header="_Run" />
+                    <MenuItem x:Name="MenuQueryRun" Header="_Run" Command="local:EditorCommands.Run" />
+                    <MenuItem x:Name="MenuQueryValidate" Header="_Validate" Command="local:EditorCommands.Validate" />
                 </MenuItem>
                 <MenuItem x:Name="MenuTools" Height="20" Header="_Tools">
                     <MenuItem x:Name="MenuToolsConnections" Header="_Connections" />
@@ -95,17 +104,34 @@
             <DockPanel>
                 <ToolBarTray Margin="0" HorizontalAlignment="Left">
                     <ToolBar>
-                        <Button Content="New" Margin="5,0,0,0" Padding="2" Click="NewFile" ToolBar.OverflowMode="AsNeeded">
+                        <Button ToolTip="New File (Ctrl + N)" ToolBar.OverflowMode="AsNeeded" Command="local:EditorCommands.New" >
+                            <Image x:Name="ButtonNewFileImage" />
                         </Button>
-                        <Button Content="Open" Padding="2" Click="OpenFile">
+                        <Button Command="local:EditorCommands.Open" ToolTip="Open File (Ctrl + O)">
+                            <Image x:Name="ButtonOpenFileImage" />
                         </Button>
-                        <Button Content="Save" Padding="2" Click="SaveFile">
+                        <Button Command="local:EditorCommands.Save" ToolTip="Save File (Ctrl + S)">
+                            <Image x:Name="ButtonSaveFileImage" />
                         </Button>
-                        <Button Content="Save As" Padding="2" Click="SaveFileAs">
+                        <Button Command="local:EditorCommands.SaveAs" ToolTip="Save File As (Ctrl + Shift + S)">
+                            <Image x:Name="ButtonSaveAsImage" />
                         </Button>
                         <Separator Margin="5,0" />
-                        <Button Content="Undo" Padding="2" Click="Undo"></Button>
-                        <Button Content="Redo" Padding="2" Click="Redo">
+                        <Button Command="Copy" ToolTip="Copy (Ctrl + C)" IsEnabledChanged="ButtonCopyEnabledChanged">
+                            <Image x:Name="ButtonCopyImage" />
+                        </Button>
+                        <Button Command="Cut" ToolTip="Cut (Ctrl + X)" IsEnabledChanged="ButtonCutEnabledChanged">
+                            <Image x:Name="ButtonCutImage" />
+                        </Button>
+                        <Button Command="Paste" ToolTip="Paste (Ctrl + V)">
+                            <Image x:Name="ButtonPasteImage" />
+                        </Button>
+                        <Separator Margin="5,0" />
+                        <Button Command="local:EditorCommands.Undo" ToolTip="Undo (Ctrl + Z)">
+                            <Image x:Name="ButtonUndoImage" />
+                        </Button>
+                        <Button Command="local:EditorCommands.Redo" ToolTip="Redo (Ctrl + Y)">
+                            <Image x:Name="ButtonRedoImage" />
                         </Button>
                         <Separator Margin="5,0" />
                         <ComboBox Margin="5,0" Padding="2" Text="Database1">
@@ -120,14 +146,18 @@
                             <ComboBoxItem Content="Table3"/>
                             <ComboBoxItem Content="Table4"/>
                         </ComboBox>
-                        <Button Content="Run" Margin="0,0,5,0" Padding="2" Click="ValidateQueries"></Button>
-                        <Button Content="Validate" Margin="0,0,5,0" Padding="2" Click="ValidateQueries"></Button>
+                        <Button Margin="0,0,5,0" Padding="2" Command="local:EditorCommands.Run">
+                            <Image x:Name="ButtonRunImage" />
+                        </Button>
+                        <Button Margin="0,0,5,0" Padding="2" Command="local:EditorCommands.Validate">
+                            <Image x:Name="ButtonValidateImage" />
+                        </Button>
                     </ToolBar>
                 </ToolBarTray>
                 <ToolBarTray Margin="0" HorizontalAlignment="Left">
                     <ToolBar>
-                        <Button Content="Disconnect" Margin="5,0,0,0" Padding="2"></Button>
-                        <Button Content="Connect" Margin="0,0,5,0" Padding="2"></Button>
+                        <Button Content="Connect" Click="ConnectToServer" x:Name="ButtonConnect" Margin="0,0,5,0" Padding="2"></Button>
+                        <Button Content="Disconnect" x:Name="ButtonDisconnect" Click="DisconnectFromServer" Margin="5,0,0,0" Padding="2"></Button>
                     </ToolBar>
                 </ToolBarTray>
             </DockPanel>
