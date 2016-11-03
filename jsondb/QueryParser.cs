@@ -316,6 +316,7 @@ namespace JSONDB.Library
                     try
                     {
                         ParsedQueries[i] = Parse(queriesLines[q].ToString());
+                        i++;
                     }
                     catch (Exception e)
                     {
