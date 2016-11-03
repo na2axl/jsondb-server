@@ -113,20 +113,34 @@ namespace JSONDB.JQLEditor.TextEditor
                     else if (kde.Key == Key.Up)
                     {
                         suggestionList.Items.MoveCurrentToPrevious();
-                        if (suggestionList.Items.IsCurrentBeforeFirst)
+                        if (suggestionList.Items.CurrentItem == null)
                         {
-                            suggestionList.Items.MoveCurrentToFirst();
+                            suggestionList.Items.MoveCurrentToPosition(suggestionList.Items.Count - 1);
                         }
+                        int i = suggestionList.Items.CurrentPosition;
+                        while (!((IntellisenseListItem)suggestionList.Items.GetItemAt(Math.Abs(i) % suggestionList.Items.Count)).IsEnabled)
+                        {
+                            i--;
+                        }
+                        suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % suggestionList.Items.Count);
+                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).IsSelected = true;
                         ((IntellisenseListItem)suggestionList.Items.CurrentItem).Focus();
                         kde.Handled = true;
                     }
                     else if (kde.Key == Key.Down)
                     {
                         suggestionList.Items.MoveCurrentToNext();
-                        if (suggestionList.Items.IsCurrentAfterLast)
+                        if (suggestionList.Items.CurrentItem == null)
                         {
-                            suggestionList.Items.MoveCurrentToLast();
+                            suggestionList.Items.MoveCurrentToPosition(0);
                         }
+                        int i = suggestionList.Items.CurrentPosition;
+                        while (!((IntellisenseListItem)suggestionList.Items.GetItemAt(Math.Abs(i) % suggestionList.Items.Count)).IsEnabled)
+                        {
+                            i++;
+                        }
+                        suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % suggestionList.Items.Count);
+                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).IsSelected = true;
                         ((IntellisenseListItem)suggestionList.Items.CurrentItem).Focus();
                         kde.Handled = true;
                     }
@@ -969,6 +983,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 {
                     IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
                     item.Visibility = Visibility.Visible;
+                    item.IsEnabled = true;
                 }
 
                 int h = 0;
@@ -978,6 +993,7 @@ namespace JSONDB.JQLEditor.TextEditor
                     if (!Regex.IsMatch(item.DisplayText, "^" + Regex.Escape(SuggestionLabelPart)))
                     {
                         item.Visibility = Visibility.Collapsed;
+                        item.IsEnabled = false;
                         h++;
                     }
                     else
