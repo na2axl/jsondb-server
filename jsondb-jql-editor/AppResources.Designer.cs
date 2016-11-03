@@ -63,9 +63,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Copy {
+        internal static System.Drawing.Bitmap CopyIcon {
             get {
-                object obj = ResourceManager.GetObject("Copy", resourceCulture);
+                object obj = ResourceManager.GetObject("CopyIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Cut {
+        internal static System.Drawing.Bitmap CutIcon {
             get {
-                object obj = ResourceManager.GetObject("Cut", resourceCulture);
+                object obj = ResourceManager.GetObject("CutIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -147,9 +147,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap NewFile {
+        internal static System.Drawing.Bitmap NewFileIcon {
             get {
-                object obj = ResourceManager.GetObject("NewFile", resourceCulture);
+                object obj = ResourceManager.GetObject("NewFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -157,9 +157,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap OpenFile {
+        internal static System.Drawing.Bitmap OpenFileIcon {
             get {
-                object obj = ResourceManager.GetObject("OpenFile", resourceCulture);
+                object obj = ResourceManager.GetObject("OpenFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -167,9 +167,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Paste {
+        internal static System.Drawing.Bitmap PasteIcon {
             get {
-                object obj = ResourceManager.GetObject("Paste", resourceCulture);
+                object obj = ResourceManager.GetObject("PasteIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -177,9 +177,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Redo {
+        internal static System.Drawing.Bitmap RedoIcon {
             get {
-                object obj = ResourceManager.GetObject("Redo", resourceCulture);
+                object obj = ResourceManager.GetObject("RedoIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -187,9 +187,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Redo1 {
+        internal static System.Drawing.Bitmap RunIcon {
             get {
-                object obj = ResourceManager.GetObject("Redo1", resourceCulture);
+                object obj = ResourceManager.GetObject("RunIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -197,9 +197,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Run {
+        internal static System.Drawing.Bitmap SaveFileAsIcon {
             get {
-                object obj = ResourceManager.GetObject("Run", resourceCulture);
+                object obj = ResourceManager.GetObject("SaveFileAsIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -207,19 +207,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap SaveFile {
+        internal static System.Drawing.Bitmap SaveFileIcon {
             get {
-                object obj = ResourceManager.GetObject("SaveFile", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap SaveFileAs {
-            get {
-                object obj = ResourceManager.GetObject("SaveFileAs", resourceCulture);
+                object obj = ResourceManager.GetObject("SaveFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -245,9 +235,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Undo {
+        internal static System.Drawing.Bitmap UndoIcon {
             get {
-                object obj = ResourceManager.GetObject("Undo", resourceCulture);
+                object obj = ResourceManager.GetObject("UndoIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -255,19 +245,9 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Undo1 {
+        internal static System.Drawing.Bitmap ValidateIcon {
             get {
-                object obj = ResourceManager.GetObject("Undo1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Validate {
-            get {
-                object obj = ResourceManager.GetObject("Validate", resourceCulture);
+                object obj = ResourceManager.GetObject("ValidateIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
