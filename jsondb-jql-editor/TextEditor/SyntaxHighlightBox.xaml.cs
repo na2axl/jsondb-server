@@ -1013,19 +1013,6 @@ namespace JSONDB.JQLEditor.TextEditor
         }
 
         /// <summary>
-        /// Select a query block.
-        /// </summary>
-        /// <param name="blockNumber">The query's block ID to select.</param>
-        public void SelectQueryBlock(int blockNumber)
-        {
-            string[] blocks = Regex.Split(Text, "(?:[^\\\\]);");
-
-            Match currentBlock = Regex.Match(Text, Regex.Escape(blocks[blockNumber].Trim(Environment.NewLine.ToCharArray())));
-
-            Select(currentBlock.Index, currentBlock.Length + 2);
-        }
-
-        /// <summary>
         /// Get the index of the active line.
         /// </summary>
         /// <returns>The non zero based index of the active line</returns>
