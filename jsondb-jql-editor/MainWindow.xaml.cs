@@ -48,6 +48,7 @@ namespace JSONDB.JQLEditor
             ButtonValidateImage.Source = BitmapToImageSource(AppResources.ValidateIcon);
 
             // Defaults
+            MenuViewShowLineNumbers.IsChecked = Settings.ShowLineNumbers;
             ButtonDisconnect.IsEnabled = App.IsConnected();
 
             // Set the syntax highighter
