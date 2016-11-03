@@ -1,18 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using JSONDB.JQLEditor.TextEditor;
+using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.ComponentModel;
 
 namespace JSONDB.JQLEditor
 {
@@ -34,6 +25,9 @@ namespace JSONDB.JQLEditor
 
             // Initialize the UI
             InitializeComponent();
+
+            // Set the highlighter
+            ResultBox.CurrentHighlighter = HighlighterManager.Instance.LoadXML(AppResources.JSONSyntax);
         }
 
         /// <summary>
@@ -67,6 +61,9 @@ namespace JSONDB.JQLEditor
         /// </summary>
         public void UpdateTheme()
         {
+            // Reload settings
+            Settings.Reload();
+
             // Show/Hide line numbers
             ResultBox.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
 
@@ -86,6 +83,9 @@ namespace JSONDB.JQLEditor
                     ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
                     break;
             }
+
+            // Refresh UI
+            InvalidateVisual();
         }
 
         /// <summary>
