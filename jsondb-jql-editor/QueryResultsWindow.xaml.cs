@@ -20,27 +20,33 @@ namespace JSONDB.JQLEditor
     /// </summary>
     public partial class QueryResultsWindow : Window
     {
-        public QueryResultsWindow(Window o, int queriesNB, JObject[] results)
+        // Application Settings
+        private AppSettings Settings;
+
+        public QueryResultsWindow(Window o)
         {
             // Set the owner
             Owner = o;
 
             // Load application settings
-            AppSettings Settings = new AppSettings();
+            Settings = new AppSettings();
 
             // Initialize the UI
             InitializeComponent();
+        }
 
+        public void Populate(JObject[] results)
+        {
             // Initialize the list of queries
             QueriesList.Items.Clear();
-            for (int i = 0; i < queriesNB; i++)
+            for (int i = 0; i < results.Length; i++)
             {
                 int current = i;
                 ComboBoxItem item = new ComboBoxItem();
-                item.Content = "#" + (i+1);
+                item.Content = "#" + (i + 1);
                 item.Selected += (s, e) =>
                 {
-                    ((MainWindow)o).SelectQueryBlock(current);
+                    ((MainWindow)Owner).SelectQueryBlock(current);
                     ResultBox.SetDocumentContents(results[current].ToString());
                 };
 
@@ -50,9 +56,14 @@ namespace JSONDB.JQLEditor
             // Select first item by default
             QueriesList.Items.MoveCurrentToFirst();
             ((ComboBoxItem)QueriesList.Items.CurrentItem).IsSelected = true;
+        }
 
-            // Initialize the result view theme
+        public void UpdateTheme()
+        {
+            // Show/Hide line numbers
             ResultBox.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
+
+            // Set the editor theme
             switch (Settings.EditorTheme)
             {
                 case "Black":
