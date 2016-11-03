@@ -6,8 +6,9 @@ namespace JSONDB.JQLEditor
 {
     public class App : Application
     {
-        private static Database DBConnection { get; set; }
+        private static Database _db;
         private static string _cwf = String.Empty;
+
         public static string CurrentWorkingFile
         {
             get { return _cwf; }
@@ -19,6 +20,10 @@ namespace JSONDB.JQLEditor
                 }
                 _cwf = value;
             }
+        }
+        public static Database DBConnection
+        {
+            get { return _db; }
         }
 
         [STAThread]
@@ -58,7 +63,7 @@ namespace JSONDB.JQLEditor
         /// <param name="password">The password</param>
         public static void Connect(string serverName, string username, string password)
         {
-            DBConnection = Library.JSONDB.Connect(serverName, username, password);
+            _db = Library.JSONDB.Connect(serverName, username, password);
         }
 
         /// <summary>
