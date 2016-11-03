@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.ComponentModel;
 
 namespace JSONDB.JQLEditor
 {
@@ -35,8 +36,15 @@ namespace JSONDB.JQLEditor
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Populate the window with results.
+        /// </summary>
+        /// <param name="results">Results to use</param>
         public void Populate(JObject[] results)
         {
+            // Update the UI
+            UpdateTheme();
+
             // Initialize the list of queries
             QueriesList.Items.Clear();
             for (int i = 0; i < results.Length; i++)
@@ -52,12 +60,11 @@ namespace JSONDB.JQLEditor
 
                 QueriesList.Items.Add(item);
             }
-
-            // Select first item by default
-            QueriesList.Items.MoveCurrentToFirst();
-            ((ComboBoxItem)QueriesList.Items.CurrentItem).IsSelected = true;
         }
 
+        /// <summary>
+        /// Update the window theme to match with the editor theme.
+        /// </summary>
         public void UpdateTheme()
         {
             // Show/Hide line numbers
@@ -79,6 +86,16 @@ namespace JSONDB.JQLEditor
                     ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
                     break;
             }
+        }
+
+        /// <summary>
+        /// Hide the window instead of close it.
+        /// </summary>
+        /// <param name="e">The OnClosing event</param>
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            Visibility = Visibility.Collapsed;
+            e.Cancel = true;
         }
     }
 }
