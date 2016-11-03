@@ -7,13 +7,9 @@ namespace JSONDB.Library
 {
     public class Query
     {
-        private string QueryString { get; set; } = String.Empty;
-
         private Database DBConnection { get; set; }
 
         private string Table { get; set; }
-
-        private bool QueryPrepared { get; set; }
 
         private bool QueryExecuted { get; set; }
 
@@ -26,14 +22,28 @@ namespace JSONDB.Library
 
         public JObject Send(string query)
         {
-            QueryString = query;
+            ParsedQuery = QueryParser.Parse(query);
 
-            ParsedQuery = QueryParser.Parse(QueryString);
-
-            QueryPrepared = false;
             QueryExecuted = false;
 
             return _execute();
+        }
+
+        public JObject[] MultiSend(string queries)
+        {
+            JObject[] parsedQueries = QueryParser.MultilineParse(queries);
+            JObject[] Results = new JObject[parsedQueries.Length];
+
+            for (int i = 0, l = parsedQueries.Length; i < l; i++)
+            {
+                ParsedQuery = parsedQueries[i];
+
+                QueryExecuted = false;
+
+                Results[i] = _execute();
+            }
+
+            return Results;
         }
 
         private JObject _execute()

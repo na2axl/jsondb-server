@@ -220,6 +220,12 @@ namespace JSONDB.Library
             return this;
         }
 
+        /// <summary>
+        /// Create a new table in the current working database.
+        /// </summary>
+        /// <param name="name">The name of the table</param>
+        /// <param name="prototype">The prtotype of the table</param>
+        /// <returns>The current Database instance</returns>
         public Database CreateTable(string name, JObject prototype)
         {
             Benchmark.Mark("Database_(createTable)_start");
@@ -444,9 +450,19 @@ namespace JSONDB.Library
         /// </summary>
         /// <param name="query">The query</param>
         /// <returns>The query result</returns>
-        public object Query(string query)
+        public JObject Query(string query)
         {
             return new Query(this).Send(query);
+        }
+
+        /// <summary>
+        /// Send multiple queries at once.
+        /// </summary>
+        /// <param name="queries">The queries</param>
+        /// <returns>An array of queries' results</returns>
+        public JObject[] MultiQuery(string queries)
+        {
+            return new Query(this).MultiSend(queries);
         }
     }
 }
