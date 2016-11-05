@@ -70,6 +70,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
+    <Compile Include="ConnectionsManager.xaml.cs">
+      <DependentUpon>ConnectionsManager.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ConnectionWindow.xaml.cs">
       <DependentUpon>ConnectionWindow.xaml</DependentUpon>
     </Compile>
@@ -89,6 +92,10 @@
     </Compile>
     <Compile Include="TextEditor\TextUtilities.cs" />
     <Compile Include="TextEditor\UndoRedoStack.cs" />
+    <Page Include="ConnectionsManager.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConnectionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
