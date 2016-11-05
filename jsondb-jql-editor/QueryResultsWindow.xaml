@@ -14,7 +14,7 @@
         </DockPanel>
         <DockPanel Margin="0" DockPanel.Dock="Top">
             <Label Content="Result:" Padding="0" Margin="20,0,20,5" DockPanel.Dock="Top" />
-            <TextEditor:SyntaxHighlightBox x:Name="ResultBox" IsReadOnly="True" IsReadOnlyCaretVisible="True" DockPanel.Dock="Top" />
+            <TextEditor:SyntaxHighlightBox x:Name="ResultBox" IsReadOnly="True" IsReadOnlyCaretVisible="True" Margin="0" DockPanel.Dock="Top" Padding="10,0,0,0" TextColor="Black" />
         </DockPanel>
     </DockPanel>
 </Window>

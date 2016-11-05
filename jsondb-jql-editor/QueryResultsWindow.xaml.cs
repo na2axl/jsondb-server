@@ -39,6 +39,9 @@ namespace JSONDB.JQLEditor
             // Update the UI
             UpdateTheme();
 
+            // Clear the result box
+            ResultBox.CleanDocument();
+
             // Initialize the list of queries
             QueriesList.Items.Clear();
             for (int i = 0; i < results.Length; i++)
@@ -71,21 +74,27 @@ namespace JSONDB.JQLEditor
             switch (Settings.EditorTheme)
             {
                 case "Black":
-                    ResultBox.Foreground = (Brush)(new BrushConverter().ConvertFrom("#333333"));
-                    ResultBox.Background = (Brush)(new BrushConverter().ConvertFrom("#252121"));
+                    ResultBox.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#333333"));
+                    ResultBox.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#252121"));
                     ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
                     break;
 
                 default:
                 case "White":
-                    ResultBox.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
-                    ResultBox.Background = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
+                    ResultBox.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+                    ResultBox.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
                     ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
                     break;
             }
 
             // Refresh UI
             InvalidateVisual();
+        }
+
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            QueriesList.Focus();
+            base.OnGotFocus(e);
         }
 
         /// <summary>
@@ -96,6 +105,7 @@ namespace JSONDB.JQLEditor
         {
             Visibility = Visibility.Collapsed;
             e.Cancel = true;
+            base.OnClosing(e);
         }
     }
 }

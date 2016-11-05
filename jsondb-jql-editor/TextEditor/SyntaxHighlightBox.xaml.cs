@@ -1187,6 +1187,12 @@ namespace JSONDB.JQLEditor.TextEditor
         public static readonly DependencyProperty TextColorProperty = DependencyProperty.Register(
             "TextColor", typeof(Brush), typeof(SyntaxHighlightBox), new PropertyMetadata(Brushes.Black));
 
+        public static readonly DependencyProperty LineNumbersBackgroundColorProperty = DependencyProperty.Register(
+            "LineNumbersBackgroundColor", typeof(Brush), typeof(SyntaxHighlightBox), new PropertyMetadata(Brushes.Transparent));
+
+        public static readonly DependencyProperty TextEditorBackgroundColorProperty = DependencyProperty.Register(
+            "TextEditorBackgroundColor", typeof(Brush), typeof(SyntaxHighlightBox), new PropertyMetadata(Brushes.Transparent));
+
         // ----------------------------------------------------------
         // Properties
         // ----------------------------------------------------------
@@ -1194,6 +1200,11 @@ namespace JSONDB.JQLEditor.TextEditor
         public int TabSize
         {
             get { return 4; }
+        }
+
+        private string Tab
+        {
+            get { return new String(' ', TabSize); }
         }
 
         public IHighlighter CurrentHighlighter { get; set; }
@@ -1210,9 +1221,16 @@ namespace JSONDB.JQLEditor.TextEditor
             set { SetValue(TextColorProperty, value); InvalidateBlocks(0); InvalidateVisual(); }
         }
 
-        private string Tab
+        public Brush LineNumbersBackgroundColor
         {
-            get { return new String(' ', TabSize); }
+            get { return (Brush)GetValue(LineNumbersBackgroundColorProperty); }
+            set { SetValue(LineNumbersBackgroundColorProperty, value); }
+        }
+
+        public Brush TextEditorBackgroundColor
+        {
+            get { return (Brush)GetValue(TextEditorBackgroundColorProperty); }
+            set { SetValue(TextEditorBackgroundColorProperty, value); }
         }
 
         // ----------------------------------------------------------

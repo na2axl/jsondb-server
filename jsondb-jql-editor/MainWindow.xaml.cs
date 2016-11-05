@@ -554,8 +554,8 @@ namespace JSONDB.JQLEditor
 
         private void SetBlackTheme(object sender, RoutedEventArgs e)
         {
-            TextEditor.Foreground = (Brush)(new BrushConverter().ConvertFrom("#333333"));
-            TextEditor.Background = (Brush)(new BrushConverter().ConvertFrom("#252121"));
+            TextEditor.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#333333"));
+            TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#252121"));
             TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
             Settings.EditorTheme = "Black";
             Settings.Save();
@@ -567,8 +567,8 @@ namespace JSONDB.JQLEditor
 
         private void SetWhiteTheme(object sender, RoutedEventArgs e)
         {
-            TextEditor.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
-            TextEditor.Background = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
+            TextEditor.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
             TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
             Settings.EditorTheme = "White";
             Settings.Save();
@@ -708,6 +708,10 @@ namespace JSONDB.JQLEditor
                 {
                     ComboBoxItem item = new ComboBoxItem();
                     item.Content = db;
+                    if (db == App.DBConnection.GetDatabase())
+                    {
+                        item.IsSelected = true;
+                    }
                     item.Selected += (ds, de) =>
                     {
                         App.DBConnection.SetDatabase(db);
