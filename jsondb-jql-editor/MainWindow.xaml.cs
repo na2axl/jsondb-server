@@ -20,6 +20,7 @@ namespace JSONDB.JQLEditor
 
         enum StatusMessageState
         {
+            None,
             Information,
             Error,
             Loading
@@ -134,6 +135,9 @@ namespace JSONDB.JQLEditor
             {
                 resultsWindow = new QueryResultsWindow(this);
             };
+
+            // Set status
+            SetStatus("Ready", StatusMessageState.None);
         }
 
         private ImageSource BitmapToImageSource(System.Drawing.Bitmap bmp)
@@ -172,6 +176,7 @@ namespace JSONDB.JQLEditor
         /// <param name="path">The path where to save the document.</param>
         public void SaveDocument(string path)
         {
+            SetStatus("Saving file...", StatusMessageState.Loading);
             if (!path.EndsWith(".jql"))
             {
                 path = path + ".jql";
@@ -187,7 +192,6 @@ namespace JSONDB.JQLEditor
         /// <returns>The path to the saved file.</returns>
         public string SaveDocumentAs()
         {
-            SetStatus("Saving file...", StatusMessageState.Loading);
             System.Windows.Forms.SaveFileDialog saveDialog = new System.Windows.Forms.SaveFileDialog();
             saveDialog.AddExtension = true;
             saveDialog.CheckPathExists = true;
@@ -210,7 +214,6 @@ namespace JSONDB.JQLEditor
         /// <returns>The path to the file.</returns>
         public string OpenDocument()
         {
-            SetStatus("Opening file...", StatusMessageState.Loading);
             System.Windows.Forms.OpenFileDialog openDialog = new System.Windows.Forms.OpenFileDialog();
             openDialog.AddExtension = true;
             openDialog.CheckFileExists = true;
@@ -233,6 +236,7 @@ namespace JSONDB.JQLEditor
         /// <param name="path">The path of the file</param>
         public void OpenDocumentAt(string path)
         {
+            SetStatus("Opening file...", StatusMessageState.Loading);
             if (!path.EndsWith(".jql"))
             {
                 path = path + ".jql";
@@ -253,6 +257,7 @@ namespace JSONDB.JQLEditor
                     "Cannot open the file",
                     MessageWindowButton.OK,
                     MessageWindowImage.Error).Open();
+                SetStatus("Ready", StatusMessageState.None);
             }
         }
 
@@ -294,6 +299,10 @@ namespace JSONDB.JQLEditor
         {
             switch (state)
             {
+                case StatusMessageState.None:
+                    StatusBar.Background = TextEditor.LineNumbersBackgroundColor;
+                    StatusBar.Foreground = TextEditor.TextColor;
+                    break;
                 case StatusMessageState.Information:
                     StatusBar.Background = (Brush)(new BrushConverter().ConvertFrom("#0066CC"));
                     StatusBar.Foreground = Brushes.White;
@@ -556,26 +565,30 @@ namespace JSONDB.JQLEditor
         {
             TextEditor.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#333333"));
             TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#252121"));
-            TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            TextEditor.TextColor = Brushes.White;
+            TextEditor.CaretBrush = Brushes.White;
             Settings.EditorTheme = "Black";
             Settings.Save();
             if (resultsWindow != null)
             {
                 resultsWindow.UpdateTheme();
             }
+            SetStatus("Theme changed", StatusMessageState.None);
         }
 
         private void SetWhiteTheme(object sender, RoutedEventArgs e)
         {
             TextEditor.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
             TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
-            TextEditor.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
+            TextEditor.TextColor = Brushes.Black;
+            TextEditor.CaretBrush = Brushes.Black;
             Settings.EditorTheme = "White";
             Settings.Save();
             if (resultsWindow != null)
             {
                 resultsWindow.UpdateTheme();
             }
+            SetStatus("Theme changed", StatusMessageState.None);
         }
 
         private void ShowLineNumbers(object sender, RoutedEventArgs e)
