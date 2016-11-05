@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace JSONDB.JQLEditor
 {
@@ -26,6 +16,7 @@ namespace JSONDB.JQLEditor
 
             // Initialize UI
             InitializeComponent();
+            ServerNameBox.Focus();
 
             // Set button behavior
             ConnectButton.IsDefault = true;
@@ -36,7 +27,7 @@ namespace JSONDB.JQLEditor
         {
             try
             {
-                App.Connect(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Password);
+                App.Connect(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Password, DatabaseName.Text);
                 Close();
             }
             catch (Exception ex)

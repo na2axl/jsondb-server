@@ -61,9 +61,10 @@ namespace JSONDB.JQLEditor
         /// <param name="serverName">The name of the server</param>
         /// <param name="username">The username</param>
         /// <param name="password">The password</param>
-        public static void Connect(string serverName, string username, string password)
+        /// <param name="database">The name of the database to use</param>
+        public static void Connect(string serverName, string username, string password, string database)
         {
-            _db = Library.JSONDB.Connect(serverName, username, password);
+            _db = Library.JSONDB.Connect(serverName, username, password, database);
         }
 
         /// <summary>
