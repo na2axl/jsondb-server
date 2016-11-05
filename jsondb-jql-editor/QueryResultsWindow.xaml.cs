@@ -76,14 +76,16 @@ namespace JSONDB.JQLEditor
                 case "Black":
                     ResultBox.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#333333"));
                     ResultBox.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#252121"));
-                    ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+                    ResultBox.TextColor = Brushes.White;
+                    ResultBox.CaretBrush = Brushes.White;
                     break;
 
                 default:
                 case "White":
                     ResultBox.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
                     ResultBox.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
-                    ResultBox.TextColor = (Brush)(new BrushConverter().ConvertFrom("#000000"));
+                    ResultBox.TextColor = Brushes.Black;
+                    ResultBox.CaretBrush = Brushes.Black;
                     break;
             }
 
@@ -91,6 +93,19 @@ namespace JSONDB.JQLEditor
             InvalidateVisual();
         }
 
+        /// <summary>
+        /// Auto focus the window on showing.
+        /// </summary>
+        public new void Show()
+        {
+            Focus();
+            base.Show();
+        }
+
+        /// <summary>
+        /// Auto focus the list of queries when the window get focus.
+        /// </summary>
+        /// <param name="e">The OnFocus event</param>
         protected override void OnGotFocus(RoutedEventArgs e)
         {
             QueriesList.Focus();
