@@ -71,6 +71,9 @@ namespace JSONDB.JQLEditor
             {
                 _data = entry;
                 Content = entry["name"];
+
+                Padding = new Thickness(2, 5, 2, 5);
+                Margin = new Thickness(2);
             }
         }
 

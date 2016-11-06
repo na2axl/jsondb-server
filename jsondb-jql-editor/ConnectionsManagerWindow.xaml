@@ -52,8 +52,8 @@
         </Grid>
 
         <Grid Grid.Row="1">
-            <Border BorderBrush="Gray" BorderThickness="0,1,0,0">
-                <DockPanel HorizontalAlignment="Right">
+            <Border BorderBrush="Gray" BorderThickness="0,1,0,0" Background="#e5e5e5">
+                <DockPanel HorizontalAlignment="Right" Margin="10">
                     <Button Content="Connect" Click="StartConnection" Height="30" Width="75" Margin="10" />
                     <Button Content="Cancel" Click="CloseWindow" Height="30" Width="75" Margin="10" />
                 </DockPanel>
