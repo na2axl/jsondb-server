@@ -29,17 +29,11 @@ namespace JSONDB.JQLEditor
         // Changes State
         private bool changesSaved = true;
 
-        // Application Settings
-        private AppSettings Settings;
-
         // Windows
         private QueryResultsWindow resultsWindow;
 
         public MainWindow()
         {
-            // Load Application Settings
-            Settings = new AppSettings();
-
             // Initialize the UI
             InitializeComponent();
 
@@ -58,7 +52,7 @@ namespace JSONDB.JQLEditor
             ButtonValidateImage.Source = BitmapToImageSource(AppResources.ValidateIcon);
 
             // Editor theme
-            switch (Settings.EditorTheme)
+            switch (App.Settings.EditorTheme)
             {
                 case "Black":
                     SetBlackTheme(null, null);
@@ -70,7 +64,7 @@ namespace JSONDB.JQLEditor
             }
 
             // Line numbers
-            MenuViewShowLineNumbers.IsChecked = Settings.ShowLineNumbers;
+            MenuViewShowLineNumbers.IsChecked = App.Settings.ShowLineNumbers;
 
             // Buttons states
             ButtonDisconnect.IsEnabled = App.IsConnected();
@@ -79,7 +73,7 @@ namespace JSONDB.JQLEditor
             TextEditor.CurrentHighlighter = HighlighterManager.Instance.LoadXML(AppResources.JQLSyntax);
 
             // Show/Hide line numbers
-            TextEditor.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
+            TextEditor.IsLineNumbersMarginVisible = App.Settings.ShowLineNumbers;
 
             // If we have to open a file
             if (App.CurrentWorkingFile != String.Empty)
@@ -567,8 +561,8 @@ namespace JSONDB.JQLEditor
             TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#252121"));
             TextEditor.TextColor = Brushes.White;
             TextEditor.CaretBrush = Brushes.White;
-            Settings.EditorTheme = "Black";
-            Settings.Save();
+            App.Settings.EditorTheme = "Black";
+            App.Settings.Save();
             if (resultsWindow != null)
             {
                 resultsWindow.UpdateTheme();
@@ -582,8 +576,8 @@ namespace JSONDB.JQLEditor
             TextEditor.LineNumbersBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#e5e5e5"));
             TextEditor.TextColor = Brushes.Black;
             TextEditor.CaretBrush = Brushes.Black;
-            Settings.EditorTheme = "White";
-            Settings.Save();
+            App.Settings.EditorTheme = "White";
+            App.Settings.Save();
             if (resultsWindow != null)
             {
                 resultsWindow.UpdateTheme();
@@ -594,8 +588,8 @@ namespace JSONDB.JQLEditor
         private void ShowLineNumbers(object sender, RoutedEventArgs e)
         {
             TextEditor.IsLineNumbersMarginVisible = MenuViewShowLineNumbers.IsChecked;
-            Settings.ShowLineNumbers = TextEditor.IsLineNumbersMarginVisible;
-            Settings.Save();
+            App.Settings.ShowLineNumbers = TextEditor.IsLineNumbersMarginVisible;
+            App.Settings.Save();
             if (resultsWindow != null)
             {
                 resultsWindow.UpdateTheme();
@@ -741,6 +735,12 @@ namespace JSONDB.JQLEditor
                     MessageWindowButton.OK,
                     MessageWindowImage.Error).Open();
             }
+        }
+
+        private void ManageConnections(object sender, RoutedEventArgs e)
+        {
+            ConnectionsManager w = new ConnectionsManager(this);
+            w.ShowDialog();
         }
     }
 

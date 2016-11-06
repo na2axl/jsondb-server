@@ -89,7 +89,7 @@
                     <MenuItem x:Name="MenuQueryValidate" Header="_Validate" Command="local:EditorCommands.Validate" />
                 </MenuItem>
                 <MenuItem x:Name="MenuTools" Height="20" Header="_Tools">
-                    <MenuItem x:Name="MenuToolsConnections" Header="_Connections" />
+                    <MenuItem x:Name="MenuToolsConnections" Header="_Connections" Click="ManageConnections" />
                     <Separator />
                     <MenuItem x:Name="MenuToolsSettins" Header="_Settings" />
                 </MenuItem>
