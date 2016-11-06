@@ -50,7 +50,11 @@ namespace JSONDB.JQLEditor
         {
             ConnectionsManager w = new ConnectionsManager(this);
             w.ShowDialog();
-            Close();
+
+            if (App.IsConnected())
+            {
+                Close();
+            }
         }
     }
 }
