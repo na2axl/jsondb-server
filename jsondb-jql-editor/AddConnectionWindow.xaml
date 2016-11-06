@@ -20,7 +20,7 @@
             <PasswordBox x:Name="PasswordBox" Height="25" Margin="10,0,10,0" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
             <Separator Margin="10,10,10,0" DockPanel.Dock="Top" />
             <Label Content="Default Database Name (Optional):" Margin="10,10,10,0" DockPanel.Dock="Top" />
-            <TextBox x:Name="DatabaseName" Height="25" Margin="10,0,10,10" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
+            <TextBox x:Name="DatabaseNameBox" Height="25" Margin="10,0,10,10" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Right" Margin="10">
             <Button x:Name="ConnectButton" Content="Add" Height="30" Width="75" Margin="10" Click="ConnectToServer" />
