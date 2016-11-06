@@ -741,6 +741,8 @@ namespace JSONDB.JQLEditor
         {
             ConnectionsManager w = new ConnectionsManager(this);
             w.ShowDialog();
+            RefreshDatabaseList(sender, e);
+            ButtonDisconnect.IsEnabled = App.IsConnected();
         }
     }
 
