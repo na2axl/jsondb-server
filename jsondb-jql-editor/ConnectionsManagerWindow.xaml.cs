@@ -106,5 +106,30 @@ namespace JSONDB.JQLEditor
                     break;
             }
         }
+
+        private void StartConnection(object sender, RoutedEventArgs e)
+        {
+            JObject entry = ((ConnectionEntry)ConnectionsList.Items.CurrentItem).Entry;
+
+            try
+            {
+                App.Connect(entry["server"].ToString(), entry["username"].ToString(), entry["password"].ToString(), entry["database"].ToString());
+                Close();
+            }
+            catch (Exception ex)
+            {
+                new MessageWindow(
+                    this,
+                    ex.Message,
+                    "Error",
+                    MessageWindowButton.OK,
+                    MessageWindowImage.Error).Open();
+            }
+        }
+
+        private void CloseWindow(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }
