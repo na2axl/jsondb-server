@@ -137,28 +137,39 @@
                         <ComboBox Margin="5,0" Padding="2" x:Name="DatabaseList">
                             <ComboBoxItem Content="(Not Connected)" Selector.IsSelected="True" />
                         </ComboBox>
-                        <Button Margin="0,0,5,0" Padding="2" Click="RefreshDatabaseList">
+                        <Button Margin="0,0,5,0" Padding="2" ToolTip="Refresh Database List" Click="RefreshDatabaseList">
                             <Image x:Name="ButtonRefreshDatabaseImage" />
                         </Button>
                         <Separator Margin="5,0" />
-                        <Button Margin="0,0,5,0" Padding="2" Command="local:EditorCommands.Run">
+                        <Button Margin="0,0,5,0" Padding="2" ToolTip="Run Queries (F5)" Command="local:EditorCommands.Run">
                             <Image x:Name="ButtonRunImage" />
                         </Button>
-                        <Button Margin="0,0,5,0" Padding="2" Command="local:EditorCommands.Validate">
+                        <Button Margin="0,0,5,0" Padding="2" ToolTip="Validate Queries (F6)" Command="local:EditorCommands.Validate">
                             <Image x:Name="ButtonValidateImage" />
                         </Button>
                     </ToolBar>
                 </ToolBarTray>
                 <ToolBarTray Margin="0" HorizontalAlignment="Left">
                     <ToolBar>
-                        <Button Content="Connect" Click="ConnectToServer" x:Name="ButtonConnect" Margin="0,0,5,0" Padding="2"></Button>
-                        <Button Content="Disconnect" x:Name="ButtonDisconnect" Click="DisconnectFromServer" Margin="5,0,0,0" Padding="2"></Button>
+                        <Button Content="Connect" ToolTip="Connect To Server" Click="ConnectToServer" x:Name="ButtonConnect" Margin="0,0,5,0" Padding="2"></Button>
+                        <Button Content="Disconnect" ToolTip="Disconnect From Server" x:Name="ButtonDisconnect" Click="DisconnectFromServer" Margin="5,0,0,0" Padding="2"></Button>
                     </ToolBar>
                 </ToolBarTray>
             </DockPanel>
         </ToolBarPanel>
         <DockPanel DockPanel.Dock="Top">
-            <TextEditor:SyntaxHighlightBox IsLineNumbersMarginVisible="False" x:Name="TextEditor" Margin="0,0,0,25" DockPanel.Dock="Top" Padding="10,0,0,0" TextColor="Black" BorderThickness="0,1,0,0" />
+            <TextEditor:SyntaxHighlightBox IsLineNumbersMarginVisible="False" x:Name="TextEditor" Margin="0,0,0,25" DockPanel.Dock="Top" Padding="10,0,0,0" TextColor="Black" BorderThickness="0,1,0,0">
+                <TextEditor:SyntaxHighlightBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="_Copy" Command="Copy" />
+                        <MenuItem Header="_Cut" Command="Cut" />
+                        <MenuItem Header="_Paste" Command="Paste" />
+                        <Separator />
+                        <MenuItem Header="_Run" Command="local:EditorCommands.Run" />
+                        <MenuItem Header="_Validate" Command="local:EditorCommands.Validate" />
+                    </ContextMenu>
+                </TextEditor:SyntaxHighlightBox.ContextMenu>
+            </TextEditor:SyntaxHighlightBox>
             <StatusBar x:Name="StatusBar" Padding="5,0" DockPanel.Dock="Top" Margin="0,-25,0,0" VerticalContentAlignment="Center" Height="25">
                 <StatusBarItem Content="Ready" x:Name="StatusMessage" VerticalContentAlignment="Center"/>
                 <StatusBarItem x:Name="StatusEditorInfo" HorizontalAlignment="Right" />
