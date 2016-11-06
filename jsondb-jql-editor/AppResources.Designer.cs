@@ -63,6 +63,16 @@ namespace JSONDB.JQLEditor {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap AddConnectionIcon {
+            get {
+                object obj = ResourceManager.GetObject("AddConnectionIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap CopyIcon {
             get {
                 object obj = ResourceManager.GetObject("CopyIcon", resourceCulture);
@@ -76,6 +86,26 @@ namespace JSONDB.JQLEditor {
         internal static System.Drawing.Bitmap CutIcon {
             get {
                 object obj = ResourceManager.GetObject("CutIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap DeleteConnectionIcon {
+            get {
+                object obj = ResourceManager.GetObject("DeleteConnectionIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap EditConnectionIcon {
+            get {
+                object obj = ResourceManager.GetObject("EditConnectionIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
