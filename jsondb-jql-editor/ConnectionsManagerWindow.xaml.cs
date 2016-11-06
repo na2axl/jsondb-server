@@ -87,5 +87,24 @@ namespace JSONDB.JQLEditor
             w.ShowDialog();
             PopulateConnectionList();
         }
+
+        private void DeleteConnection(object sender, RoutedEventArgs e)
+        {
+            MessageWindowResult choice = new MessageWindow(
+                this,
+                "Are you sure you want to delete this connection?",
+                "Confirm",
+                MessageWindowButton.YesNo,
+                MessageWindowImage.Warning).Open();
+
+            switch (choice)
+            {
+                case MessageWindowResult.Yes:
+                    App.Settings.Connections.RemoveAt(ConnectionsList.Items.CurrentPosition);
+                    App.Settings.Save();
+                    PopulateConnectionList();
+                    break;
+            }
+        }
     }
 }
