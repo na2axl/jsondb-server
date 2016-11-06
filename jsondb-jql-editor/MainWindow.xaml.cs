@@ -184,6 +184,7 @@ namespace JSONDB.JQLEditor
             Util.WriteTextFile(path, TextEditor.GetDocumentContents());
             changesSaved = true;
             SetStatus("File Saved", StatusMessageState.Information);
+            Title = path + " - JQL Editor";
         }
 
         /// <summary>
@@ -411,6 +412,7 @@ namespace JSONDB.JQLEditor
                 TextEditor.CleanDocument();
                 TextEditor.ResetUndoRedoStack();
                 App.CurrentWorkingFile = String.Empty;
+                Title = "Untitled - JQL Editor";
             }
         }
 
