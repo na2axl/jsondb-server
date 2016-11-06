@@ -26,6 +26,8 @@ namespace JSONDB.JQLEditor
             get { return _db; }
         }
 
+        internal static readonly AppSettings Settings = new AppSettings();
+
         [STAThread]
         public static void Main(string[] args)
         {
