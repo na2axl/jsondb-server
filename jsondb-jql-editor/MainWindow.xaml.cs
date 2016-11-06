@@ -184,7 +184,6 @@ namespace JSONDB.JQLEditor
             Util.WriteTextFile(path, TextEditor.GetDocumentContents());
             changesSaved = true;
             SetStatus("File Saved", StatusMessageState.Information);
-            Title = path + " - JQL Editor";
         }
 
         /// <summary>
@@ -412,7 +411,6 @@ namespace JSONDB.JQLEditor
                 TextEditor.CleanDocument();
                 TextEditor.ResetUndoRedoStack();
                 App.CurrentWorkingFile = String.Empty;
-                Title = "Untitled - JQL Editor";
             }
         }
 
@@ -456,6 +454,20 @@ namespace JSONDB.JQLEditor
         private void Paste(object sender, RoutedEventArgs e)
         {
             TextEditor.Paste();
+        }
+
+        private void Delete(object sender, RoutedEventArgs e)
+        {
+            string currentText = TextEditor.GetDocumentContents();
+            if (TextEditor.SelectedText != String.Empty)
+            {
+                currentText = currentText.Remove(TextEditor.SelectionStart, TextEditor.SelectionLength);
+            }
+            else
+            {
+                currentText = currentText.Remove(TextEditor.CaretIndex, 1);
+            }
+            TextEditor.SetDocumentContents(currentText, true);
         }
 
         private void CanExecuteAlwaysTrue(object sender, CanExecuteRoutedEventArgs e)
