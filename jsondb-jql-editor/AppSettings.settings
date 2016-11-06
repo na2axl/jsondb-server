@@ -8,5 +8,8 @@
     <Setting Name="EditorTheme" Type="System.String" Scope="User">
       <Value Profile="(Default)">White</Value>
     </Setting>
+    <Setting Name="Connections" Type="Newtonsoft.Json.Linq.JArray" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

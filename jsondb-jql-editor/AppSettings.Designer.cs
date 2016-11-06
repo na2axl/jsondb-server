@@ -46,5 +46,16 @@ namespace JSONDB.JQLEditor {
                 this["EditorTheme"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::Newtonsoft.Json.Linq.JArray Connections {
+            get {
+                return ((global::Newtonsoft.Json.Linq.JArray)(this["Connections"]));
+            }
+            set {
+                this["Connections"] = value;
+            }
+        }
     }
 }
