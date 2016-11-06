@@ -1,18 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace JSONDB.JQLEditor
 {
@@ -21,15 +13,10 @@ namespace JSONDB.JQLEditor
     /// </summary>
     public partial class ConnectionsManager : Window
     {
-        private AppSettings Settings;
-
         public ConnectionsManager(Window o)
         {
             // Set the owner
             Owner = o;
-
-            // Load Application Settings
-            Settings = new AppSettings();
 
             // Initialize UI
             InitializeComponent();
@@ -39,11 +26,29 @@ namespace JSONDB.JQLEditor
             ButtonDeleteConnection.Source = BitmapToImageSource(AppResources.DeleteConnectionIcon);
             ButtonEditConnection.Source = BitmapToImageSource(AppResources.EditConnectionIcon);
 
-            // Load connections list
+            // Populate the list
+            PopulateConnectionList();
+        }
+
+        private void PopulateConnectionList()
+        {
+            // If the list is empty, create a new one
             ConnectionsList.Items.Clear();
-            foreach (JObject item in Settings.Connections)
+            for (int i = 0, l = App.Settings.Connections.Count; i < l; i++)
             {
-                ConnectionEntry entry = new ConnectionEntry(item);
+                string item = App.Settings.Connections[i];
+
+                JObject info = new JObject();
+                string[] parts = System.Text.RegularExpressions.Regex.Split(item, "\\{\\{s\\}\\}");
+
+                info["name"] = parts[0];
+                info["server"] = parts[1];
+                info["username"] = parts[2];
+                info["password"] = parts[3];
+                info["database"] = parts[4] ?? String.Empty;
+
+                ConnectionEntry entry = new ConnectionEntry(info);
+                ConnectionsList.Items.Add(entry);
             }
         }
 
@@ -81,6 +86,13 @@ namespace JSONDB.JQLEditor
         }
 
         private void AddConnection(object sender, RoutedEventArgs e)
+        {
+            AddConnectionWindow w = new AddConnectionWindow(this);
+            w.ShowDialog();
+            PopulateConnectionList();
+        }
+
+        private void EditConnection(object sender, RoutedEventArgs e)
         {
 
         }

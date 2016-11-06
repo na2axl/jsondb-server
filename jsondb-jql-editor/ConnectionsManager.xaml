@@ -34,7 +34,7 @@
                     <Button Style="{StaticResource Icon}" DockPanel.Dock="Top" Click="AddConnection" >
                         <Image x:Name="ButtonAddConnection" />
                     </Button>
-                    <Button Style="{StaticResource Icon}" DockPanel.Dock="Top">
+                    <Button Style="{StaticResource Icon}" DockPanel.Dock="Top" Click="EditConnection">
                         <Image x:Name="ButtonEditConnection" />
                     </Button>
                     <Button Style="{StaticResource Icon}" DockPanel.Dock="Top">
@@ -46,14 +46,6 @@
             <Grid Grid.Column="1">
                 <DockPanel>
                     <ListBox DockPanel.Dock="Left" BorderBrush="Gray" BorderThickness="1,0,0,0" x:Name="ConnectionsList">
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
-                        <ListBoxItem Content="asdasd"></ListBoxItem>
                     </ListBox>
                 </DockPanel>
             </Grid>
