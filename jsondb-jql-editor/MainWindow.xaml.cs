@@ -134,7 +134,7 @@ namespace JSONDB.JQLEditor
             SetStatus("Ready", StatusMessageState.None);
         }
 
-        private ImageSource BitmapToImageSource(System.Drawing.Bitmap bmp)
+        internal static ImageSource BitmapToImageSource(System.Drawing.Bitmap bmp)
         {
             MemoryStream memory = new MemoryStream();
             BitmapImage imageSource = new BitmapImage();
