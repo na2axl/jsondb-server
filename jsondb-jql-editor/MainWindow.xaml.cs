@@ -158,10 +158,16 @@ namespace JSONDB.JQLEditor
         public void SelectQueryBlock(int blockNumber)
         {
             string[] blocks = Regex.Split(TextEditor.GetDocumentContents(), "(?:[^\\\\]);");
+            int length = 0;
 
-            Match currentBlock = Regex.Match(TextEditor.GetDocumentContents(), Regex.Escape(blocks[blockNumber].Trim(Environment.NewLine.ToCharArray())));
+            for (int i = 0; i < blockNumber; i++)
+            {
+                length += blocks[i].Length + 2;
+            }
 
-            TextEditor.Select(currentBlock.Index, currentBlock.Length + 2);
+            Match currentBlock = Regex.Match(TextEditor.GetDocumentContents().Substring(length), Regex.Escape(blocks[blockNumber].Trim(Environment.NewLine.ToCharArray())));
+
+            TextEditor.Select(currentBlock.Index + length, currentBlock.Length + 2);
         }
 
         /// <summary>
