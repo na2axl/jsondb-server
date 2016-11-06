@@ -37,6 +37,7 @@ namespace JSONDB.JQLEditor
             for (int i = 0, l = App.Settings.Connections.Count; i < l; i++)
             {
                 string item = App.Settings.Connections[i];
+                int index = i;
 
                 JObject info = new JObject();
                 string[] parts = System.Text.RegularExpressions.Regex.Split(item, "\\{\\{s\\}\\}");
@@ -48,6 +49,11 @@ namespace JSONDB.JQLEditor
                 info["database"] = parts[4] ?? String.Empty;
 
                 ConnectionEntry entry = new ConnectionEntry(info);
+                entry.Selected += (s, e) =>
+                {
+                    ConnectionsList.Items.MoveCurrentToPosition(index);
+                };
+
                 ConnectionsList.Items.Add(entry);
             }
         }
@@ -77,7 +83,9 @@ namespace JSONDB.JQLEditor
 
         private void EditConnection(object sender, RoutedEventArgs e)
         {
-
+            EditConnectionWindow w = new EditConnectionWindow(this, ConnectionsList.Items.CurrentPosition);
+            w.ShowDialog();
+            PopulateConnectionList();
         }
     }
 }
