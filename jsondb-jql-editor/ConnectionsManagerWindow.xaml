@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JSONDB.JQLEditor"
         mc:Ignorable="d"
-        Title="Connections" Height="300" Width="400">
+        Title="Connections" Height="300" Width="400" WindowStartupLocation="CenterOwner">
 
     <Window.Resources>
         <Style TargetType="Button" x:Key="Icon">
