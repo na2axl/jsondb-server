@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace JSONDB.JQLEditor
 {
@@ -19,9 +9,48 @@ namespace JSONDB.JQLEditor
     /// </summary>
     public partial class EditConnectionWindow : Window
     {
-        public EditConnectionWindow()
+        private int _i;
+
+        public EditConnectionWindow(Window o, int index)
         {
+            // Set the owner
+            Owner = o;
+
+            // Save the index
+            _i = index;
+
+            // Initialize UI
             InitializeComponent();
+
+            // Get the entry by index
+            string entry = App.Settings.Connections[_i];
+
+            string[] parts = System.Text.RegularExpressions.Regex.Split(entry, "\\{\\{s\\}\\}");
+
+            ConnectionNameBox.Text = parts[0];
+            ServerNameBox.Text = parts[1];
+            UsernameBox.Text = parts[2];
+            PasswordBox.Password = parts[3];
+            DatabaseNameBox.Text = parts[4] ?? String.Empty;
+        }
+
+        private void EditConnection(object sender, RoutedEventArgs e)
+        {
+            App.Settings.Connections[_i] = 
+                ConnectionNameBox.Text + "{{s}}" +
+                ServerNameBox.Text + "{{s}}" +
+                UsernameBox.Text + "{{s}}" +
+                PasswordBox.Password + "{{s}}" +
+                DatabaseNameBox.Text;
+
+            App.Settings.Save();
+
+            Close();
+        }
+
+        private void CloseWindow(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }
