@@ -698,6 +698,11 @@ namespace JSONDB.JQLEditor
             {
                 case MessageWindowResult.Yes:
                     App.Disconnect();
+                    DatabaseList.Items.Clear();
+                    ComboBoxItem item = new ComboBoxItem();
+                    item.Content = "(Not Connected)";
+                    item.IsSelected = true;
+                    DatabaseList.Items.Add(item);
                     break;
             }
 
