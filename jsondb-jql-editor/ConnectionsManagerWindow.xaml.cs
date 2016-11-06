@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace JSONDB.JQLEditor
 {
@@ -52,6 +49,10 @@ namespace JSONDB.JQLEditor
                 entry.Selected += (s, e) =>
                 {
                     ConnectionsList.Items.MoveCurrentToPosition(index);
+                };
+                entry.MouseDoubleClick += (s, e) =>
+                {
+                    StartConnection(s, e);
                 };
 
                 ConnectionsList.Items.Add(entry);
