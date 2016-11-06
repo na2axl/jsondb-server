@@ -73,8 +73,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ConnectionsManager.xaml.cs">
-      <DependentUpon>ConnectionsManager.xaml</DependentUpon>
+    <Compile Include="ConnectionsManagerWindow.xaml.cs">
+      <DependentUpon>ConnectionsManagerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ConnectionWindow.xaml.cs">
       <DependentUpon>ConnectionWindow.xaml</DependentUpon>
@@ -102,7 +102,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ConnectionsManager.xaml">
+    <Page Include="ConnectionsManagerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
