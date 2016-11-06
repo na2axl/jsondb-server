@@ -45,5 +45,12 @@ namespace JSONDB.JQLEditor
         {
             Close();
         }
+
+        private void OpenManager(object sender, RoutedEventArgs e)
+        {
+            ConnectionsManager w = new ConnectionsManager(this);
+            w.ShowDialog();
+            Close();
+        }
     }
 }

@@ -6,9 +6,9 @@
         xmlns:local="clr-namespace:JSONDB.JQLEditor"
         mc:Ignorable="d"
         Title="Connect To Server" SizeToContent="Height" Width="300" ResizeMode="CanMinimize" WindowStartupLocation="CenterOwner">
-    <DockPanel>
+    <DockPanel Margin="10">
         <DockPanel DockPanel.Dock="Top">
-            <Label Content="Server Name:" Margin="10,10,10,0" DockPanel.Dock="Top" />
+            <Label Content="Server Name:" Margin="10,0,10,0" DockPanel.Dock="Top" />
             <TextBox x:Name="ServerNameBox" Height="25" Margin="10,0,10,0" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
             <Separator Margin="10,10,10,0" DockPanel.Dock="Top" />
             <Label Content="Username:" Margin="10,10,10,0" DockPanel.Dock="Top" />
@@ -20,8 +20,9 @@
             <TextBox x:Name="DatabaseName" Height="25" Margin="10,0,10,10" DockPanel.Dock="Top" VerticalContentAlignment="Center" />
         </DockPanel>
         <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Right">
-            <Button x:Name="ConnectButton" Content="Connect" Height="30" Width="75" Margin="10" Click="ConnectToServer" />
-            <Button x:Name="CancelButton" Content="Cancel" Height="30" Width="75" Margin="10" Click="CloseWindow" />
+            <Button x:Name="ManageButton" Content="Manage" Height="30" Width="75" Margin="5,10" Click="OpenManager" />
+            <Button x:Name="ConnectButton" Content="Connect" Height="30" Width="75" Margin="5,10" Click="ConnectToServer" />
+            <Button x:Name="CancelButton" Content="Cancel" Height="30" Width="75" Margin="5,10,10,10" Click="CloseWindow" />
         </DockPanel>
     </DockPanel>
 </Window>
