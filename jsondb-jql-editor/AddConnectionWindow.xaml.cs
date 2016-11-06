@@ -42,6 +42,8 @@ namespace JSONDB.JQLEditor
                         MessageWindowButton.OK,
                         MessageWindowImage.Success).Open();
 
+                    temp_db.Disconnect();
+
                     Close();
                 }
                 else
