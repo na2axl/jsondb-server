@@ -39,7 +39,7 @@
                         <!--Render canvas-->
                         <Grid Margin="{TemplateBinding Padding}">
                             <local:DrawingControl x:Name="PART_RenderCanvas" ClipToBounds="True" TextOptions.TextRenderingMode="ClearType" TextOptions.TextFormattingMode="Display" />
-                            <Canvas Grid.Column="1" x:Name="PART_SuggestionCanvas" Background="Transparent" IsHitTestVisible="True">
+                            <Canvas x:Name="PART_SuggestionCanvas" Background="Transparent" IsHitTestVisible="True">
                                 <ListBox x:Name="PART_SuggestionList" Width="Auto" MaxHeight="150" TextElement.FontSize="9pt">
                                 </ListBox>
                             </Canvas>
