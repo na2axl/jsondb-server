@@ -57,9 +57,22 @@ namespace JSONDB.Library
             }
 
             ServerName = Util.MakePath(Util.AppRoot(), "servers", server);
-            DatabaseName = database;
             Username = username;
             Password = password;
+
+            if (database != String.Empty)
+            {
+                try
+                {
+                    SetDatabase(database);
+                }
+                catch (Exception)
+                {
+                    Benchmark.Mark("Database_(connect)_end");
+                    throw;
+                }
+            }
+
             Benchmark.Mark("Database_(connect)_end");
         }
 
@@ -83,7 +96,7 @@ namespace JSONDB.Library
         /// <returns>The current Database instance</returns>
         public Database SetDatabase(string database)
         {
-            if (ServerName == String.Empty)
+            if (!IsConnected())
             {
                 throw new Exception("Database Error: Can't use the database \"" + database + "\", there is no connection established with a server.");
             }
