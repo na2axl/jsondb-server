@@ -12,16 +12,11 @@ namespace JSONDB.JQLEditor
     /// </summary>
     public partial class QueryResultsWindow : Window
     {
-        // Application Settings
-        private AppSettings Settings;
 
         public QueryResultsWindow(Window o)
         {
             // Set the owner
             Owner = o;
-
-            // Load application settings
-            Settings = new AppSettings();
 
             // Initialize the UI
             InitializeComponent();
@@ -64,14 +59,11 @@ namespace JSONDB.JQLEditor
         /// </summary>
         public void UpdateTheme()
         {
-            // Reload settings
-            Settings.Reload();
-
             // Show/Hide line numbers
-            ResultBox.IsLineNumbersMarginVisible = Settings.ShowLineNumbers;
+            ResultBox.IsLineNumbersMarginVisible = App.Settings.ShowLineNumbers;
 
             // Set the editor theme
-            switch (Settings.EditorTheme)
+            switch (App.Settings.EditorTheme)
             {
                 case "Black":
                     ResultBox.TextEditorBackgroundColor = (Brush)(new BrushConverter().ConvertFrom("#333333"));
