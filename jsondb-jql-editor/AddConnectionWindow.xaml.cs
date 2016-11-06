@@ -19,7 +19,7 @@ namespace JSONDB.JQLEditor
             InitializeComponent();
         }
 
-        private void ConnectToServer(object sender, RoutedEventArgs e)
+        private void AddConnection(object sender, RoutedEventArgs e)
         {
             try
             {
