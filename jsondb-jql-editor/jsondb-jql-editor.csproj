@@ -59,6 +59,9 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddConnectionWindow.xaml.cs">
+      <DependentUpon>AddConnectionWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="App.cs" />
     <Compile Include="AppResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -92,6 +95,10 @@
     </Compile>
     <Compile Include="TextEditor\TextUtilities.cs" />
     <Compile Include="TextEditor\UndoRedoStack.cs" />
+    <Page Include="AddConnectionWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConnectionsManager.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

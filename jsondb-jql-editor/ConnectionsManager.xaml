@@ -5,8 +5,68 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JSONDB.JQLEditor"
         mc:Ignorable="d"
-        Title="ConnectionsManager" Height="300" Width="300">
+        Title="Connections" Height="300" Width="400">
+
+    <Window.Resources>
+        <Style TargetType="Button" x:Key="Icon">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Margin" Value="4" />
+        </Style>
+    </Window.Resources>
+
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <DockPanel Margin="0" VerticalAlignment="Top">
+                    <Button Style="{StaticResource Icon}" DockPanel.Dock="Top" Click="AddConnection" >
+                        <Image x:Name="ButtonAddConnection" />
+                    </Button>
+                    <Button Style="{StaticResource Icon}" DockPanel.Dock="Top">
+                        <Image x:Name="ButtonEditConnection" />
+                    </Button>
+                    <Button Style="{StaticResource Icon}" DockPanel.Dock="Top">
+                        <Image x:Name="ButtonDeleteConnection" />
+                    </Button>
+                </DockPanel>
+            </Grid>
+        
+            <Grid Grid.Column="1">
+                <DockPanel>
+                    <ListBox DockPanel.Dock="Left" BorderBrush="Gray" BorderThickness="1,0,0,0" x:Name="ConnectionsList">
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                        <ListBoxItem Content="asdasd"></ListBoxItem>
+                    </ListBox>
+                </DockPanel>
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Border BorderBrush="Gray" BorderThickness="0,1,0,0">
+                <DockPanel HorizontalAlignment="Right">
+                    <Button Content="Connect" Height="30" Width="75" Margin="10" />
+                    <Button Content="Cancel" Height="30" Width="75" Margin="10" />
+                </DockPanel>
+            </Border>
+        </Grid>
         
     </Grid>
 </Window>
