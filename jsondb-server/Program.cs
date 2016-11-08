@@ -45,7 +45,7 @@ namespace JSONDB.Server
         /// <param name="args">Program arguments passed through the console</param>
         public static void Main(string[] args)
         {
-            // Getting the server adsress from the list of arguments
+            // Getting the server address from the list of arguments
             if (args.Length > 0)
             {
                 for (int i = 0, l = args.Length; i < l; i++)
