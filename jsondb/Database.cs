@@ -35,6 +35,42 @@ namespace JSONDB.Library
             Connect(server, username, password, String.Empty);
         }
 
+        /// <summary>
+        /// Connect to a server.
+        /// </summary>
+        /// <param name="server">The name of the server to connect on</param>
+        /// <param name="credentials">Credentials sent by the WebSocket connection</param>
+        public Database(string server, string credentials)
+        {
+            if (server == String.Empty || credentials == String.Empty)
+            {
+                throw new Exception("Database Error: Can't connect to the server, missing parameters.");
+            }
+
+            Benchmark.Mark("Database_(connect)_start");
+            var Users = Configuration.GetConfigFile("users");
+
+            if (Users[server] == null)
+            {
+                Benchmark.Mark("Database_(connect)_end");
+                throw new Exception("Database Error: There is no registered server with the name \"" + server + "\".");
+            }
+
+            var CurrentCredentials = Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(Users[server]["username"].ToString() + ":" + Users[server]["password"].ToString())
+            );
+
+            if (CurrentCredentials != credentials)
+            {
+                Benchmark.Mark("Database_(connect)_end");
+                throw new Exception("Database Error: User's authentication failed. Access denied.");
+            }
+
+            ServerName = Util.MakePath(Util.AppRoot(), "servers", server);
+
+            Benchmark.Mark("Database_(connect)_end");
+        }
+
         private void Connect(string server, string username, string password, string database)
         {
             if (server == String.Empty || username == String.Empty)

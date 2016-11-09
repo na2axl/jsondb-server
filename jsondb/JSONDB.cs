@@ -87,5 +87,16 @@ namespace JSONDB.Library
         {
             return new Database(server, username, password);
         }
+
+        /// <summary>
+        /// Connect to a server.
+        /// </summary>
+        /// <param name="server">The name of the server to connect on</param>
+        /// <param name="credentials">Credentials sent by the websocket connection</param>
+        /// <returns></returns>
+        public static Database Connect(string server, string credentials)
+        {
+            return new Database(server, credentials);
+        }
     }
 }
