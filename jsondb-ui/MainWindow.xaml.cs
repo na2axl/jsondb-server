@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
 
 namespace JSONDB.UI
@@ -25,8 +26,10 @@ namespace JSONDB.UI
             InitializeComponent();
 
             // Check the server state every 1 / 4 seconds
-            // var statusChecker = new StatusChecker(this);
-            // var stateTimer = new Timer(statusChecker.CheckStatus, null, 0, 250);
+            var stateTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Normal, (s, e) =>
+            {
+                UpdateServerState();
+            }, Application.Current.Dispatcher);
             UpdateServerState();
         }
 
@@ -139,23 +142,6 @@ namespace JSONDB.UI
         {
             var newServerWindow = new NewServerWindow(this);
             newServerWindow.ShowDialog();
-        }
-    }
-
-    public class StatusChecker
-    {
-
-        private MainWindow window { get; set; }
-
-        public StatusChecker(MainWindow w)
-        {
-            window = w;
-        }
-
-        // This method is called by the timer delegate.
-        public void CheckStatus(Object stateInfo)
-        {
-            window.UpdateServerState();
         }
     }
 }
