@@ -6,7 +6,7 @@ namespace JSONDB.Library
     struct BenchPoint
     {
         public long Time { get; set; }
-        public int Memory { get; set; }
+        public long Memory { get; set; }
     }
 
     class Benchmark
@@ -17,7 +17,7 @@ namespace JSONDB.Library
         {
             BenchPoint Point = new BenchPoint();
             Point.Time = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
-            Point.Memory = 0;
+            Point.Memory = System.Diagnostics.Process.GetCurrentProcess().PeakWorkingSet64;
 
             if (Marker == null) Marker = new Dictionary<string, BenchPoint>();
 
@@ -46,7 +46,7 @@ namespace JSONDB.Library
             return e - s;
         }
 
-        public static int MemoryUsage(string point1, string point2)
+        public static long MemoryUsage(string point1, string point2)
         {
             if (point1 == null)
             {
@@ -62,8 +62,8 @@ namespace JSONDB.Library
                 Mark(point2);
             }
 
-            int s = Marker[point1].Memory;
-            int e = Marker[point2].Memory;
+            long s = Marker[point1].Memory;
+            long e = Marker[point2].Memory;
 
             return e - s;
         }
