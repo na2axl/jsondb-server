@@ -566,6 +566,10 @@ namespace JSONDB.Library
             ParsedClause["action"] = new JObject();
             ParsedClause["action"]["name"] = actionParts[0].ToString().Trim();
             ParsedClause["action"]["parameters"] = new JArray(actionParts[1].Split(';'));
+            Array.ForEach(ParsedClause["action"]["parameters"].ToArray(), (field) =>
+            {
+                ParsedClause["action"]["parameters"][Array.IndexOf(ParsedClause["action"]["parameters"].ToArray(), field)] = field.ToString().Trim();
+            });
 
             return ParsedClause;
         }
