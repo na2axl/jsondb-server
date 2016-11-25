@@ -1,53 +1,24 @@
 ﻿using JSONDB.Library;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using WebSocketSharp;
+using WebSocketSharp.Net.WebSockets;
 using WebSocketSharp.Server;
 
 namespace JSONDB.Server
 {
     public class ClientSocketServer : WebSocketBehavior
     {
+
+        internal static Queue<QueryPool> Pools = new Queue<QueryPool>();
+
         protected override void OnMessage(MessageEventArgs e)
         {
             if (e.IsText)
             {
-                var ServerName = Context.Headers["jdb-server-name"] ?? String.Empty;
-                if (ServerName == String.Empty)
-                {
-                    Context.WebSocket.Close(CloseStatusCode.InvalidData, "The request has not a server to connect on.");
-                }
-                else
-                {
-                    var ServerList = Configuration.GetConfigFile("users");
-                    if (ServerList[ServerName] != null)
-                    {
-                        var CurrentCredentials = Convert.ToBase64String(
-                            Encoding.UTF8.GetBytes(ServerList[ServerName]["username"].ToString() + ":" + ServerList[ServerName]["password"].ToString())
-                        );
-                        var SentCredentials = Context.Headers["authorization"].Replace("Basic ", "");
-
-                        if (CurrentCredentials == SentCredentials)
-                        {
-                            /// TODO: Implement JSONDB in C# to use it here...
-                            JObject res = new JObject();
-                            res["_jdb_error"] = false;
-                            res["_error_msg"] = String.Empty;
-                            res["_query_result"] = QueryParser.Parse(e.Data);
-                            Send(res.ToString());
-                            Context.WebSocket.Close(CloseStatusCode.Normal, "Received query executed.");
-                        }
-                        else
-                        {
-                            Context.WebSocket.Close(CloseStatusCode.ServerError, "Bad user credentials.");
-                        }
-                    }
-                    else
-                    {
-                        Context.WebSocket.Close(CloseStatusCode.ServerError, "No server was found.");
-                    }
-                }
+                Pools.Enqueue(new QueryPool(e.Data, Context));
             }
             else
             {
@@ -61,7 +32,70 @@ namespace JSONDB.Server
             res["_jdb_error"] = true;
             res["_error_msg"] = e.Message;
             res["_query_result"] = new JObject();
-            Send(res.ToString());
+            SendAsync(res.ToString(), (success) =>
+            {
+                Context.WebSocket.Close(CloseStatusCode.ServerError, e.Message);
+            });
+        }
+
+        internal class QueryPool
+        {
+            private string _query;
+            private WebSocketContext _context;
+
+            public QueryPool(string query, WebSocketContext context)
+            {
+                _query = query;
+                _context = context;
+            }
+
+            /// <summary>
+            /// Send an enqueued query to the server.
+            /// </summary>
+            public void Send()
+            {
+                var ServerName = _context.Headers["jdb-server-name"] ?? String.Empty;
+                if (ServerName == String.Empty)
+                {
+                    _context.WebSocket.Close(CloseStatusCode.InvalidData, "The request has not a server to connect on.");
+                }
+
+                else
+                {
+                    var DatabaseName = _context.Headers["jdb-database-name"] ?? String.Empty;
+                    if (DatabaseName == String.Empty)
+                    {
+                        _context.WebSocket.Close(CloseStatusCode.InvalidData, "The request has not a database to connect on.");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Database _db = Library.JSONDB.Connect(ServerName, _context.Headers["authorization"].Replace("Basic ", ""));
+                            _db.SetDatabase(DatabaseName);
+                            JObject res = new JObject();
+                            res["_jdb_error"] = false;
+                            res["_error_msg"] = String.Empty;
+                            res["_query_result"] = _db.Query(_query);
+                            _context.WebSocket.SendAsync(res.ToString(), (success) =>
+                            {
+                                if (success)
+                                {
+                                    _context.WebSocket.Close(CloseStatusCode.Normal, "Received query executed.");
+                                }
+                                else
+                                {
+                                    _context.WebSocket.Close(CloseStatusCode.ServerError, "Error when executing the query.");
+                                }
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            _context.WebSocket.Close(CloseStatusCode.ServerError, e.Message);
+                        }
+                    }
+                }
+            }
         }
     }
 }

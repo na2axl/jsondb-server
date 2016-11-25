@@ -66,6 +66,7 @@ namespace JSONDB.Server
             }
 
             HTTPServer http = null;
+            System.Threading.Thread qThread = null;
 
             try
             {
@@ -104,8 +105,21 @@ namespace JSONDB.Server
 
                 // Start the HTTP server
                 http.Start();
+
+                // Execute queries while the server is running
+                qThread = new System.Threading.Thread((state) => {
+                    while (IsRunning)
+                    {
+                        if (ClientSocketServer.Pools.Count > 0)
+                        {
+                            ClientSocketServer.Pools.Dequeue().Send();
+                        }
+                    }
+                });
+
+                qThread.Start();
             }
-            catch (Exception)
+            catch (System.Net.Sockets.SocketException)
             {
                 AServerIsRunning = true;
             }
@@ -224,6 +238,9 @@ namespace JSONDB.Server
             {
                 // Stop the server when a "close" command is recieved
                 http.Stop();
+
+                // Stop to execute queries
+                qThread.Abort();
             }
         }
 
@@ -641,31 +658,15 @@ namespace JSONDB.Server
                 }
                 else
                 {
-                    var ServerList = Configuration.GetConfigFile("users");
-                    if (ServerList[server] != null)
+                    try
                     {
-                        if (ServerList[server]["username"].ToString() == Util.Crypt(username) && ServerList[server]["password"].ToString() == Util.Crypt(password))
-                        {
-                            ServerName = server;
-
-                            try
-                            {
-                                DB = Library.JSONDB.Connect(ServerName, username, password, database);
-                                UserIsConnected = true;
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine("Unable to connect to the database: " + e.Message);
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("Cannot connect to a server. There is an error with the username or with the password.");
-                        }
+                        DB = Library.JSONDB.Connect(server, username, password, database);
+                        UserIsConnected = true;
+                        ServerName = server;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        Console.WriteLine("Cannot connect to a server. No server found with the given name.");
+                        Console.WriteLine("Unable to connect to the database: " + e.Message);
                     }
                 }
             }
