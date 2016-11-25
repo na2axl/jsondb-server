@@ -10,9 +10,18 @@ namespace JSONDB.Library
         public static void AddUser(string server, string username, string password)
         {
             JObject Config = GetConfigFile("users");
-            Config[server] = new JObject();
-            Config[server]["username"] = Util.Crypt(username);
-            Config[server]["password"] = Util.Crypt(password);
+            JObject user = new JObject();
+
+            user["username"] = Util.Crypt(username);
+            user["password"] = Util.Crypt(password);
+
+            if (Config[server] == null)
+            {
+                Config[server] = new JArray();
+            }
+
+            ((JArray)Config[server]).Add(user);
+
             _writeConfigFile("users", Config);
         }
 

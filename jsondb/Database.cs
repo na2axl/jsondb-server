@@ -42,6 +42,8 @@ namespace JSONDB.Library
         /// <param name="credentials">Credentials sent by the WebSocket connection</param>
         public Database(string server, string credentials)
         {
+            bool userFound = false;
+
             if (server == String.Empty || credentials == String.Empty)
             {
                 throw new Exception("Database Error: Can't connect to the server, missing parameters.");
@@ -56,11 +58,19 @@ namespace JSONDB.Library
                 throw new Exception("Database Error: There is no registered server with the name \"" + server + "\".");
             }
 
-            var CurrentCredentials = Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(Users[server]["username"].ToString() + ":" + Users[server]["password"].ToString())
-            );
+            foreach (JObject user in (JArray)Users[server])
+            {
+                var CurrentCredentials = Convert.ToBase64String(
+                    System.Text.Encoding.UTF8.GetBytes(user["username"].ToString() + ":" + user["password"].ToString())
+                );
 
-            if (CurrentCredentials != credentials)
+                if (CurrentCredentials == credentials)
+                {
+                    userFound = true;
+                }
+            }
+
+            if (!userFound)
             {
                 Benchmark.Mark("Database_(connect)_end");
                 throw new Exception("Database Error: User's authentication failed. Access denied.");
@@ -73,6 +83,8 @@ namespace JSONDB.Library
 
         private void Connect(string server, string username, string password, string database)
         {
+            bool userFound = false;
+    
             if (server == String.Empty || username == String.Empty)
             {
                 throw new Exception("Database Error: Can't connect to the server, missing parameters.");
@@ -86,7 +98,16 @@ namespace JSONDB.Library
                 Benchmark.Mark("Database_(connect)_end");
                 throw new Exception("Database Error: There is no registered server with the name \"" + server + "\".");
             }
-            if (Users[server]["username"].ToString() != Util.Crypt(username) || Users[server]["password"].ToString() != Util.Crypt(password))
+
+            foreach (JObject user in (JArray)Users[server])
+            {
+                if (user["username"].ToString() == Util.Crypt(username) && user["password"].ToString() == Util.Crypt(password))
+                {
+                    userFound = true;
+                }
+            }
+
+            if (!userFound)
             {
                 Benchmark.Mark("Database_(connect)_end");
                 throw new Exception("Database Error: User's authentication failed for user \"" + username + "\" on server \"" + server + "\" (Using password: " + (password.Length > 0 ? "Yes" : "No") + "). Access denied.");

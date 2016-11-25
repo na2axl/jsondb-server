@@ -72,6 +72,7 @@ namespace JSONDB.Library
 
                 Benchmark.Mark("jsondb_(query)_start");
                 Util.LockFile(Util.MakePath(DBConnection.GetServer(), DBConnection.GetDatabase(), Table + ".jdbt"));
+                Cache.Reset();
 
                 JObject json_array = JObject.Parse(Cache.Get(table_path));
                 JObject QueryResult = new JObject();
@@ -199,7 +200,7 @@ namespace JSONDB.Library
                         while (dataIterator.MoveNext())
                         {
                             var data = (JObject)dataIterator.Current.Value;
-                            if (data[link_info[1]] == value)
+                            if (data[link_info[1]].ToString() == value.ToString())
                             {
                                 return dataIterator.Current.Key;
                             }
