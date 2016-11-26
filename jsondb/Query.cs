@@ -671,7 +671,7 @@ namespace JSONDB.Library
             foreach (var item in (JObject)data["data"])
             {
                 JObject array_data = Util.DiffKey((JObject)item.Value, non_pk);
-                pk_error = (pk_error || (JObject.DeepEquals(Util.DiffKey(values, non_pk), array_data) && array_data.Count > 0));
+                pk_error = (pk_error || (JToken.DeepEquals(Util.DiffKey(values, non_pk), array_data) && array_data.Count > 0));
                 if (pk_error)
                 {
                     throw new Exception("JSONDB Error: Can't insert value. Duplicate values \"" + String.Join(", ", Util.Values(array_data)) + "\" for primary keys \"" + String.Join(", ", data["properties"]["primary_keys"]) + "\".");
@@ -688,7 +688,7 @@ namespace JSONDB.Library
                 {
                     JObject array_data = new JObject();
                     array_data[uk] = item.Value[uk];
-                    uk_error = (uk_error || (array[uk] != null && JObject.DeepEquals(array, array_data)));
+                    uk_error = (uk_error || (array[uk] != null && JToken.DeepEquals(array, array_data)));
                     if (uk_error)
                     {
                         throw new Exception("JSONDB Error: Can't insert value. Duplicate values \"" + array[uk] + "\" for unique key \"" + uk + "\".");
@@ -850,7 +850,7 @@ namespace JSONDB.Library
                 foreach (var slid in Util.Slice(insert, index + 1))
                 {
                     JObject value = Util.DiffKey((JObject)slid.Value, non_pk);
-                    pk_error = (pk_error || (JObject.DeepEquals(value, array_data) && array_data.Count > 0));
+                    pk_error = (pk_error || (JToken.DeepEquals(value, array_data) && array_data.Count > 0));
                     if (pk_error)
                     {
                         throw new Exception("JSONDB Error: Can't insert value. Duplicate values \"" + String.Join(", ", Util.Values(value)) + "\" for primary keys \"" + String.Join(", ", (JArray)data["properties"]["primary_keys"]) + "\".");
@@ -860,9 +860,9 @@ namespace JSONDB.Library
             }
 
             bool uk_error = false;
-            index = 0;
             for (int i = 0, l = ((JArray)data["properties"]["unique_keys"]).Count; i < l; i++)
             {
+                index = 0;
                 string uk = data["properties"]["unique_keys"][i].ToString();
                 foreach (var lid in insert)
                 {
@@ -872,7 +872,7 @@ namespace JSONDB.Library
                     {
                         JObject value = new JObject();
                         value[uk] = slid.Value[uk];
-                        uk_error = (uk_error || (value[uk] != null && JObject.DeepEquals(value, array_data)));
+                        uk_error = (uk_error || (value[uk] != null && JToken.DeepEquals(value, array_data)));
                         if (uk_error)
                         {
                             throw new Exception("JSONDB Error: Can't insert value. Duplicate value \"" + value[uk] + "\" for unique key \"" + uk + "\".");
