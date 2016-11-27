@@ -33,6 +33,29 @@ namespace JSONDB.Library
             _writeConfigFile("users", Config);
         }
 
+        public static void RemoveUser(string server, string username, string password)
+        {
+            JObject Config = GetConfigFile("users");
+            int i = 0;
+
+            if (Config[server] == null)
+            {
+                return;
+            }
+
+            foreach (JObject user in (JArray)Config[server])
+            {
+                if (user["username"].ToString() == Util.Crypt(username) && user["password"].ToString() == Util.Crypt(password))
+                {
+                    ((JArray)Config[server]).RemoveAt(i);
+                    break;
+                }
+                ++i;
+            }
+
+            _writeConfigFile("users", Config);
+        }
+
         public static JObject GetConfigFile(string file)
         {
             if (_exists(file))
