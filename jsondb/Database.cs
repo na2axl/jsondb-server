@@ -500,7 +500,7 @@ namespace JSONDB.Library
         /// </summary>
         /// <param name="table_path">The path to the table</param>
         /// <returns>The content of the table</returns>
-        public static JObject GetTableData(string table_path)
+        internal static JObject GetTableData(string table_path)
         {
             return JObject.Parse(Util.ReadTextFile(table_path));
         }
@@ -510,7 +510,7 @@ namespace JSONDB.Library
         /// </summary>
         /// <param name="table_path">The path to the tabe</param>
         /// <param name="data">The data to write</param>
-        public static void WriteTableData(string table_path, JObject data)
+        internal static void WriteTableData(string table_path, JObject data)
         {
             Util.WriteTextFile(table_path, data.ToString());
         }
