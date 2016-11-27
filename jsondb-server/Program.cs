@@ -1,6 +1,7 @@
 ﻿using JSONDB.Library;
 using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using WebSocketSharp;
@@ -123,6 +124,12 @@ namespace JSONDB.Server
             {
                 AServerIsRunning = true;
             }
+            catch (Exception)
+            {
+                Console.WriteLine("An error occured while starting the server, please try again. If the error persist, contact your administrator. Press Enter to close.");
+                Console.ReadKey(true);
+                IsRunning = false;
+            }
 
             // If the JSONDB Server is launched as a console
             if (!Console.IsInputRedirected)
@@ -132,7 +139,7 @@ namespace JSONDB.Server
                 Console.WriteLine("Server version 1.0.0");
                 Console.WriteLine();
                 Console.WriteLine("The server is listening for incomming connections at the address jsondb://" + ServerAddress.ToString() + ":2717");
-                Console.WriteLine("The server is serving the web administration interface at the address http://" + ServerAddress.ToString() + ":2717");
+                Console.WriteLine("The web administration interface is available at the address http://" + ServerAddress.ToString() + ":2717");
                 Console.WriteLine();
                 Console.WriteLine("Type 'help' for the list of available commands.");
                 Console.WriteLine();
@@ -149,66 +156,78 @@ namespace JSONDB.Server
                         Console.Write("$ jsondb >  ");
                     }
 
-                    var command = Console.ReadLine();
-                    Console.WriteLine();
+                    string command = Console.ReadLine();
+                    string _cmd = command.ToLower().TrimStart();
 
-                    if (command.Trim() == String.Empty)
+                    if (_cmd == String.Empty)
                     {
                         // Do nothing...
                     }
-                    else if (command.ToLower().StartsWith("help"))
+                    else if (_cmd.StartsWith("help"))
                     {
                         Console.WriteLine("Use help [commandName] for a detailed help about a command.");
                         Console.WriteLine();
-                        Console.WriteLine("mkserver          Create a new server.");
-                        Console.WriteLine("connect           Connect to a server.");
-                        Console.WriteLine("mkdatabase        Create a new database.");
-                        Console.WriteLine("cd                Change the current working database.");
-                        Console.WriteLine("mktable           Create a new table in the current working database.");
-                        Console.WriteLine("query             Execute a query.");
-                        Console.WriteLine("desc server       Show the list of databases in the current working server.");
-                        Console.WriteLine("desc database     Show the list of tables in the current working database.");
-                        Console.WriteLine("disconnect        Disconnect from a server.");
-                        Console.WriteLine("close             Disconnect and close the console.");
-                        Console.WriteLine("clear             Clear the console.");
+                        Console.WriteLine("mkserver           Create a new server.");
+                        Console.WriteLine("connect            Connect to a server.");
+                        Console.WriteLine("mkdatabase         Create a new database.");
+                        Console.WriteLine("cd                 Change the current working database.");
+                        Console.WriteLine("mktable            Create a new table in the current working database.");
+                        Console.WriteLine("query              Execute a query.");
+                        Console.WriteLine("desc server        Show the list of databases in the current working server.");
+                        Console.WriteLine("desc database      Show the list of tables in the current working database.");
+                        Console.WriteLine("disconnect         Disconnect from a server.");
+                        Console.WriteLine("close              Disconnect and close the console.");
+                        Console.WriteLine("clear              Clear the console.");
                     }
-                    else if (command.ToLower().StartsWith("mkserver"))
+                    else if (_cmd.StartsWith("mkserver"))
                     {
                         ExecMkServer(command);
                     }
-                    else if (command.ToLower().StartsWith("desc"))
+                    else if (_cmd.StartsWith("rmserver"))
+                    {
+                        ExecRmSrever(command);
+                    }
+                    else if (_cmd.StartsWith("desc"))
                     {
                         ExecDesc(command);
                     }
-                    else if (command.ToLower().StartsWith("connect"))
+                    else if (_cmd.StartsWith("connect"))
                     {
                         ExecConnect(command);
                     }
-                    else if (command.ToLower().StartsWith("mkdatabase"))
+                    else if (_cmd.StartsWith("mkdatabase"))
                     {
                         ExecMkDatabase(command);
                     }
-                    else if (command.ToLower().StartsWith("cd"))
+                    else if (_cmd.StartsWith("rmdatabase"))
+                    {
+                        ExecRmDatabase(command);
+                    }
+                    else if (_cmd.StartsWith("cd"))
                     {
                         ExecChangeDatabase(command);
                     }
-                    else if (command.ToLower().StartsWith("mktable"))
+                    else if (_cmd.StartsWith("mktable"))
                     {
                         ExecMkTable(command);
                     }
-                    else if (command.ToLower().StartsWith("query"))
+                    else if (_cmd.StartsWith("rmtable"))
+                    {
+                        ExecRmTable(command);
+                    }
+                    else if (_cmd.StartsWith("query"))
                     {
                         ExecQuery(command);
                     }
-                    else if (command.ToLower().StartsWith("disconnect"))
+                    else if (_cmd.StartsWith("disconnect"))
                     {
                         ExecDisconnect(command);
                     }
-                    else if (command.ToLower().StartsWith("quit") || command.ToLower().StartsWith("exit") || command.ToLower().StartsWith("close") || command.ToLower().StartsWith("shutdown"))
+                    else if (_cmd.StartsWith("quit") || _cmd.StartsWith("exit") || _cmd.StartsWith("close") || _cmd.StartsWith("shutdown"))
                     {
                         ExecClose(command);
                     }
-                    else if (command.ToLower().StartsWith("clear"))
+                    else if (_cmd.StartsWith("clear"))
                     {
                         Console.Clear();
                     }
@@ -241,6 +260,163 @@ namespace JSONDB.Server
 
                 // Stop to execute queries
                 qThread.Abort();
+            }
+        }
+
+        private static void ExecRmTable(string command)
+        {
+            if (UserIsConnected)
+            {
+                if (DB.IsWorkingDatabase())
+                {
+                    string table = command.Remove(0, 7).Trim();
+                    while (table == String.Empty)
+                    {
+                        Console.Write(" -> Table name: ");
+                        table = _validateName(Console.ReadLine().Trim());
+                    }
+
+                    if (Util.Exists(Util.MakePath(DB.GetServer(), DB.GetDatabase(), table + ".jdbt")))
+                    {
+                        try
+                        {
+                            Console.Write("The table will be deleted. It's recommended to backup your table before continue. Are you sure to delete this table ? (Type 'yes' to confirm): ");
+                            string choice = Console.ReadLine().ToLower().Trim();
+                            if (choice == "yes" || choice == "y")
+                            {
+                                File.Delete(Util.MakePath(DB.GetServer(), DB.GetDatabase(), table + ".jdbt"));
+                                Console.WriteLine("Table deleted.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Table deletion cancelled.");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Unable to delete the table: " + e.Message);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unable to delete the table: The table doesn't exist in the current database.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Unable to delete the table: No database selected.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Unable to delete the table: You are not connected to a server.");
+            }
+        }
+
+        private static void ExecRmDatabase(string command)
+        {
+            if (UserIsConnected)
+            {
+                string database = command.Remove(0, 10).Trim();
+
+                while (database == String.Empty)
+                {
+                    Console.Write(" -> Database name: ");
+                    database = _validateName(Console.ReadLine().Trim());
+                }
+
+                try
+                {
+                    if (DB.Exists(database))
+                    {
+                        Console.Write("The database will be deleted, note that ALL your tables will be also deleted. It's recommended to backup your database before continue. Are you sure to delete this database ? (Type 'yes' to confirm): ");
+                        string choice = Console.ReadLine().ToLower().Trim();
+                        if (choice == "yes" || choice == "y")
+                        {
+                            Directory.Delete(Util.MakePath(DB.GetServer(), database), true);
+                            Console.WriteLine("Database deleted.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Database deletion cancelled.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("The database \"" + database + "\" doesn't exist in the current server.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unable to delete the database: " + e.Message);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Unable to delete the database: You are not connected to a server.");
+            }
+        }
+
+        private static void ExecRmSrever(string command)
+        {
+            string[] parts = command.Remove(0, 8).Trim().Split(' ');
+
+            string username = String.Empty;
+            string password = String.Empty;
+            string server = String.Empty;
+
+            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+
+            for (int i = 0, l = parts.Length; i < l; i++)
+            {
+                switch (parts[i])
+                {
+                    case "-s":
+                        server = parts[i + 1];
+                        break;
+                    case "-u":
+                        username = parts[i + 1];
+                        break;
+                }
+            }
+
+            while (server == String.Empty)
+            {
+                Console.Write(" -> Server name: ");
+                server = _validateName(Console.ReadLine().Trim());
+            }
+
+            while (username == String.Empty)
+            {
+                Console.Write(" -> Username: ");
+                username = _validateName(Console.ReadLine().Trim());
+            }
+
+            if (command.Trim().Length == 8 && password == String.Empty)
+            {
+                Console.Write(" -> Password: ");
+                password = _password();
+            }
+
+            try
+            {
+                Library.JSONDB.Connect(server, username, password);
+                Console.Write("The server will be deleted, note that ALL your databases and tables will be also deleted. It's recommended to backup your server before continue. Are you sure to delete this server ? (Type 'yes' to confirm): ");
+                string choice = Console.ReadLine().ToLower().Trim();
+                if (choice == "yes" || choice == "y")
+                {
+                    Directory.Delete(Util.MakePath(Util.AppRoot(), "servers", server), true);
+                    Configuration.RemoveServer(server);
+                    Console.WriteLine("Server deleted.");
+                }
+                else
+                {
+                    Console.WriteLine("Server deletion cancelled.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unable to delete the server: " + e.Message);
             }
         }
 
@@ -386,22 +562,29 @@ namespace JSONDB.Server
 
         private static void ExecMkDatabase(string command)
         {
-            string database = command.Remove(0, 10).Trim();
+            if (UserIsConnected)
+            {
+                string database = command.Remove(0, 10).Trim();
 
-            while (database == String.Empty)
-            {
-                Console.Write(" -> Database name: ");
-                database = Console.ReadLine().Trim().Split(' ')[0];
-            }
+                while (database == String.Empty)
+                {
+                    Console.Write(" -> Database name: ");
+                    database = _validateName(Console.ReadLine().Trim());
+                }
 
-            try
-            {
-                DB.CreateDatabase(database);
-                Console.WriteLine("Database created.");
+                try
+                {
+                    DB.CreateDatabase(database);
+                    Console.WriteLine("Database created.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unable to create the database: " + e.Message);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine("Unable to create the database: " + e.Message);
+                Console.WriteLine("Unable to create the database: You are not connected to a server.");
             }
         }
 
@@ -413,7 +596,7 @@ namespace JSONDB.Server
 
                 while (query == String.Empty)
                 {
-                    Console.WriteLine(" -> ");
+                    Console.Write(" -> ");
                     query = Console.ReadLine().Trim();
                 }
 
@@ -458,19 +641,19 @@ namespace JSONDB.Server
             while (server == String.Empty)
             {
                 Console.Write(" -> Server name: ");
-                server = Console.ReadLine().Trim().Split(' ')[0];
+                server = _validateName(Console.ReadLine().Trim());
             }
 
             while (username == String.Empty)
             {
                 Console.Write(" -> Username: ");
-                username = Console.ReadLine().Trim();
+                username = _validateName(Console.ReadLine().Trim());
             }
 
             if (command.Trim().Length == 8 && password == String.Empty)
             {
                 Console.Write(" -> Password (Leave blank to ignore (not recommended)): ");
-                password = Console.ReadLine();
+                password = _password();
             }
 
             try
@@ -545,7 +728,7 @@ namespace JSONDB.Server
                     while (table == String.Empty)
                     {
                         Console.Write(" -> Table name: ");
-                        table = Console.ReadLine().Trim().Split(' ')[0];
+                        table = _validateName(Console.ReadLine().Trim());
                     }
                     JObject prototype = new JObject();
                     bool IsAddindFields = true;
@@ -670,6 +853,32 @@ namespace JSONDB.Server
                     }
                 }
             }
+        }
+
+        private static string _validateName(string name)
+        {
+            if (!Regex.IsMatch(name, "^[a-zA-Z0-9_]+$"))
+            {
+                Console.WriteLine("Invalid server name.");
+                Console.WriteLine();
+                return String.Empty;
+            }
+
+            return name;
+        }
+
+        private static string _password()
+        {
+            ConsoleKeyInfo c;
+            string password = String.Empty;
+
+            while ((c = Console.ReadKey(true)).Key != ConsoleKey.Enter)
+            {
+                password += c.KeyChar;
+            }
+            Console.WriteLine();
+
+            return password;
         }
     }
 }
