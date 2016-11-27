@@ -5,8 +5,16 @@ using System.Text;
 
 namespace JSONDB.Library
 {
-    public class Configuration
+    public static class Configuration
     {
+        public static void RemoveServer(string server)
+        {
+            JObject Config = GetConfigFile("users");
+            Config.Remove(server);
+
+            _writeConfigFile("users", Config);
+        }
+
         public static void AddUser(string server, string username, string password)
         {
             JObject Config = GetConfigFile("users");
