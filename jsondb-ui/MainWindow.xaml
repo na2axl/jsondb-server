@@ -30,7 +30,7 @@
             </Menu>
         </StackPanel>
         <DockPanel LastChildFill="False" DockPanel.Dock="Top">
-            <Ellipse x:Name="serverStateIcon" Fill="Transparent" Height="15" Margin="20,0,10,0" Stroke="Transparent" VerticalAlignment="Center" Width="15" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Left">
+            <Ellipse x:Name="ServerStateIcon" Fill="Transparent" Height="15" Margin="20,0,10,0" Stroke="Transparent" VerticalAlignment="Center" Width="15" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Left">
                 <Ellipse.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform ScaleX="-1"/>
@@ -40,9 +40,9 @@
                     </TransformGroup>
                 </Ellipse.RenderTransform>
             </Ellipse>
-            <Button x:Name="serverStateManager" Height="30" Content="Start Server" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="95" Click="ServerStateToggle" DockPanel.Dock="Left" />
-            <Button x:Name="serverRestarter" Height="30" Content="Restart Server" Margin="10,0,10,0" VerticalAlignment="Center" Width="105" Click="ServerRestart" DockPanel.Dock="Left" />
-            <TextBlock x:Name="serverStateNotifierText" TextWrapping="Wrap" Margin="10,0,10,0" Text="Server Stopped" VerticalAlignment="Center" Width="110" TextAlignment="Right" TextBlock.FontWeight="Bold" DockPanel.Dock="Left" />
+            <Button x:Name="ServerStateManager" Height="30" Content="Start Server" Margin="10,0,10,0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="95" Click="ServerStateToggle" DockPanel.Dock="Left" />
+            <Button x:Name="ServerRestarter" Height="30" Content="Restart Server" Margin="10,0,10,0" VerticalAlignment="Center" Width="105" Click="ServerRestart" DockPanel.Dock="Left" />
+            <TextBlock x:Name="ServerStateNotifierText" TextWrapping="Wrap" Margin="10,0,10,0" Text="Server Stopped" VerticalAlignment="Center" Width="110" TextAlignment="Right" FontWeight="Bold" DockPanel.Dock="Left" />
         </DockPanel>
     </DockPanel>
 </Window>

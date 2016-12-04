@@ -17,9 +17,11 @@ namespace JSONDB.UI
         public MainWindow()
         {
             // Initialize the taskbar icon
-            TaskIcon = new TaskbarIcon();
-            TaskIcon.Icon = AppResources.ServerStoppedIcon;
-            TaskIcon.ToolTipText = AppResources.AppName;
+            TaskIcon = new TaskbarIcon
+            {
+                Icon = AppResources.ServerStoppedIcon,
+                ToolTipText = AppResources.AppName
+            };
             TaskIcon.TrayMouseDoubleClick += TrayMouseDoubleClick;
 
             // Initialize the UI
@@ -52,10 +54,10 @@ namespace JSONDB.UI
             if (App.ServerIsStopped())
             {
                 TaskIcon.Icon = AppResources.ServerStoppedIcon;
-                serverStateIcon.Fill = Brushes.Red;
-                serverStateNotifierText.Text = "Server Stopped";
-                serverStateManager.Content = "Start Server";
-                serverRestarter.IsEnabled = false;
+                ServerStateIcon.Fill = Brushes.Red;
+                ServerStateNotifierText.Text = "Server Stopped";
+                ServerStateManager.Content = "Start Server";
+                ServerRestarter.IsEnabled = false;
                 MenuFileRestartServer.IsEnabled = false;
                 MenuFileStopServer.IsEnabled = false;
                 MenuFileStartServer.IsEnabled = true;
@@ -63,10 +65,10 @@ namespace JSONDB.UI
             else
             {
                 TaskIcon.Icon = AppResources.ServerStartedIcon;
-                serverStateIcon.Fill = Brushes.Green;
-                serverStateNotifierText.Text = "Server Started";
-                serverStateManager.Content = "Stop Server";
-                serverRestarter.IsEnabled = true;
+                ServerStateIcon.Fill = Brushes.Green;
+                ServerStateNotifierText.Text = "Server Started";
+                ServerStateManager.Content = "Stop Server";
+                ServerRestarter.IsEnabled = true;
                 MenuFileRestartServer.IsEnabled = true;
                 MenuFileStopServer.IsEnabled = true;
                 MenuFileStartServer.IsEnabled = false;
