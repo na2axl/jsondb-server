@@ -22,6 +22,9 @@
                     <MenuItem x:Name="MenuServersEdit" Header="_Edit" />
                     <MenuItem x:Name="MenuServersDelete" Header="_Delete" />
                 </MenuItem>
+                <MenuItem x:Name="MenuTools" Height="20" Header="_Tools">
+                    <MenuItem x:Name="MenuToolsOpenCommandPrompt" Header="_Open Command Prompt" Click="OpenCommandPrompt" />
+                </MenuItem>
                 <MenuItem x:Name="MenuHelp" Height="20" Header="_Help">
                     <MenuItem x:Name="MenuHelpUpdate" Header="_Check For Updates" />
                     <Separator />

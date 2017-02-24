@@ -10,8 +10,8 @@ namespace JSONDB.UI
     public enum MessageWindowButton
     {
         None = 0,
-        OK = 1,
-        OKCancel = 2,
+        Ok = 1,
+        OkCancel = 2,
         YesNo = 3,
         YesNoCancel = 4
     }
@@ -26,7 +26,7 @@ namespace JSONDB.UI
 
     public enum MessageWindowResult
     {
-        OK = 9,
+        Ok = 9,
         Cancel = 10,
         Yes = 11,
         No = 12,
@@ -61,37 +61,37 @@ namespace JSONDB.UI
             // Set the message text
             MessageBoxText.Text = message;
 
-            Bitmap ImageToShow = null;
+            Bitmap imageToShow = null;
 
             // Set the image to show and the sound to play
             switch (image)
             {
                 case MessageWindowImage.Information:
-                    ImageToShow = AppResources.MessageWindowInformation;
+                    imageToShow = AppResources.MessageWindowInformation;
                     SoundToPlay = SystemSounds.Asterisk;
                     break;
                 case MessageWindowImage.Warning:
-                    ImageToShow = AppResources.MessageWindowWarning;
+                    imageToShow = AppResources.MessageWindowWarning;
                     SoundToPlay = SystemSounds.Exclamation;
                     break;
                 case MessageWindowImage.Error:
-                    ImageToShow = AppResources.MessageWindowError;
+                    imageToShow = AppResources.MessageWindowError;
                     SoundToPlay = SystemSounds.Hand;
                     break;
                 case MessageWindowImage.Success:
-                    ImageToShow = AppResources.MessageWindowSuccess;
+                    imageToShow = AppResources.MessageWindowSuccess;
                     SoundToPlay = SystemSounds.Beep;
                     break;
                 default:
                     break;
             }
 
-            if (ImageToShow != null)
+            if (imageToShow != null)
             {
-                MemoryStream memory = new MemoryStream();
-                ImageToShow.Save(memory, ImageFormat.Png);
+                var memory = new MemoryStream();
+                imageToShow.Save(memory, ImageFormat.Png);
                 memory.Position = 0;
-                BitmapImage bitmapImage = new BitmapImage();
+                var bitmapImage = new BitmapImage();
                 bitmapImage.BeginInit();
                 bitmapImage.StreamSource = memory;
                 bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
@@ -103,13 +103,13 @@ namespace JSONDB.UI
             switch (buttons)
             {
                 default:
-                case MessageWindowButton.OK:
+                case MessageWindowButton.Ok:
                     ButtonYes.Visibility = Visibility.Collapsed;
                     ButtonCancel.Visibility = Visibility.Collapsed;
                     ButtonNo.Visibility = Visibility.Collapsed;
                     break;
 
-                case MessageWindowButton.OKCancel:
+                case MessageWindowButton.OkCancel:
                     ButtonYes.Visibility = Visibility.Collapsed;
                     ButtonNo.Visibility = Visibility.Collapsed;
                     break;
@@ -145,7 +145,7 @@ namespace JSONDB.UI
 
             ButtonOK.Click += (object sender, RoutedEventArgs e) =>
             {
-                ClickedButton = MessageWindowResult.OK;
+                ClickedButton = MessageWindowResult.Ok;
                 Close();
             };
 

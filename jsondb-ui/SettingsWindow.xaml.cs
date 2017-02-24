@@ -1,5 +1,4 @@
-﻿using JSONDB.Library;
-using System.Windows;
+﻿using System.Windows;
 
 namespace JSONDB.UI
 {
@@ -8,7 +7,7 @@ namespace JSONDB.UI
     /// </summary>
     public partial class SettingsWindow : Window
     {
-        private AppSettings Settings;
+        private AppSettings _settings;
 
         public SettingsWindow(Window o)
         {
@@ -20,21 +19,21 @@ namespace JSONDB.UI
             InitializeComponent();
 
             // Load Application settings
-            Settings = new AppSettings();
+            _settings = new AppSettings();
 
             // Set buttons states
             cancelSettingsButton.IsCancel = true;
             saveSettingsButton.IsDefault = true;
 
             // Update the UI
-            UpdateUI();
+            UpdateUi();
         }
 
-        private void UpdateUI()
+        private void UpdateUi()
         {
-            UseCustomServerAddress.IsChecked = Settings.UseCustomServerAdress;
-            CustomServerAddress.IsEnabled = Settings.UseCustomServerAdress;
-            CustomServerAddress.Text = Settings.CustomServerAdress;
+            UseCustomServerAddress.IsChecked = _settings.UseCustomServerAdress;
+            CustomServerAddress.IsEnabled = _settings.UseCustomServerAdress;
+            CustomServerAddress.Text = _settings.CustomServerAdress;
         }
 
         private void CustomServerCheckboxChecked(object sender, RoutedEventArgs e)
@@ -56,45 +55,45 @@ namespace JSONDB.UI
             if (Util.TestServerAddress(CustomServerAddress.Text))
             {
                 msgWaitBox.Close();
-                new MessageWindow(this, "The server address works fine !", "Testing Server Address", MessageWindowButton.OK, MessageWindowImage.Success).Open();
+                new MessageWindow(this, "The server address works fine !", "Testing Server Address", MessageWindowButton.Ok, MessageWindowImage.Success).Open();
             }
             else
             {
                 msgWaitBox.Close();
-                new MessageWindow(this, "The server address is not working !", "Testing Server Address", MessageWindowButton.OK, MessageWindowImage.Error).Open();
+                new MessageWindow(this, "The server address is not working !", "Testing Server Address", MessageWindowButton.Ok, MessageWindowImage.Error).Open();
             }
         }
 
         private void SaveSettings(object sender, RoutedEventArgs e)
         {
-            Settings.UseCustomServerAdress = (bool)UseCustomServerAddress.IsChecked;
-            Settings.CustomServerAdress = (string)CustomServerAddress.Text;
-            Settings.JDBTAssociation = (bool)AssociateJDBTFiles.IsChecked;
-            Settings.JQLAssociation = (bool)AssociateJQLFiles.IsChecked;
-            Settings.Save();
+            _settings.UseCustomServerAdress = (bool)UseCustomServerAddress.IsChecked;
+            _settings.CustomServerAdress = (string)CustomServerAddress.Text;
+            _settings.JDBTAssociation = (bool)AssociateJDBTFiles.IsChecked;
+            _settings.JQLAssociation = (bool)AssociateJQLFiles.IsChecked;
+            _settings.Save();
 
-            if (Settings.JDBTAssociation)
+            if (_settings.JDBTAssociation)
             {
                 App.RunElevatedClient("--set-association .jdbt JSONDB_Table_File \"" + Util.MakePath(Util.AppRoot(), "jsondb-jql-editor.exe") + "\" \"JSONDB Table\"");
             }
 
-            if (Settings.JQLAssociation)
+            if (_settings.JQLAssociation)
             {
                 App.RunElevatedClient("--set-association .jql JQL_File \"" + Util.MakePath(Util.AppRoot(), "jsondb-jql-editor.exe") + "\" \"JQL File\"");
             }
 
-            new MessageWindow(this, "Settings Saved.", Title, MessageWindowButton.OK, MessageWindowImage.Success).Open();
+            new MessageWindow(this, "Settings Saved.", Title, MessageWindowButton.Ok, MessageWindowImage.Success).Open();
         }
 
         private void DefaultSettings(object sender, RoutedEventArgs e)
         {
-            Settings.Reset();
-            UpdateUI();
+            _settings.Reset();
+            UpdateUi();
         }
 
         private void CancelSettings(object sender, RoutedEventArgs e)
         {
-            Settings.Reload();
+            _settings.Reload();
             Close();
         }
     }

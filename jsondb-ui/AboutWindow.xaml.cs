@@ -31,10 +31,10 @@ namespace JSONDB.UI
             InitializeComponent();
 
             // Show the logo
-            MemoryStream memory = new MemoryStream();
+            var memory = new MemoryStream();
             AppResources.ProgramLogo.Save(memory, ImageFormat.Png);
             memory.Position = 0;
-            BitmapImage bitmapImage = new BitmapImage();
+            var bitmapImage = new BitmapImage();
             bitmapImage.BeginInit();
             bitmapImage.StreamSource = memory;
             bitmapImage.CacheOption = BitmapCacheOption.OnLoad;

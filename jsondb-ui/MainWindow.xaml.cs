@@ -12,7 +12,8 @@ namespace JSONDB.UI
     public partial class MainWindow : Window
     {
 
-        private TaskbarIcon TaskIcon { get; set; }
+        private TaskbarIcon TaskIcon { get; }
+        private readonly DispatcherTimer _stateTimer;
 
         public MainWindow()
         {
@@ -28,11 +29,19 @@ namespace JSONDB.UI
             InitializeComponent();
 
             // Check the server state every 1 / 4 seconds
-            var stateTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Normal, (s, e) =>
+            _stateTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Normal, (s, e) =>
             {
                 UpdateServerState();
             }, Application.Current.Dispatcher);
+            _stateTimer.Start();
+
+            // Update the server state
             UpdateServerState();
+        }
+
+        ~MainWindow()
+        {
+            _stateTimer.Stop();
         }
 
         private void TrayMouseDoubleClick(object sender, RoutedEventArgs e)
@@ -144,6 +153,20 @@ namespace JSONDB.UI
         {
             var newServerWindow = new NewServerWindow(this);
             newServerWindow.ShowDialog();
+        }
+
+        private void OpenCommandPrompt(object sender, RoutedEventArgs e)
+        {
+            var _cmdProcess = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "jsondb-server.exe",
+                    Arguments = "-noServer"
+                }
+            };
+
+            _cmdProcess.Start();
         }
     }
 }

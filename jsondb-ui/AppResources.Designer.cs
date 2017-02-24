@@ -39,7 +39,7 @@ namespace JSONDB.UI {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("JSONDB.UI.AppResources", typeof(AppResources).Assembly);
+                    var temp = new global::System.Resources.ResourceManager("JSONDB.UI.AppResources", typeof(AppResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -92,7 +92,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap ConsoleLogo {
             get {
-                object obj = ResourceManager.GetObject("ConsoleLogo", resourceCulture);
+                var obj = ResourceManager.GetObject("ConsoleLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -102,7 +102,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap JQLEditorLogo {
             get {
-                object obj = ResourceManager.GetObject("JQLEditorLogo", resourceCulture);
+                var obj = ResourceManager.GetObject("JQLEditorLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -134,7 +134,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowError {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowError", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowError", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -144,7 +144,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowInformation {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowInformation", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowInformation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -154,7 +154,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowSuccess {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowSuccess", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowSuccess", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -164,7 +164,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowWarning {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowWarning", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowWarning", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -174,7 +174,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Icon ProgramIcon {
             get {
-                object obj = ResourceManager.GetObject("ProgramIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("ProgramIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -184,7 +184,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Bitmap ProgramLogo {
             get {
-                object obj = ResourceManager.GetObject("ProgramLogo", resourceCulture);
+                var obj = ResourceManager.GetObject("ProgramLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -194,7 +194,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Icon ServerStartedIcon {
             get {
-                object obj = ResourceManager.GetObject("ServerStartedIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("ServerStartedIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -204,7 +204,7 @@ namespace JSONDB.UI {
         /// </summary>
         internal static System.Drawing.Icon ServerStoppedIcon {
             get {
-                object obj = ResourceManager.GetObject("ServerStoppedIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("ServerStoppedIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

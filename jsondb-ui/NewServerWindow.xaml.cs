@@ -21,7 +21,7 @@ namespace JSONDB.UI
             CancelButton.IsCancel = true;
         }
 
-        private void LockUI()
+        private void LockUi()
         {
             ServerNameBox.IsEnabled = false;
             UsernameBox.IsEnabled = false;
@@ -30,7 +30,7 @@ namespace JSONDB.UI
             CancelButton.IsEnabled = false;
         }
 
-        private void UnlockUI()
+        private void UnlockUi()
         {
             ServerNameBox.IsEnabled = true;
             UsernameBox.IsEnabled = true;
@@ -41,18 +41,18 @@ namespace JSONDB.UI
 
         private void CreateServer(object sender, RoutedEventArgs e)
         {
-            LockUI();
-            if (Library.JSONDB.ServerExists(ServerNameBox.Text))
+            LockUi();
+            if (Jsondb.ServerExists(ServerNameBox.Text))
             {
-                new MessageWindow(this, "A server with this name already exist.", Title, MessageWindowButton.OK, MessageWindowImage.Error).Open();
+                new MessageWindow(this, "A server with this name already exist.", Title, MessageWindowButton.Ok, MessageWindowImage.Error).Open();
             }
             else
             {
-                Library.JSONDB.CreateServer(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Text);
-                new MessageWindow(this, "The server is successfully created.", Title, MessageWindowButton.OK, MessageWindowImage.Success).Open();
+                Jsondb.CreateServer(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Text);
+                new MessageWindow(this, "The server is successfully created.", Title, MessageWindowButton.Ok, MessageWindowImage.Success).Open();
                 Close();
             }
-            UnlockUI();
+            UnlockUi();
         }
 
         private void CloseWindow(object sender, RoutedEventArgs e)

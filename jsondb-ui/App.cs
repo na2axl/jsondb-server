@@ -1,29 +1,27 @@
 ﻿using System.Windows;
 using System.Diagnostics;
-using Microsoft.Win32;
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace JSONDB.UI
 {
-    public partial class App : Application
+    public class App : Application
     {
-        private static Process ServerProcess;
+        private static Process _serverProcess;
 
-        private static AppSettings Settings = new AppSettings();
+        private static readonly AppSettings Settings = new AppSettings();
 
-        static Mutex mutex = new Mutex(true, ResourceAssembly.FullName);
+        private static readonly Mutex Mutex = new Mutex(true, ResourceAssembly.FullName);
 
         [STAThread]
         public static void Main(string[] args)
         {
-            if (mutex.WaitOne(TimeSpan.Zero, true))
+            if (Mutex.WaitOne(TimeSpan.Zero, true))
             {
-                App app = new App();
+                var app = new App();
                 app.InitializeComponent();
                 app.Run();
-                mutex.ReleaseMutex();
+                Mutex.ReleaseMutex();
             }
         }
 
@@ -34,32 +32,36 @@ namespace JSONDB.UI
 
         public static void StartServer()
         {
-            string serverCommandLine = String.Empty;
+            var serverCommandLine = string.Empty;
 
             if (Settings.UseCustomServerAdress)
             {
                 serverCommandLine += " -a " + Settings.CustomServerAdress;
             }
 
-            if (null == ServerProcess || ServerProcess.HasExited)
+            if (null == _serverProcess || _serverProcess.HasExited)
             {
-                ServerProcess = new Process();
-                ProcessStartInfo StartInfo = new ProcessStartInfo();
-                StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                StartInfo.CreateNoWindow = true;
-                StartInfo.FileName = "jsondb-server.exe";
-                StartInfo.Arguments = serverCommandLine;
-                StartInfo.RedirectStandardInput = true;
-                StartInfo.RedirectStandardOutput = false;
-                StartInfo.UseShellExecute = false;
-                ServerProcess.StartInfo = StartInfo;
-                ServerProcess.Start();
+                _serverProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                        FileName = "jsondb-server.exe",
+                        Arguments = serverCommandLine,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = false,
+                        UseShellExecute = false
+                    }
+                };
+
+                _serverProcess.Start();
             }
         }
 
         public static Process GetProcess()
         {
-            return ServerProcess;
+            return _serverProcess;
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -76,31 +78,34 @@ namespace JSONDB.UI
 
         public static void StopServer()
         {
-            if (!ServerProcess.HasExited)
+            if (!_serverProcess.HasExited)
             {
-                ServerProcess.StandardInput.WriteLine("exit");
-                ServerProcess.WaitForExit();
+                _serverProcess.StandardInput.WriteLine("exit");
+                _serverProcess.WaitForExit();
             }
         }
 
         public static bool ServerIsStopped()
         {
-            return (null == ServerProcess || ServerProcess.HasExited);
+            return (null == _serverProcess || _serverProcess.HasExited);
         }
 
         public static void RunElevatedClient(string command)
         {
             try
             {
-                Process process = new Process();
-                ProcessStartInfo StartInfo = new ProcessStartInfo();
-                StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                StartInfo.CreateNoWindow = true;
-                StartInfo.FileName = "jsondb-elevated-client.exe";
-                StartInfo.Arguments = command;
-                StartInfo.Verb = "runas";
-                StartInfo.UseShellExecute = true;
-                process.StartInfo = StartInfo;
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                        FileName = "jsondb-elevated-client.exe",
+                        Arguments = command,
+                        Verb = "runas",
+                        UseShellExecute = true
+                    }
+                };
                 process.Start();
             }
             catch { /* Operation surely cancelled by the user... */ }
