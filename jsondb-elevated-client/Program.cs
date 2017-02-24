@@ -1,56 +1,49 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JSONDB.ElevatedClient
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            if (args.Length > 0)
+            if (args.Length <= 0) return;
+
+            if (args[0] == "--set-association")
             {
-                if (args[0] == "--set-association")
-                {
-                    SetAssociation(args[1], args[2], args[3], args[4]);
-                }
+                SetAssociation(args[1], args[2], args[3], args[4]);
             }
         }
 
-        public static void SetAssociation(string Extension, string KeyName, string OpenWith, string FileDescription)
+        public static void SetAssociation(string extension, string keyName, string openWith, string fileDescription)
         {
-            RegistryKey BaseKey;
-            RegistryKey OpenMethod;
-            RegistryKey Shell;
-            RegistryKey CurrentUser;
+            var baseKey = Registry.ClassesRoot.CreateSubKey(extension);
+            baseKey?.SetValue("", keyName);
 
-            BaseKey = Registry.ClassesRoot.CreateSubKey(Extension);
-            BaseKey.SetValue("", KeyName);
+            var openMethod = Registry.ClassesRoot.CreateSubKey(keyName);
+            openMethod?.SetValue("", fileDescription);
+            openMethod?.CreateSubKey("DefaultIcon")?.SetValue("", "\"" + openWith + "\",0");
 
-            OpenMethod = Registry.ClassesRoot.CreateSubKey(KeyName);
-            OpenMethod.SetValue("", FileDescription);
-            OpenMethod.CreateSubKey("DefaultIcon").SetValue("", "\"" + OpenWith + "\",0");
-            Shell = OpenMethod.CreateSubKey("Shell");
-            Shell.CreateSubKey("edit").CreateSubKey("command").SetValue("", "\"" + OpenWith + "\"" + " \"%1\"");
-            Shell.CreateSubKey("open").CreateSubKey("command").SetValue("", "\"" + OpenWith + "\"" + " \"%1\"");
-            BaseKey.Close();
-            OpenMethod.Close();
-            Shell.Close();
+            var shell = openMethod?.CreateSubKey("Shell");
+            shell?.CreateSubKey("edit")?.CreateSubKey("command")?.SetValue("", "\"" + openWith + "\"" + " \"%1\"");
+            shell?.CreateSubKey("open")?.CreateSubKey("command")?.SetValue("", "\"" + openWith + "\"" + " \"%1\"");
+
+            baseKey?.Close();
+            openMethod?.Close();
+            shell?.Close();
 
             // Delete the key instead of trying to change it
-            CurrentUser = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\" + Extension, true);
-            CurrentUser.DeleteSubKey("UserChoice", false);
-            CurrentUser.Close();
+            var currentUser = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\" + extension, true);
+            currentUser?.DeleteSubKey("UserChoice", false);
+
+            currentUser?.Close();
 
             // Tell explorer the file association has been changed
             NativeMethods.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
         }
 
-        private class NativeMethods
+        private static class NativeMethods
         {
             [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
             public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
