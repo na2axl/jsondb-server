@@ -1,5 +1,4 @@
 ﻿using JSONDB.JQLEditor.TextEditor;
-using JSONDB.Library;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -27,10 +26,10 @@ namespace JSONDB.JQLEditor
         }
 
         // Changes State
-        private bool changesSaved = true;
+        private bool _changesSaved = true;
 
         // Windows
-        private QueryResultsWindow resultsWindow;
+        private QueryResultsWindow _resultsWindow;
 
         public MainWindow()
         {
@@ -70,13 +69,13 @@ namespace JSONDB.JQLEditor
             ButtonDisconnect.IsEnabled = App.IsConnected();
 
             // Set the syntax highighter
-            TextEditor.CurrentHighlighter = HighlighterManager.Instance.LoadXML(AppResources.JQLSyntax);
+            TextEditor.CurrentHighlighter = HighlighterManager.Instance.LoadXml(AppResources.JQLSyntax);
 
             // Show/Hide line numbers
             TextEditor.IsLineNumbersMarginVisible = App.Settings.ShowLineNumbers;
 
             // If we have to open a file
-            if (App.CurrentWorkingFile != String.Empty)
+            if (App.CurrentWorkingFile != string.Empty)
             {
                 TextEditor.Loaded += (s, e) =>
                 {
@@ -94,7 +93,7 @@ namespace JSONDB.JQLEditor
                 StatusEditorInfo.Content = TextEditor.ToString();
 
                 // Invalidate the save state
-                changesSaved = false;
+                _changesSaved = false;
             };
 
             TextEditor.PreviewKeyDown += (s, e) =>
@@ -127,7 +126,7 @@ namespace JSONDB.JQLEditor
             // Load SubWindows
             Loaded += (s, e) =>
             {
-                resultsWindow = new QueryResultsWindow(this);
+                _resultsWindow = new QueryResultsWindow(this);
             };
 
             // Set status
@@ -182,7 +181,7 @@ namespace JSONDB.JQLEditor
                 path = path + ".jql";
             }
             Util.WriteTextFile(path, TextEditor.GetDocumentContents());
-            changesSaved = true;
+            _changesSaved = true;
             SetStatus("File Saved", StatusMessageState.Information);
             Title = path + " - JQL Editor";
         }
@@ -193,7 +192,7 @@ namespace JSONDB.JQLEditor
         /// <returns>The path to the saved file.</returns>
         public string SaveDocumentAs()
         {
-            System.Windows.Forms.SaveFileDialog saveDialog = new System.Windows.Forms.SaveFileDialog();
+            var saveDialog = new System.Windows.Forms.SaveFileDialog();
             saveDialog.AddExtension = true;
             saveDialog.CheckPathExists = true;
             saveDialog.SupportMultiDottedExtensions = true;
@@ -215,7 +214,7 @@ namespace JSONDB.JQLEditor
         /// <returns>The path to the file.</returns>
         public string OpenDocument()
         {
-            System.Windows.Forms.OpenFileDialog openDialog = new System.Windows.Forms.OpenFileDialog();
+            var openDialog = new System.Windows.Forms.OpenFileDialog();
             openDialog.AddExtension = true;
             openDialog.CheckFileExists = true;
             openDialog.Filter = "JQL File|*.jql";
@@ -246,7 +245,7 @@ namespace JSONDB.JQLEditor
             {
                 TextEditor.ResetUndoRedoStack();
                 TextEditor.SetDocumentContents(Util.ReadTextFile(path));
-                changesSaved = true;
+                _changesSaved = true;
                 SetStatus("File Opened", StatusMessageState.Information);
                 Title = path + " - JQL Editor";
             }
@@ -256,7 +255,7 @@ namespace JSONDB.JQLEditor
                     this,
                     "The file \"" + path + "\" doesn't exists.",
                     "Cannot open the file",
-                    MessageWindowButton.OK,
+                    MessageWindowButton.Ok,
                     MessageWindowImage.Error).Open();
                 SetStatus("Ready", StatusMessageState.None);
             }
@@ -350,7 +349,7 @@ namespace JSONDB.JQLEditor
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (!changesSaved)
+            if (!_changesSaved)
             {
                 MessageWindowResult choice = new MessageWindow(
                     this,
@@ -365,7 +364,7 @@ namespace JSONDB.JQLEditor
                         e.Cancel = true;
                         break;
                     case MessageWindowResult.Yes:
-                        if (App.CurrentWorkingFile == String.Empty)
+                        if (App.CurrentWorkingFile == string.Empty)
                         {
                             App.CurrentWorkingFile = SaveDocumentAs();
                         }
@@ -381,7 +380,7 @@ namespace JSONDB.JQLEditor
 
         private void NewFile(object sender, RoutedEventArgs e)
         {
-            if (!changesSaved)
+            if (!_changesSaved)
             {
                 MessageWindowResult choice = new MessageWindow(
                     this,
@@ -396,7 +395,7 @@ namespace JSONDB.JQLEditor
                         e.Handled = true;
                         break;
                     case MessageWindowResult.Yes:
-                        if (App.CurrentWorkingFile == String.Empty)
+                        if (App.CurrentWorkingFile == string.Empty)
                         {
                             App.CurrentWorkingFile = SaveDocumentAs();
                         }
@@ -411,7 +410,7 @@ namespace JSONDB.JQLEditor
             {
                 TextEditor.CleanDocument();
                 TextEditor.ResetUndoRedoStack();
-                App.CurrentWorkingFile = String.Empty;
+                App.CurrentWorkingFile = string.Empty;
                 Title = "Untitled - JQL Editor";
             }
         }
@@ -423,7 +422,7 @@ namespace JSONDB.JQLEditor
 
         private void SaveFile(object sender, RoutedEventArgs e)
         {
-            if (App.CurrentWorkingFile == String.Empty)
+            if (App.CurrentWorkingFile == string.Empty)
             {
                 SaveDocumentAs();
             }
@@ -460,8 +459,8 @@ namespace JSONDB.JQLEditor
 
         private void Delete(object sender, RoutedEventArgs e)
         {
-            string currentText = TextEditor.GetDocumentContents();
-            if (TextEditor.SelectedText != String.Empty)
+            var currentText = TextEditor.GetDocumentContents();
+            if (TextEditor.SelectedText != string.Empty)
             {
                 currentText = currentText.Remove(TextEditor.SelectionStart, TextEditor.SelectionLength);
             }
@@ -533,7 +532,7 @@ namespace JSONDB.JQLEditor
                             this,
                             "Can run queries, you are not connected to a server.",
                             "Error",
-                            MessageWindowButton.OK,
+                            MessageWindowButton.Ok,
                             MessageWindowImage.Error).Open();
                         break;
                 }
@@ -543,8 +542,8 @@ namespace JSONDB.JQLEditor
             {
                 try
                 {
-                    resultsWindow.Populate(App.DBConnection.MultiQuery(TextEditor.GetDocumentContents()));
-                    resultsWindow.Show();
+                    _resultsWindow.Populate(App.DbConnection.MultiQuery(TextEditor.GetDocumentContents()));
+                    _resultsWindow.Show();
                 }
                 catch (Exception ex)
                 {
@@ -552,7 +551,7 @@ namespace JSONDB.JQLEditor
                         this,
                         ex.Message,
                         "Error",
-                        MessageWindowButton.OK,
+                        MessageWindowButton.Ok,
                         MessageWindowImage.Error).Open();
                 }
             }
@@ -571,9 +570,9 @@ namespace JSONDB.JQLEditor
             TextEditor.CaretBrush = Brushes.White;
             App.Settings.EditorTheme = "Black";
             App.Settings.Save();
-            if (resultsWindow != null)
+            if (_resultsWindow != null)
             {
-                resultsWindow.UpdateTheme();
+                _resultsWindow.UpdateTheme();
             }
             SetStatus("Theme changed", StatusMessageState.None);
         }
@@ -586,9 +585,9 @@ namespace JSONDB.JQLEditor
             TextEditor.CaretBrush = Brushes.Black;
             App.Settings.EditorTheme = "White";
             App.Settings.Save();
-            if (resultsWindow != null)
+            if (_resultsWindow != null)
             {
-                resultsWindow.UpdateTheme();
+                _resultsWindow.UpdateTheme();
             }
             SetStatus("Theme changed", StatusMessageState.None);
         }
@@ -598,9 +597,9 @@ namespace JSONDB.JQLEditor
             TextEditor.IsLineNumbersMarginVisible = MenuViewShowLineNumbers.IsChecked;
             App.Settings.ShowLineNumbers = TextEditor.IsLineNumbersMarginVisible;
             App.Settings.Save();
-            if (resultsWindow != null)
+            if (_resultsWindow != null)
             {
-                resultsWindow.UpdateTheme();
+                _resultsWindow.UpdateTheme();
             }
         }
 
@@ -721,20 +720,20 @@ namespace JSONDB.JQLEditor
         {
             if (App.IsConnected())
             {
-                string[] db_list = Util.GetDirectoriesList(App.DBConnection.GetServer());
+                var dbList = Util.GetDirectoriesList(App.DbConnection.GetServer());
 
                 DatabaseList.Items.Clear();
-                foreach (string db in db_list)
+                foreach (var db in dbList)
                 {
-                    ComboBoxItem item = new ComboBoxItem();
+                    var item = new ComboBoxItem();
                     item.Content = db;
-                    if (db == App.DBConnection.GetDatabase())
+                    if (db == App.DbConnection.GetDatabase())
                     {
                         item.IsSelected = true;
                     }
                     item.Selected += (ds, de) =>
                     {
-                        App.DBConnection.SetDatabase(db);
+                        App.DbConnection.SetDatabase(db);
                     };
                     DatabaseList.Items.Add(item);
                 }
@@ -745,7 +744,7 @@ namespace JSONDB.JQLEditor
                     this,
                     "You are not connected to a server.",
                     "Not Connected",
-                    MessageWindowButton.OK,
+                    MessageWindowButton.Ok,
                     MessageWindowImage.Error).Open();
             }
         }

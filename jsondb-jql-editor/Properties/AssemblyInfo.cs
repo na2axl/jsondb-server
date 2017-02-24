@@ -11,7 +11,7 @@ using System.Windows;
 [assembly: AssemblyDescription("Create, edit and run JQL files.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("JSONDB Server")]
+[assembly: AssemblyProduct("JSONDB")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

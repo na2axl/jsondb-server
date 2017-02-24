@@ -36,7 +36,7 @@ namespace JSONDB.JQLEditor
                     this,
                     ex.Message,
                     "An error occurred",
-                    MessageWindowButton.OK,
+                    MessageWindowButton.Ok,
                     MessageWindowImage.Error).Open();
             }
         }

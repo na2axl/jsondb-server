@@ -1,7 +1,5 @@
-﻿using JSONDB.Library;
-using System;
+﻿using System;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace JSONDB.JQLEditor
 {
@@ -23,8 +21,8 @@ namespace JSONDB.JQLEditor
         {
             try
             {
-                Database temp_db = Library.JSONDB.Connect(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Password, DatabaseNameBox.Text);
-                if (temp_db.IsConnected())
+                Database tempDb = Jsondb.Connect(ServerNameBox.Text, UsernameBox.Text, PasswordBox.Password, DatabaseNameBox.Text);
+                if (tempDb.IsConnected())
                 {
                     App.Settings.Connections.Add(
                         ConnectionNameBox.Text + "{{s}}" +
@@ -39,10 +37,10 @@ namespace JSONDB.JQLEditor
                         this,
                         "Connection added successfully.",
                         "Connection added",
-                        MessageWindowButton.OK,
+                        MessageWindowButton.Ok,
                         MessageWindowImage.Success).Open();
 
-                    temp_db.Disconnect();
+                    tempDb.Disconnect();
 
                     Close();
                 }
@@ -57,7 +55,7 @@ namespace JSONDB.JQLEditor
                     this,
                     ex.Message,
                     "Error",
-                    MessageWindowButton.OK,
+                    MessageWindowButton.Ok,
                     MessageWindowImage.Error).Open();
             }
         }

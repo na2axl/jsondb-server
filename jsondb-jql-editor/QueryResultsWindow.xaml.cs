@@ -22,7 +22,7 @@ namespace JSONDB.JQLEditor
             InitializeComponent();
 
             // Set the highlighter
-            ResultBox.CurrentHighlighter = HighlighterManager.Instance.LoadXML(AppResources.JSONSyntax);
+            ResultBox.CurrentHighlighter = HighlighterManager.Instance.LoadXml(AppResources.JSONSyntax);
         }
 
         /// <summary>
@@ -39,10 +39,10 @@ namespace JSONDB.JQLEditor
 
             // Initialize the list of queries
             QueriesList.Items.Clear();
-            for (int i = 0; i < results.Length; i++)
+            for (var i = 0; i < results.Length; i++)
             {
-                int current = i;
-                ComboBoxItem item = new ComboBoxItem();
+                var current = i;
+                var item = new ComboBoxItem();
                 item.Content = "#" + (i + 1);
                 item.Selected += (s, e) =>
                 {

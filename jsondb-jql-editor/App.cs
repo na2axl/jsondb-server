@@ -1,5 +1,4 @@
-﻿using JSONDB.Library;
-using System;
+﻿using System;
 using System.Windows;
 
 namespace JSONDB.JQLEditor
@@ -7,21 +6,21 @@ namespace JSONDB.JQLEditor
     public class App : Application
     {
         private static Database _db;
-        private static string _cwf = String.Empty;
+        private static string _cwf = string.Empty;
 
         public static string CurrentWorkingFile
         {
             get { return _cwf; }
             set
             {
-                if (value != String.Empty && !Util.Exists(value))
+                if (value != string.Empty && !Util.Exists(value))
                 {
                     Util.WriteTextFile(value, "");
                 }
                 _cwf = value;
             }
         }
-        public static Database DBConnection
+        public static Database DbConnection
         {
             get { return _db; }
         }
@@ -31,7 +30,7 @@ namespace JSONDB.JQLEditor
         [STAThread]
         public static void Main(string[] args)
         {
-            CurrentWorkingFile = args.Length > 0 ? args[0] : String.Empty;
+            CurrentWorkingFile = args.Length > 0 ? args[0] : string.Empty;
 
             App app = new App();
             app.InitializeComponent();
@@ -49,9 +48,9 @@ namespace JSONDB.JQLEditor
         /// <returns>true if connected and false otherwise</returns>
         public static bool IsConnected()
         {
-            if (DBConnection != null)
+            if (DbConnection != null)
             {
-                return DBConnection.IsConnected();
+                return DbConnection.IsConnected();
             }
 
             return false;
@@ -66,7 +65,7 @@ namespace JSONDB.JQLEditor
         /// <param name="database">The name of the database to use</param>
         public static void Connect(string serverName, string username, string password, string database)
         {
-            _db = Library.JSONDB.Connect(serverName, username, password, database);
+            _db = Jsondb.Connect(serverName, username, password, database);
         }
 
         /// <summary>
@@ -74,7 +73,7 @@ namespace JSONDB.JQLEditor
         /// </summary>
         public static void Disconnect()
         {
-            DBConnection.Disconnect();
+            DbConnection.Disconnect();
         }
     }
 }

@@ -39,7 +39,7 @@ namespace JSONDB.JQLEditor {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("JSONDB.JQLEditor.AppResources", typeof(AppResources).Assembly);
+                    var temp = new global::System.Resources.ResourceManager("JSONDB.JQLEditor.AppResources", typeof(AppResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -65,7 +65,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap AddConnectionIcon {
             get {
-                object obj = ResourceManager.GetObject("AddConnectionIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("AddConnectionIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -75,7 +75,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap CopyIcon {
             get {
-                object obj = ResourceManager.GetObject("CopyIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("CopyIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -85,7 +85,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap CutIcon {
             get {
-                object obj = ResourceManager.GetObject("CutIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("CutIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -95,7 +95,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap DeleteConnectionIcon {
             get {
-                object obj = ResourceManager.GetObject("DeleteConnectionIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("DeleteConnectionIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -105,7 +105,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap EditConnectionIcon {
             get {
-                object obj = ResourceManager.GetObject("EditConnectionIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("EditConnectionIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -164,7 +164,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowError {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowError", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowError", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -174,7 +174,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowInformation {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowInformation", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowInformation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -184,7 +184,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowSuccess {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowSuccess", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowSuccess", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -194,7 +194,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap MessageWindowWarning {
             get {
-                object obj = ResourceManager.GetObject("MessageWindowWarning", resourceCulture);
+                var obj = ResourceManager.GetObject("MessageWindowWarning", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -204,7 +204,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap NewFileIcon {
             get {
-                object obj = ResourceManager.GetObject("NewFileIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("NewFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -214,7 +214,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap OpenFileIcon {
             get {
-                object obj = ResourceManager.GetObject("OpenFileIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("OpenFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -224,7 +224,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap PasteIcon {
             get {
-                object obj = ResourceManager.GetObject("PasteIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("PasteIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -234,7 +234,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap RedoIcon {
             get {
-                object obj = ResourceManager.GetObject("RedoIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("RedoIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -244,7 +244,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap RefreshIcon {
             get {
-                object obj = ResourceManager.GetObject("RefreshIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("RefreshIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -254,7 +254,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap RunIcon {
             get {
-                object obj = ResourceManager.GetObject("RunIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("RunIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -264,7 +264,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap SaveFileAsIcon {
             get {
-                object obj = ResourceManager.GetObject("SaveFileAsIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("SaveFileAsIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -274,7 +274,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap SaveFileIcon {
             get {
-                object obj = ResourceManager.GetObject("SaveFileIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("SaveFileIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -302,7 +302,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap UndoIcon {
             get {
-                object obj = ResourceManager.GetObject("UndoIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("UndoIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -312,7 +312,7 @@ namespace JSONDB.JQLEditor {
         /// </summary>
         internal static System.Drawing.Bitmap ValidateIcon {
             get {
-                object obj = ResourceManager.GetObject("ValidateIcon", resourceCulture);
+                var obj = ResourceManager.GetObject("ValidateIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

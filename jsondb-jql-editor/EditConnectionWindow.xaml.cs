@@ -31,7 +31,7 @@ namespace JSONDB.JQLEditor
             ServerNameBox.Text = parts[1];
             UsernameBox.Text = parts[2];
             PasswordBox.Password = parts[3];
-            DatabaseNameBox.Text = parts[4] ?? String.Empty;
+            DatabaseNameBox.Text = parts[4] ?? string.Empty;
         }
 
         private void EditConnection(object sender, RoutedEventArgs e)

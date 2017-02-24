@@ -43,7 +43,7 @@ namespace JSONDB.JQLEditor
                 info["server"] = parts[1];
                 info["username"] = parts[2];
                 info["password"] = parts[3];
-                info["database"] = parts[4] ?? String.Empty;
+                info["database"] = parts[4] ?? string.Empty;
 
                 ConnectionEntry entry = new ConnectionEntry(info);
                 entry.Selected += (s, e) =>
@@ -126,7 +126,7 @@ namespace JSONDB.JQLEditor
                     this,
                     ex.Message,
                     "Error",
-                    MessageWindowButton.OK,
+                    MessageWindowButton.Ok,
                     MessageWindowImage.Error).Open();
             }
         }
