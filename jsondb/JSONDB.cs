@@ -1,8 +1,11 @@
 ﻿using System;
 
-namespace JSONDB.Library
+namespace JSONDB
 {
-    public static class JSONDB
+    /// <summary>
+    /// Class JSONDB
+    /// </summary>
+    public static class Jsondb
     {
         /// <summary>
         /// Create a new server.
@@ -13,9 +16,9 @@ namespace JSONDB.Library
         public static void CreateServer(string name, string username, string password)
         {
             Benchmark.Mark("JSONDB_(CreateServer)_start");
-            string path = Util.MakePath(Util.AppRoot(), "servers", name);
+            var path = Util.MakePath(Util.AppRoot(), "servers", name);
 
-            if (username == String.Empty)
+            if (string.IsNullOrWhiteSpace(username))
             {
                 Benchmark.Mark("JSONDB_(CreateServer)_end");
                 throw new Exception("JSONDB Error: Can't create the server. An username is required.");
@@ -46,12 +49,7 @@ namespace JSONDB.Library
         /// <returns>true if the server exist and false otherwise</returns>
         public static bool ServerExists(string name)
         {
-            if (name == String.Empty)
-            {
-                return false;
-            }
-
-            return Util.Exists(Util.MakePath(Util.AppRoot(), "servers", name));
+            return string.IsNullOrWhiteSpace(name) && Util.Exists(Util.MakePath(Util.AppRoot(), "servers", name));
         }
 
         /// <summary>

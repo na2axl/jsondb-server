@@ -1,34 +1,36 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Runtime.Serialization;
+﻿using System;
 using System.Collections;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
 
-namespace JSONDB.Library
+namespace JSONDB
 {
+    /// <summary>
+    /// Class QueryParser
+    /// </summary>
     public class QueryParser
     {
         /// <summary>
         /// Reserved query's characters to trim
         /// </summary>
-        private static string TRIM_CHAR = ";'\"`";
+        private const string TrimChar = ";'\"`";
 
         /// <summary>
         /// Reserved query's characters to escape
         /// </summary>
-        private static string ESCAPE_CHAR = ".,;'()";
+        private const string EscapeChar = ".,;'()";
 
         /// <summary>
         /// A list of supported queries
         /// </summary>
-        private static JArray SupportedQueries = new JArray("select", "insert", "delete", "replace", "truncate", "update", "count");
+        private static readonly string[] SupportedQueries = {"select", "insert", "delete", "replace", "truncate", "update", "count", "min", "max", "sum", "avg"};
 
         /// <summary>
         /// Registerd query operators
         /// </summary>
-        private static JArray Operators = new JArray("%!", "%=", "!=", "<>", "<=", ">=", "=", "<", ">");
+        private static readonly string[] Operators = {"%!", "%=", "!=", "<>", "<=", ">=", "=", "<", ">"};
 
         /// <summary>
         /// Quotes a value and escape reserved characters.
@@ -37,50 +39,9 @@ namespace JSONDB.Library
         /// <returns>The parsed value</returns>
         public static string Quote(string value)
         {
-            value = new Regex("\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n", RegexOptions.IgnoreCase).Replace(
-                new Regex("([" + Regex.Escape(ESCAPE_CHAR) + "])", RegexOptions.IgnoreCase).Replace(
-                    Regex.Replace(value, "(" + Environment.NewLine + ")", "\\$1"), "\\$1"),
-                    (match) =>
-                    {
-                        switch (match.Value)
-                        {
-                            case "\\\r\n":
-                            case "\\\n":
-                            case "\\\r":
-                                return "{{brk}}";
-                            case "\\'":
-                                return "{{quot}}";
-                            case "\\,":
-                                return "{{comm}}";
-                            case "\\.":
-                                return "{{dot}}";
-                            case "\\(":
-                                return "{{pto}}";
-                            case "\\)":
-                                return "{{ptc}}";
-                            case "\\;":
-                                return "{{semi}}";
-                            default:
-                                return match.Value;
-                        }
-                    }
-            );
-
-            return "'" + value + "'";
-        }
-
-        /// <summary>
-        /// Parse a JQL query.
-        /// </summary>
-        /// <param name="query">The query to parse</param>
-        /// <returns>The parsed query</returns>
-        public static JObject Parse(string query)
-        {
-            // Start the Benchmark
-            Benchmark.Mark("jsondb_query_parse_start");
-
-            // Quote all escaped reserved characters
-            query = new Regex("\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n", RegexOptions.IgnoreCase).Replace(query,
+            value = Regex.Replace(
+                Regex.Replace(Regex.Replace(value, "(" + Environment.NewLine + ")", "\\$1"), "([" + Regex.Escape(EscapeChar) + "])", "\\$1", RegexOptions.IgnoreCase),
+                "\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n",
                 (match) =>
                 {
                     switch (match.Value)
@@ -104,11 +65,56 @@ namespace JSONDB.Library
                         default:
                             return match.Value;
                     }
-                }
+                },
+                RegexOptions.IgnoreCase
+            );
+
+            return "'" + value + "'";
+        }
+
+        /// <summary>
+        /// Parse a JQL query.
+        /// </summary>
+        /// <param name="query">The query to parse</param>
+        /// <returns>The parsed query</returns>
+        public static JObject Parse(string query)
+        {
+            // Start the Benchmark
+            Benchmark.Mark("jsondb_query_parse_start");
+
+            // Quote all escaped reserved characters
+            query = Regex.Replace(
+                query,
+                "\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n",
+                (match) =>
+                {
+                    switch (match.Value)
+                    {
+                        case "\\\r\n":
+                        case "\\\n":
+                        case "\\\r":
+                            return "{{brk}}";
+                        case "\\'":
+                            return "{{quot}}";
+                        case "\\,":
+                            return "{{comm}}";
+                        case "\\.":
+                            return "{{dot}}";
+                        case "\\(":
+                            return "{{pto}}";
+                        case "\\)":
+                            return "{{ptc}}";
+                        case "\\;":
+                            return "{{semi}}";
+                        default:
+                            return match.Value;
+                    }
+                },
+                RegexOptions.IgnoreCase
             );
 
             // Initialize variables
-            JObject ParsedQuery = new JObject();
+            var parsedQuery = new JObject();
             var queryParts = query.Split('.');
 
             // If the query is not at the minimal form (table_name.action())
@@ -117,66 +123,60 @@ namespace JSONDB.Library
                 throw new Exception("JSONDB Query Parse Error: This is not a JQL query.");
             }
 
-            // Getting the table's name
-            ParsedQuery["table"] = queryParts[0];
-            if ((string)ParsedQuery["table"] == String.Empty)
+            // Get the table's name
+            if (string.IsNullOrEmpty(queryParts[0]))
             {
                 throw new Exception("JSONDB Query Parse Error: No table detected in the query.");
             }
+            parsedQuery["table"] = queryParts[0];
 
-            // Checking query's parts validity
+            // Check query's parts validity
             for (int i = 1, l = queryParts.Length; i < l; ++i)
             {
                 var part = queryParts[i];
-                if (null == part || part == String.Empty)
+                if (string.IsNullOrEmpty(part))
                 {
                     throw new Exception("JSONDB Query Parse Error: Unexpected \".\" after extension \"" + part + "\".");
                 }
-                if (!new Regex("^\\w+\\(.*\\)$").IsMatch(part))
+                if (!Regex.IsMatch(part, "^\\w+\\(.*\\)$"))
                 {
                     throw new Exception("JSONDB Query Parse Error: There is an error at the extension \"" + part + "\".");
                 }
             }
 
-            // Getting the query's main action
-            ParsedQuery["action"] = new Regex("\\(.*\\)").Replace(queryParts[1], "");
-            if (Array.IndexOf(SupportedQueries.ToArray(), ParsedQuery["action"].ToString().ToLower()) == -1)
+            // Get the query's main action
+            parsedQuery["action"] = Regex.Replace(queryParts[1], "\\(.*\\)", "");
+            if (Array.IndexOf(SupportedQueries, parsedQuery["action"].ToString().ToLower()) == -1)
             {
-                throw new Exception("JSONDB Query Parse Error: The query \"" + ParsedQuery["action"] + "\" isn't supported by JSONDB.");
+                throw new Exception("JSONDB Query Parse Error: The query \"" + parsedQuery["action"] + "\" isn't supported by JSONDB.");
             }
 
-            // Getting the action's parameters
-            ParsedQuery["parameters"] = new Regex("^\\w+\\((.*)\\)$").Replace(queryParts[1], "$1").Trim();
-            ParsedQuery["parameters"] = new Regex("\\(([^)]*)\\)").Replace(ParsedQuery["parameters"].ToString(), (match) =>
+            // Get the action's parameters
+            parsedQuery["parameters"] = Regex.Replace(queryParts[1], "^\\w+\\((.*)\\)$", "$1").Trim();
+            parsedQuery["parameters"] = Regex.Replace(parsedQuery["parameters"].ToString(), "\\(([^)]*)\\)", (match) => Regex.Replace(match.Value, ",", ";"));
+            parsedQuery["parameters"] = new JArray(parsedQuery["parameters"].ToString().Split(','));
+            parsedQuery["parameters"] = ((JArray)parsedQuery["parameters"]).Count > 0 ? parsedQuery["parameters"] : new JArray();
+            Array.ForEach(((JArray)parsedQuery["parameters"]).ToArray(), (field) =>
             {
-                return new Regex(",").Replace(match.Value, ";");
-            });
-            ParsedQuery["parameters"] = new JArray(ParsedQuery["parameters"].ToString().Split(','));
-            ParsedQuery["parameters"] = ((JArray)ParsedQuery["parameters"]).Count > 0 ? ParsedQuery["parameters"] : new JArray();
-            Array.ForEach(((JArray)ParsedQuery["parameters"]).ToArray(), (field) =>
-            {
-                ParsedQuery["parameters"][Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), field)] = field.ToString().Trim();
+                parsedQuery["parameters"][Array.IndexOf(((JArray)parsedQuery["parameters"]).ToArray(), field)] = field.ToString().Trim();
             });
 
-            // Parsing values for some actions
-            if (Array.IndexOf(new JArray("insert", "replace").ToArray(), ParsedQuery["action"].ToString().ToLower()) > -1)
+            // Parse values for some actions
+            if (Array.IndexOf(new string[] {"insert", "replace"}, parsedQuery["action"].ToString().ToLower()) > -1)
             {
-                Array.ForEach(((JArray)ParsedQuery["parameters"]).ToArray(), (field) =>
+                Array.ForEach(((JArray)parsedQuery["parameters"]).ToArray(), (field) =>
                 {
-                    ParsedQuery["parameters"][Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), field)] = _parseValue(field);
+                    parsedQuery["parameters"][Array.IndexOf(((JArray)parsedQuery["parameters"]).ToArray(), field)] = _parseValue(field);
                 });
             }
 
-            // Getting query's extension
-            JObject extensions = new JObject();
+            // Get query's extension
+            var extensions = new JObject();
             for (int i = 2, l = queryParts.Length; i < l; i++)
             {
                 var extension = queryParts[i];
-                var name = new Regex("\\(.*\\)").Replace(extension, "");
-                var parameters = new Regex("\\(([^)]*)\\)").Replace(new Regex("^" + name + "\\((.*)\\)$").Replace(extension, "$1"), (match) =>
-                {
-                    return new Regex(",").Replace(match.Value, ";");
-                });
+                var name = Regex.Replace(extension, "\\(.*\\)", "");
+                var parameters = Regex.Replace(Regex.Replace(extension, "^" + name + "\\((.*)\\)$", "$1"), "\\(([^)]*)\\)", (match) => Regex.Replace(match.Value, ",", ";"));
 
                 switch (name.ToLower())
                 {
@@ -223,20 +223,22 @@ namespace JSONDB.Library
                         throw new Exception("Query Parse Error: The extension " + name + "() is not a valid JQL extension.");
                 }
             }
-            ParsedQuery["extensions"] = extensions;
+            parsedQuery["extensions"] = extensions;
 
             // Stop the Benchmark
             Benchmark.Mark("jsondb_query_parse_end");
 
-            ParsedQuery["benchmark"] = new JObject();
-            ParsedQuery["benchmark"]["elapsed_time"] = Benchmark.ElapsedTime("jsondb_query_parse_start", "jsondb_query_parse_end");
-            ParsedQuery["benchmark"]["memory_usage"] = Benchmark.MemoryUsage("jsondb_query_parse_start", "jsondb_query_parse_end");
+            parsedQuery["benchmark"] = new JObject
+            {
+                ["elapsed_time"] = Benchmark.ElapsedTime("jsondb_query_parse_start", "jsondb_query_parse_end"),
+                ["memory_usage"] = Benchmark.MemoryUsage("jsondb_query_parse_start", "jsondb_query_parse_end")
+            };
 
-            return ParsedQuery;
+            return parsedQuery;
         }
 
         /// <summary>
-        /// Paarse multiline JQL queries.
+        /// Parse multiline JQL queries.
         /// </summary>
         /// <param name="queriesBlock">The text which contains JQL queries</param>
         /// <returns>An array of parsed queries.</returns>
@@ -246,7 +248,9 @@ namespace JSONDB.Library
             Benchmark.Mark("jsondb_query_parse_start");
 
             // Quote all escaped reserved characters
-            queriesBlock = new Regex("\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n", RegexOptions.IgnoreCase).Replace(queriesBlock,
+            queriesBlock = Regex.Replace(
+                queriesBlock,
+                "\\\\'|\\\\,|\\\\\\.|\\\\\\(|\\\\\\)|\\\\;|\\\\\r\\n|\\\\\r|\\\\\n",
                 (match) =>
                 {
                     switch (match.Value)
@@ -270,140 +274,152 @@ namespace JSONDB.Library
                         default:
                             return match.Value;
                     }
-                }
+                },
+                RegexOptions.IgnoreCase
             ).Trim('\r', '\n', ' ');
 
             // Remove comments
-            queriesBlock = new Regex("//.*[\\r\\n]?").Replace(queriesBlock, "");
+            queriesBlock = Regex.Replace(queriesBlock, "//.*[\\r\\n]?", "");
             
             // Split
-            string[] queriesArray = new Regex(";(?:[\\r\\n]*)").Split(queriesBlock);
+            var queriesArray = Regex.Split(queriesBlock, ";(?:[\\r\\n]*)");
 
             // Initialize variables
-            JArray queriesLines = new JArray();
-            int i = 0;
+            var queriesLines = new JArray();
+            var i = 0;
 
-            foreach (string query in queriesArray)
+            foreach (var query in queriesArray)
             {
-                if (query.Length > 0)
+                if (query.Length <= 0) continue;
+                queriesLines.Add(query);
+
+                // Split
+                var subQueryParts = Regex.Split(queriesLines[i].ToString(), "[\\r\\n]+");
+
+                for (int j = 0, l = subQueryParts.Length; j < l; j++)
                 {
-                    queriesLines.Add(query);
-
-                    // Split
-                    string[] subQueryParts = new Regex("[\\r\\n]+").Split(queriesLines[i].ToString());
-
-                    for (int j = 0, l = subQueryParts.Length; j < l; j++)
-                    {
-                        // Remove child indentations
-                        subQueryParts[j] = subQueryParts[j].Trim('\t', ' ');
-                    }
-
-                    // Join query parts
-                    queriesLines[i] = String.Join(String.Empty, subQueryParts);
-
-                    i++;
+                    // Remove child indentations
+                    subQueryParts[j] = subQueryParts[j].Trim('\t', ' ');
                 }
+
+                // Join query parts
+                queriesLines[i] = string.Join(string.Empty, subQueryParts);
+
+                i++;
             }
 
             // Parse all queries
-            JObject[] ParsedQueries = new JObject[queriesLines.Count];
+            var parsedQueries = new JObject[queriesLines.Count];
             i = 0;
 
             for (int q = 0, l = queriesLines.Count; q < l; q++)
             {
-                if (queriesLines[q].ToString().Trim().Length > 0)
+                if (queriesLines[q].ToString().Trim().Length <= 0) continue;
+                try
                 {
-                    try
-                    {
-                        ParsedQueries[i] = Parse(queriesLines[q].ToString());
-                        i++;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new MultilineQueryParseException(e.Message, q + 1);
-                    }
+                    parsedQueries[i] = Parse(queriesLines[q].ToString());
+                    i++;
+                }
+                catch (Exception e)
+                {
+                    throw new MultilineQueryParseException(e.Message, q + 1);
                 }
             }
 
-            return ParsedQueries;
+            return parsedQueries;
         }
 
+        /// <summary>
+        /// Parse the order() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseOrderExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            var parsedClause = new JArray(clause.Split(','));
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                int index = Array.IndexOf(ParsedClause.ToArray(), field);
-                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-                ParsedClause[index] = field;
+                var index = Array.IndexOf(parsedClause.ToArray(), field);
+                field = field.ToString().Trim(TrimChar.ToCharArray()).Trim();
+                parsedClause[index] = field;
                 if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
                 {
                     throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
                 }
             });
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"order()\" extension.");
             }
-            if (ParsedClause.Count > 2)
+            if (parsedClause.Count > 2)
             {
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"order()\" extension, only two required.");
             }
-            if (ParsedClause.Count == 2 && Array.IndexOf(new JArray("asc", "desc").ToArray(), ParsedClause[1].ToString().ToLower()) == -1)
+            if (parsedClause.Count == 2 && Array.IndexOf(new JArray("asc", "desc").ToArray(), parsedClause[1].ToString().ToLower()) == -1)
             {
                 throw new Exception("JSONDB Query Parse Error: The second parameter of the \"order()\" extension can only have values: \"asc\" or \"desc\".");
             }
-            if (ParsedClause.Count == 1)
+            if (parsedClause.Count == 1)
             {
-                ParsedClause.Add("asc");
+                parsedClause.Add("asc");
             }
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the where() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseWhereExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
+            var parsedClause = new JArray(clause.Split(','));
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"where()\" extension.");
             }
 
-            for (int i = 0, l = ParsedClause.Count; i < l; i++)
+            for (int i = 0, l = parsedClause.Count; i < l; i++)
             {
-                ParsedClause[i] = _parseWhereExtensionCondition(ParsedClause[i].ToString());
+                parsedClause[i] = _parseWhereExtensionCondition(parsedClause[i].ToString());
             }
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the conditions of the where() extension.
+        /// </summary>
+        /// <param name="condition">Condition</param>
+        /// <returns>The parsed condition</returns>
         protected static JObject _parseWhereExtensionCondition(string condition)
         {
-            JObject filters = new JObject();
-            bool opFound = false;
+            var filters = new JObject();
+            var opFound = false;
 
-            for (int i = 0, l = Operators.Count; i < l; i++)
+            for (int i = 0, l = Operators.Length; i < l; i++)
             {
-                var op = Operators[i].ToString();
-                if (condition.IndexOf(op) > -1 || Array.IndexOf(condition.ToCharArray(), op) > -1 || Array.IndexOf(condition.Split(' '), op) > -1)
-                {
-                    int index = condition.IndexOf(op);
-                    string identifier = condition.Substring(0, index).Trim();
-                    string value = condition.Substring(index + op.Length).Trim();
+                var op = Operators[i];
+                if (condition.IndexOf(op, StringComparison.Ordinal) <= -1 &&
+                    Array.IndexOf(condition.ToCharArray(), op) <= -1 && Array.IndexOf(condition.Split(' '), op) <= -1)
+                    continue;
+                var index = condition.IndexOf(op, StringComparison.Ordinal);
+                var identifier = condition.Substring(0, index).Trim();
+                var value = condition.Substring(index + op.Length).Trim();
 
-                    string[] row_val =  Regex.Split(condition, "\\s" + op + "\\s");
-                    if (!Regex.IsMatch(identifier, "^\\w+$"))
-                    {
-                        throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + identifier + "\".");
-                    }
-                    filters["operator"] = op;
-                    filters["field"] = new Regex("['\"`]").Replace(identifier, "").Trim();
-                    filters["value"] = _parseValue(value);
-                    opFound = true;
-                    break;
+                var rowVal =  Regex.Split(condition, "\\s" + op + "\\s");
+                if (!Regex.IsMatch(identifier, "^\\w+$"))
+                {
+                    throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + identifier + "\".");
                 }
+                filters["operator"] = op;
+                filters["field"] = Regex.Replace(identifier, "['\"`]", "").Trim();
+                filters["value"] = _parseValue(value);
+                opFound = true;
+                break;
             }
 
             if (!opFound)
@@ -414,172 +430,214 @@ namespace JSONDB.Library
             return filters;
         }
 
+        /// <summary>
+        /// Parse the and() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseAndExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
+            var parsedClause = new JArray(clause.Split(','));
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"and()\" extension.");
             }
 
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = _parseValue(field);
+                parsedClause[Array.IndexOf(parsedClause.ToArray(), field)] = _parseValue(field);
             });
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the limit() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseLimitExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
+            var parsedClause = new JArray(clause.Split(','));
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"limit()\" extension.");
             }
-            if (ParsedClause.Count > 2)
+            if (parsedClause.Count > 2)
             {
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"limit()\" extension, only two required.");
             }
 
-            if (ParsedClause.Count == 1)
+            if (parsedClause.Count == 1)
             {
-                ParsedClause.Add(ParsedClause[0]);
-                ParsedClause[0] = 0;
+                parsedClause.Add(parsedClause[0]);
+                parsedClause[0] = 0;
             }
 
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = _parseValue(field);
+                parsedClause[Array.IndexOf(parsedClause.ToArray(), field)] = _parseValue(field);
             });
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the in() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseInExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            var parsedClause = new JArray(clause.Split(','));
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                int index = Array.IndexOf(ParsedClause.ToArray(), field);
-                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-                ParsedClause[index] = field;
+                var index = Array.IndexOf(parsedClause.ToArray(), field);
+                field = field.ToString().Trim(TrimChar.ToCharArray()).Trim();
+                parsedClause[index] = field;
                 if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
                 {
                     throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
                 }
             });
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"in()\" extension.");
             }
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the with() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseWithExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
+            var parsedClause = new JArray(clause.Split(','));
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"with()\" extension.");
             }
 
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                ParsedClause[Array.IndexOf(ParsedClause.ToArray(), field)] = _parseValue(field);
+                parsedClause[Array.IndexOf(parsedClause.ToArray(), field)] = _parseValue(field);
             });
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the as() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseAsExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            var parsedClause = new JArray(clause.Split(','));
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                int index = Array.IndexOf(ParsedClause.ToArray(), field);
-                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-                ParsedClause[index] = field;
+                var index = Array.IndexOf(parsedClause.ToArray(), field);
+                field = field.ToString().Trim(TrimChar.ToCharArray()).Trim();
+                parsedClause[index] = field;
                 if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
                 {
                     throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
                 }
             });
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"as()\" extension.");
             }
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the group() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JArray _parseGroupExtension(string clause)
         {
-            JArray ParsedClause = new JArray(clause.Split(','));
-            Array.ForEach(ParsedClause.ToArray(), (field) =>
+            var parsedClause = new JArray(clause.Split(','));
+            Array.ForEach(parsedClause.ToArray(), (field) =>
             {
-                int index = Array.IndexOf(ParsedClause.ToArray(), field);
-                field = field.ToString().Trim(TRIM_CHAR.ToCharArray()).Trim();
-                ParsedClause[index] = field;
+                var index = Array.IndexOf(parsedClause.ToArray(), field);
+                field = field.ToString().Trim(TrimChar.ToCharArray()).Trim();
+                parsedClause[index] = field;
                 if (!Regex.IsMatch(field.ToString(), "^\\w+$"))
                 {
                     throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + field + "\".");
                 }
             });
 
-            if (ParsedClause.Count == 0)
+            if (parsedClause.Count == 0)
             {
                 throw new Exception("JSONDB Query Parse Error: At least one parameter expected for the \"group()\" extension.");
             }
-            if (ParsedClause.Count > 1)
+            if (parsedClause.Count > 1)
             {
                 throw new Exception("JSONDB Query Parse Error: Too much parameters given to the \"group()\" extension, only one required.");
             }
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse the on() extension.
+        /// </summary>
+        /// <param name="clause">Extension parameter</param>
+        /// <returns>The parsed extension</returns>
         protected static JObject _parseOnExtension(string clause)
         {
-            JObject ParsedClause = new JObject();
-            string[] extensionParts = clause.Split(',');
+            var parsedClause = new JObject();
+            var extensionParts = clause.Split(',');
 
             if (extensionParts.Length < 2)
             {
                 throw new Exception("JSONDB Query Parse Error: At least two parameters expected for the \"on()\" extension.");
             }
 
-            string[] actionParts = new Regex("(\\w+)\\((.*)\\)").Replace(extensionParts[1], "$1.$2").Split('.');
+            var actionParts = Regex.Replace(extensionParts[1], "(\\w+)\\((.*)\\)", "$1.$2").Split('.');
 
             if (!Regex.IsMatch(extensionParts[0], "^\\w+$"))
             {
                 throw new Exception("JSONDB Query Parse Error: Invalid identifier name \"" + extensionParts[0] + "\".");
             }
 
-            ParsedClause["column"] = extensionParts[0];
-            ParsedClause["action"] = new JObject();
-            ParsedClause["action"]["name"] = actionParts[0].ToString().Trim();
-            ParsedClause["action"]["parameters"] = new JArray(actionParts[1].Split(';'));
-            Array.ForEach(ParsedClause["action"]["parameters"].ToArray(), (field) =>
+            parsedClause["column"] = extensionParts[0];
+            parsedClause["action"] = new JObject
             {
-                ParsedClause["action"]["parameters"][Array.IndexOf(ParsedClause["action"]["parameters"].ToArray(), field)] = field.ToString().Trim();
+                ["name"] = actionParts[0].Trim(),
+                ["parameters"] = new JArray(actionParts[1].Split(';'))
+            };
+            Array.ForEach(parsedClause["action"]["parameters"].ToArray(), (field) =>
+            {
+                parsedClause["action"]["parameters"][Array.IndexOf(parsedClause["action"]["parameters"].ToArray(), field)] = field.ToString().Trim();
             });
 
-            return ParsedClause;
+            return parsedClause;
         }
 
+        /// <summary>
+        /// Parse and execute a function.
+        /// </summary>
+        /// <param name="func">The function name</param>
+        /// <returns>The function's result</returns>
         protected static JToken _parseFunction(string func)
         {
-            var parts = new Regex("(\\w+)\\((.*)\\)").Replace(func, "$1.$2").Split('.');
+            var parts = Regex.Replace(func, "(\\w+)\\((.*)\\)", "$1.$2").Split('.');
             var name = parts[0];
             JArray parameters;
-            if (parts[1] == String.Empty)
+            if (parts[1] == string.Empty)
             {
                 parameters = new JArray();
             }
@@ -603,7 +661,7 @@ namespace JSONDB.Library
                     {
                         throw new Exception("JSONDB Query Parse Error: Too much parameters for the function sha1(), only one is required.");
                     }
-                    return Util.SHA1(parameters[0].ToString());
+                    return Util.Sha1(parameters[0].ToString());
                 case "md5":
                     if (parameters.Count == 0)
                     {
@@ -613,7 +671,7 @@ namespace JSONDB.Library
                     {
                         throw new Exception("JSONDB Query Parse Error: Too much parameters for the function md5(), only one is required.");
                     }
-                    return Util.MD5(parameters[0].ToString());
+                    return Util.Md5(parameters[0].ToString());
                 case "time":
                     if (parameters.Count == 0)
                     {
@@ -622,35 +680,32 @@ namespace JSONDB.Library
                     throw new Exception("JSONDB Query Parse Error: Too much parameters for the function time(), no one is required.");
                 case "now":
                     var date = DateTime.Now;
-                    JArray days = new JArray("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
-                    JArray months = new JArray("January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
+                    var days = new JArray("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+                    var months = new JArray("January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
                     if (parameters.Count == 0)
                     {
                         return Util.Zeropad(date.Year) + "-" + Util.Zeropad(date.Month) + "-" + Util.Zeropad(date.Day) + " " + Util.Zeropad(date.Hour) + ":" + Util.Zeropad(date.Minute) + ":" + Util.Zeropad(date.Second);
                     }
-                    else
+                    if (parameters.Count > 1)
                     {
-                        if (parameters.Count > 1)
-                        {
-                            throw new Exception("JSONDB Query Parse Error: Too much parameters for the function now(), only one is required.");
-                        }
-                        return parameters[0].ToString()
-                            .Replace("%a", days[(int)date.DayOfWeek].ToString().Substring(0, 3))
-                            .Replace("%A", days[(int)date.DayOfWeek].ToString())
-                            .Replace("%d", Util.Zeropad(date.Day))
-                            .Replace("%m", Util.Zeropad(date.Month))
-                            .Replace("%e", date.Month.ToString())
-                            .Replace("%w", ((int)date.DayOfWeek).ToString())
-                            .Replace("%W", Util.Zeropad((int)date.DayOfWeek))
-                            .Replace("%b", months[date.Month].ToString().Substring(0, 3))
-                            .Replace("%B", months[date.Month].ToString())
-                            .Replace("%y", (date.Year % 1000).ToString())
-                            .Replace("%Y", date.Year.ToString())
-                            .Replace("%H", Util.Zeropad(date.Hour))
-                            .Replace("%k", date.Hour.ToString())
-                            .Replace("%M", Util.Zeropad(date.Minute))
-                            .Replace("%S", Util.Zeropad(date.Second));
+                        throw new Exception("JSONDB Query Parse Error: Too much parameters for the function now(), only one is required.");
                     }
+                    return parameters[0].ToString()
+                        .Replace("%a", days[(int)date.DayOfWeek].ToString().Substring(0, 3))
+                        .Replace("%A", days[(int)date.DayOfWeek].ToString())
+                        .Replace("%d", Util.Zeropad(date.Day))
+                        .Replace("%m", Util.Zeropad(date.Month))
+                        .Replace("%e", date.Month.ToString())
+                        .Replace("%w", ((int)date.DayOfWeek).ToString())
+                        .Replace("%W", Util.Zeropad((int)date.DayOfWeek))
+                        .Replace("%b", months[date.Month].ToString().Substring(0, 3))
+                        .Replace("%B", months[date.Month].ToString())
+                        .Replace("%y", (date.Year % 1000).ToString())
+                        .Replace("%Y", date.Year.ToString())
+                        .Replace("%H", Util.Zeropad(date.Hour))
+                        .Replace("%k", date.Hour.ToString())
+                        .Replace("%M", Util.Zeropad(date.Minute))
+                        .Replace("%S", Util.Zeropad(date.Second));
                 case "lowercase":
                     if (parameters.Count == 0)
                     {
@@ -701,105 +756,95 @@ namespace JSONDB.Library
             }
         }
 
+        /// <summary>
+        /// Parse a value.
+        /// </summary>
+        /// <param name="value">The value to parse</param>
+        /// <returns>The parsed value</returns>
         protected static JToken _parseValue(JToken value)
         {
-            string trim_value = value.ToString().Trim();
+            var trimValue = value.ToString().Trim();
 
-            if (trim_value == String.Empty)
+            if (trimValue == string.Empty)
             {
-                return String.Empty;
+                return string.Empty;
             }
-            else if (trim_value.IndexOf(":JSONDB::TO_BOOL:") > -1)
+            if (trimValue.IndexOf(":JSONDB::TO_BOOL:", StringComparison.Ordinal) > -1)
             {
                 return int.Parse(value.ToString().Replace(":JSONDB::TO_BOOL:", "")) == 1;
             }
-            else if (trim_value.ToLower() == "false")
+            if (trimValue.ToLower() == "false")
             {
                 return false;
             }
-            else if (trim_value.ToLower() == "true")
+            if (trimValue.ToLower() == "true")
             {
                 return true;
             }
-            else if (trim_value.IndexOf(":JSONDB::TO_NULL:") > -1 || trim_value.ToLower() == "null")
+            if (trimValue.IndexOf(":JSONDB::TO_NULL:", StringComparison.Ordinal) > -1 || trimValue.ToLower() == "null")
             {
                 return null;
             }
-            else if (trim_value.IndexOf(":JSONDB::TO_ARRAY:") > -1)
+            if (trimValue.IndexOf(":JSONDB::TO_ARRAY:", StringComparison.Ordinal) > -1)
             {
-                return JObject.Parse(_parseValue(trim_value.Replace(":JSONDB::TO_ARRAY:", "")).ToString());
+                return JObject.Parse(_parseValue(trimValue.Replace(":JSONDB::TO_ARRAY:", "")).ToString());
             }
-            else if (trim_value[0] == '\'')
+            if (trimValue[0] == '\'' && trimValue[trimValue.Length - 1] == '\'')
             {
-                if (trim_value[trim_value.Length - 1] == '\'')
-                {
-                    return new Regex("\\{\\{quot\\}\\}|\\{\\{comm\\}\\}|\\{\\{dot\\}\\}|\\{\\{pto\\}\\}|\\{\\{ptc\\}\\}|\\{\\{semi\\}\\}").Replace(
-                        new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, ""),
-                        (match) =>
+                return Regex.Replace(
+                    Regex.Replace(trimValue, "[" + TrimChar + "]", ""),
+                    "\\{\\{quot\\}\\}|\\{\\{comm\\}\\}|\\{\\{dot\\}\\}|\\{\\{pto\\}\\}|\\{\\{ptc\\}\\}|\\{\\{semi\\}\\}",
+                    (match) =>
+                    {
+                        switch (match.Value)
                         {
-                            switch (match.Value)
-                            {
-                                case "{{quot}}":
-                                    return "'";
-                                case "{{comm}}":
-                                    return ",";
-                                case "{{dot}}":
-                                    return ".";
-                                case "{{pto}}":
-                                    return "(";
-                                case "{{ptc}}":
-                                    return ")";
-                                case "{{semi}}":
-                                    return ";";
-                                default:
-                                    return match.Value;
-                            }
+                            case "{{quot}}":
+                                return "'";
+                            case "{{comm}}":
+                                return ",";
+                            case "{{dot}}":
+                                return ".";
+                            case "{{pto}}":
+                                return "(";
+                            case "{{ptc}}":
+                                return ")";
+                            case "{{semi}}":
+                                return ";";
+                            default:
+                                return match.Value;
                         }
-                    );
-                }
+                    }
+                );
             }
-            else if (new Regex("\\w+\\(.*\\)").IsMatch(trim_value))
+            else if (Regex.IsMatch(trimValue, "\\w+\\(.*\\)"))
             {
-                return _parseFunction(trim_value);
+                return _parseFunction(trimValue);
             }
             else
             {
                 int res;
-                if (int.TryParse(new Regex("[" + TRIM_CHAR + "]").Replace(trim_value, "").Trim(), out res))
+                if (int.TryParse(Regex.Replace(trimValue, "[" + TrimChar + "]", "").Trim(), out res))
                 {
                     return res;
                 }
             }
 
-            throw new Exception("JSONDB Query Parse Error: Unable to parse the value \"" + trim_value + "\".");
+            throw new Exception("JSONDB Query Parse Error: Unable to parse the value \"" + trimValue + "\".");
         }
     }
 
+    /// <summary>
+    /// Exception handler for multiline queryies parsing.
+    /// </summary>
     public class MultilineQueryParseException : Exception
     {
-        private int _line;
-        private Exception _base;
+        private readonly Exception _base;
 
-        public int Line
-        {
-            get { return _line; }
-        }
+        public int Line { get; }
 
-        public override string Message
-        {
-            get
-            {
-                return _base.Message;
-            }
-        }
+        public override string Message => _base.Message;
 
-        public override IDictionary Data
-        {
-            get
-            {
-                return _base.Data;
-            }
-        }
+        public override IDictionary Data => _base.Data;
 
         public override string HelpLink
         {
@@ -827,18 +872,12 @@ namespace JSONDB.Library
             }
         }
 
-        public override string StackTrace
-        {
-            get
-            {
-                return _base.StackTrace;
-            }
-        }
+        public override string StackTrace => _base.StackTrace;
 
         public MultilineQueryParseException(string message, int line)
         {
             _base = new Exception(message);
-            _line = line;
+            Line = line;
         }
 
         public override Exception GetBaseException()

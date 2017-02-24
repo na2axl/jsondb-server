@@ -1,28 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace JSONDB.Library
+namespace JSONDB
 {
-    internal class Cache
+    /// <summary>
+    /// Class Cache.
+    /// </summary>
+    internal static class Cache
     {
         /// <summary>
         /// An array of all cached data.
         /// </summary>
-        private static Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>();
+        private static Dictionary<string, string> _data = new Dictionary<string, string>();
 
         /// <summary>
         /// Retrieve a cached table data.
         /// </summary>
         /// <param name="path">The path to the table</param>
         /// <returns>The cached data</returns>
-        internal static string Get(string path)
+        public static string Get(string path)
         {
-            if (!Data.ContainsKey(path))
+            if (!_data.ContainsKey(path))
             {
-                Data[path] = Database.GetTableData(path).ToString();
+                _data[path] = Database.GetTableData(path).ToString();
             }
 
-            return Data[path].ToString();
+            return _data[path];
         }
 
         /// <summary>
@@ -30,24 +32,24 @@ namespace JSONDB.Library
         /// </summary>
         /// <param name="path">The path to the table</param>
         /// <param name="data">The data to cache</param>
-        internal static void Update(string path, string data)
+        public static void Update(string path, string data)
         {
-            if (data == String.Empty)
+            if (data == string.Empty)
             {
-                Data[path] = Database.GetTableData(path).ToString();
+                _data[path] = Database.GetTableData(path).ToString();
             }
             else
             {
-                Data[path] = data;
+                _data[path] = data;
             }
         }
 
         /// <summary>
         /// Reset all the cache.
         /// </summary>
-        internal static void Reset()
+        public static void Reset()
         {
-            Data = new Dictionary<string, string>();
+            _data = new Dictionary<string, string>();
         }
     }
 }
