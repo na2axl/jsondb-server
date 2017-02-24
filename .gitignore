@@ -247,3 +247,4 @@ ModelManifest.xml
 /jsondb-server/node_modules/jdb-core/web/public/compile.cmd
 /jsondb-server/node_modules/jdb-core/web/public/js/build.txt
 *.less
+/.idea/
