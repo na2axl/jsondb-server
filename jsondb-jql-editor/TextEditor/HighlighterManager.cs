@@ -1,25 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Media;
-using System.Windows;
-using System.Xml.Linq;
-using System.Xml.Schema;
-using System.Diagnostics;
-using System.Xml;
 using System.IO;
-using System.Reflection;
-using System.Resources;
-using System.Collections;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Media;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace JSONDB.JQLEditor.TextEditor
 {
     public class HighlighterManager
     {
-        private static HighlighterManager instance = new HighlighterManager();
-        public static HighlighterManager Instance { get { return instance; } }
+        private static HighlighterManager _instance = new HighlighterManager();
+        public static HighlighterManager Instance { get { return _instance; } }
 
         public IDictionary<string, IHighlighter> Highlighters { get; private set; }
 
@@ -28,9 +21,9 @@ namespace JSONDB.JQLEditor.TextEditor
             Highlighters = new Dictionary<string, IHighlighter>();
         }
 
-        public IHighlighter LoadXML(string xml)
+        public IHighlighter LoadXml(string xml)
         {
-            var syntaxStream = new MemoryStream();
+            MemoryStream syntaxStream = new MemoryStream();
             StreamWriter syntaxWriter = new StreamWriter(syntaxStream);
 
             for (int i = 0, l = xml.Length; i < l; i++)
@@ -54,7 +47,7 @@ namespace JSONDB.JQLEditor.TextEditor
             }
 
             XElement root = xmldoc.Root;
-            String name = root.Attribute("name").Value.Trim();
+            string name = root.Attribute("name").Value.Trim();
             Highlighters.Add(name, new XmlHighlighter(root));
 
             return Highlighters[name];
@@ -65,23 +58,23 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private class XmlHighlighter : IHighlighter
         {
-            private List<HighlightWordsRule> wordsRules;
-            private List<HighlightLineRule> lineRules;
-            private List<AdvancedHighlightRule> regexRules;
+            private List<HighlightWordsRule> _wordsRules;
+            private List<HighlightLineRule> _lineRules;
+            private List<AdvancedHighlightRule> _regexRules;
 
             public XmlHighlighter(XElement root)
             {
-                wordsRules = new List<HighlightWordsRule>();
-                lineRules = new List<HighlightLineRule>();
-                regexRules = new List<AdvancedHighlightRule>();
+                _wordsRules = new List<HighlightWordsRule>();
+                _lineRules = new List<HighlightLineRule>();
+                _regexRules = new List<AdvancedHighlightRule>();
 
                 foreach (XElement elem in root.Elements())
                 {
                     switch (elem.Name.ToString())
                     {
-                        case "HighlightWordsRule": wordsRules.Add(new HighlightWordsRule(elem)); break;
-                        case "HighlightLineRule": lineRules.Add(new HighlightLineRule(elem)); break;
-                        case "AdvancedHighlightRule": regexRules.Add(new AdvancedHighlightRule(elem)); break;
+                        case "HighlightWordsRule": _wordsRules.Add(new HighlightWordsRule(elem)); break;
+                        case "HighlightLineRule": _lineRules.Add(new HighlightLineRule(elem)); break;
+                        case "AdvancedHighlightRule": _regexRules.Add(new AdvancedHighlightRule(elem)); break;
                     }
                 }
             }
@@ -100,7 +93,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 Regex wordsRgx = new Regex("[a-zA-Z_][a-zA-Z0-9_]*");
                 foreach (Match m in wordsRgx.Matches(text.Text))
                 {
-                    foreach (HighlightWordsRule rule in wordsRules)
+                    foreach (HighlightWordsRule rule in _wordsRules)
                     {
                         foreach (string word in rule.Words)
                         {
@@ -137,7 +130,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 //
                 // REGEX RULES
                 //
-                foreach (AdvancedHighlightRule rule in regexRules)
+                foreach (AdvancedHighlightRule rule in _regexRules)
                 {
                     Regex regexRgx = new Regex(rule.Expression);
                     foreach (Match m in regexRgx.Matches(text.Text))
@@ -155,7 +148,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 //
                 // LINES RULES
                 //
-                foreach (HighlightLineRule rule in lineRules)
+                foreach (HighlightLineRule rule in _lineRules)
                 {
                     Regex lineRgx = new Regex(Regex.Escape(rule.LineStart) + ".*");
                     foreach (Match m in lineRgx.Matches(text.Text))

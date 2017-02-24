@@ -8,12 +8,12 @@ namespace JSONDB.JQLEditor.TextEditor
 {
     public class IntellisenseListItem : ListBoxItem
     {
-        private Canvas ToolTipMessage = new Canvas();
-        private Border ToolTipBorder = new Border();
-        private DockPanel ToolTipContainer = new DockPanel();
-        private Label ToolTipTitle = new Label();
-        private Separator ToolTipSeparator = new Separator();
-        private TextBlock ToolTipDescription = new TextBlock();
+        private Canvas _toolTipMessage = new Canvas();
+        private Border _toolTipBorder = new Border();
+        private DockPanel _toolTipContainer = new DockPanel();
+        private Label _toolTipTitle = new Label();
+        private Separator _toolTipSeparator = new Separator();
+        private TextBlock _toolTipDescription = new TextBlock();
 
         public Action Action { get; set; }
         public string DisplayText
@@ -22,16 +22,16 @@ namespace JSONDB.JQLEditor.TextEditor
             set { Content = value; }
         }
 
-        public IntellisenseListItem(string DisplayText, string HelpTitle, string HelpDescription, Action Action)
+        public IntellisenseListItem(string displayText, string helpTitle, string helpDescription, Action action)
         {
-            Content = DisplayText;
-            this.Action = Action;
+            Content = displayText;
+            this.Action = action;
 
             PreviewKeyDown += (s, e) =>
             {
                 if (e.Key == Key.Enter || e.Key == Key.Tab)
                 {
-                    Action();
+                    action();
                     e.Handled = true;
                 }
             };
@@ -40,93 +40,93 @@ namespace JSONDB.JQLEditor.TextEditor
             {
                 if (e.LeftButton == MouseButtonState.Pressed)
                 {
-                    Action();
+                    action();
                     e.Handled = true;
                 }
             };
 
-            ToolTipBorder.Padding = new Thickness(10, 5, 10, 5);
-            ToolTipBorder.BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#555555"));
-            ToolTipBorder.Background = (Brush)(new BrushConverter().ConvertFrom("#333333"));
+            _toolTipBorder.Padding = new Thickness(10, 5, 10, 5);
+            _toolTipBorder.BorderBrush = (Brush)(new BrushConverter().ConvertFrom("#555555"));
+            _toolTipBorder.Background = (Brush)(new BrushConverter().ConvertFrom("#333333"));
 
-            ToolTipTitle.Content = HelpTitle;
-            ToolTipTitle.FontWeight = FontWeights.Bold;
-            ToolTipTitle.Margin = new Thickness(0, 0, 0, 5);
-            ToolTipTitle.Padding = new Thickness(0);
-            ToolTipTitle.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            _toolTipTitle.Content = helpTitle;
+            _toolTipTitle.FontWeight = FontWeights.Bold;
+            _toolTipTitle.Margin = new Thickness(0, 0, 0, 5);
+            _toolTipTitle.Padding = new Thickness(0);
+            _toolTipTitle.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
 
-            ToolTipSeparator.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
-            ToolTipSeparator.Height = 1;
+            _toolTipSeparator.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            _toolTipSeparator.Height = 1;
 
-            ToolTipDescription.Text = HelpDescription;
-            ToolTipDescription.TextWrapping = TextWrapping.Wrap;
-            ToolTipDescription.MaxWidth = 200;
-            ToolTipDescription.Margin = new Thickness(0);
-            ToolTipDescription.Padding = new Thickness(0);
-            ToolTipDescription.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
+            _toolTipDescription.Text = helpDescription;
+            _toolTipDescription.TextWrapping = TextWrapping.Wrap;
+            _toolTipDescription.MaxWidth = 200;
+            _toolTipDescription.Margin = new Thickness(0);
+            _toolTipDescription.Padding = new Thickness(0);
+            _toolTipDescription.Foreground = (Brush)(new BrushConverter().ConvertFrom("#ffffff"));
 
-            ToolTipContainer.Children.Add(ToolTipTitle);
-            ToolTipContainer.Children.Add(ToolTipSeparator);
-            ToolTipContainer.Children.Add(ToolTipDescription);
+            _toolTipContainer.Children.Add(_toolTipTitle);
+            _toolTipContainer.Children.Add(_toolTipSeparator);
+            _toolTipContainer.Children.Add(_toolTipDescription);
 
-            DockPanel.SetDock(ToolTipTitle, Dock.Top);
-            DockPanel.SetDock(ToolTipSeparator, Dock.Top);
-            DockPanel.SetDock(ToolTipDescription, Dock.Top);
+            DockPanel.SetDock(_toolTipTitle, Dock.Top);
+            DockPanel.SetDock(_toolTipSeparator, Dock.Top);
+            DockPanel.SetDock(_toolTipDescription, Dock.Top);
 
-            ToolTipBorder.Child = ToolTipContainer;
+            _toolTipBorder.Child = _toolTipContainer;
 
-            ToolTipMessage.Children.Add(ToolTipBorder);
-            ToolTipMessage.IsHitTestVisible = false;
-            ToolTipBorder.Visibility = Visibility.Collapsed;
+            _toolTipMessage.Children.Add(_toolTipBorder);
+            _toolTipMessage.IsHitTestVisible = false;
+            _toolTipBorder.Visibility = Visibility.Collapsed;
 
             Loaded += (s, e) =>
             {
-                Grid parent = (Grid)((Canvas)((ListBox)Parent).Parent).Parent;
-                parent.Children.Add(ToolTipMessage);
+                var parent = (Grid)((Canvas)((ListBox)Parent).Parent).Parent;
+                parent.Children.Add(_toolTipMessage);
                 UpdatePosition();
             };
 
             GotFocus += (s, e) =>
             {
                 UpdatePosition();
-                ToolTipMessage.IsHitTestVisible = true;
-                ToolTipBorder.Visibility = Visibility.Visible;
+                _toolTipMessage.IsHitTestVisible = true;
+                _toolTipBorder.Visibility = Visibility.Visible;
             };
 
             LostFocus += (s, e) =>
             {
                 UpdatePosition();
-                ToolTipMessage.IsHitTestVisible = false;
-                ToolTipBorder.Visibility = Visibility.Collapsed;
+                _toolTipMessage.IsHitTestVisible = false;
+                _toolTipBorder.Visibility = Visibility.Collapsed;
             };
         }
 
         public void UpdatePosition()
         {
-            ToolTipBorder.BorderThickness = new Thickness(5, 0, 0, 0);
+            _toolTipBorder.BorderThickness = new Thickness(5, 0, 0, 0);
 
-            ToolTipTitle.HorizontalContentAlignment = HorizontalAlignment.Left;
-            ToolTipDescription.TextAlignment = TextAlignment.Left;
+            _toolTipTitle.HorizontalContentAlignment = HorizontalAlignment.Left;
+            _toolTipDescription.TextAlignment = TextAlignment.Left;
 
-            ListBox list = ((ListBox)Parent);
-            double top = Canvas.GetTop(list);
-            double left = Canvas.GetLeft(list) + list.ActualWidth + 5;
+            var list = ((ListBox)Parent);
+            var top = Canvas.GetTop(list);
+            var left = Canvas.GetLeft(list) + list.ActualWidth + 5;
 
-            if (left + ToolTipContainer.ActualWidth > ToolTipMessage.ActualWidth)
+            if (left + _toolTipContainer.ActualWidth > _toolTipMessage.ActualWidth)
             {
-                ToolTipBorder.BorderThickness = new Thickness(0, 0, 5, 0);
-                ToolTipTitle.HorizontalContentAlignment = HorizontalAlignment.Right;
-                ToolTipDescription.TextAlignment = TextAlignment.Right;
-                left = Canvas.GetLeft(list) - ToolTipContainer.ActualWidth - ToolTipBorder.Padding.Left - ToolTipBorder.Padding.Right - ToolTipBorder.BorderThickness.Left - ToolTipBorder.BorderThickness.Right - 5;
+                _toolTipBorder.BorderThickness = new Thickness(0, 0, 5, 0);
+                _toolTipTitle.HorizontalContentAlignment = HorizontalAlignment.Right;
+                _toolTipDescription.TextAlignment = TextAlignment.Right;
+                left = Canvas.GetLeft(list) - _toolTipContainer.ActualWidth - _toolTipBorder.Padding.Left - _toolTipBorder.Padding.Right - _toolTipBorder.BorderThickness.Left - _toolTipBorder.BorderThickness.Right - 5;
             }
 
-            if (top + ToolTipContainer.ActualHeight > ToolTipMessage.ActualHeight)
+            if (top + _toolTipContainer.ActualHeight > _toolTipMessage.ActualHeight)
             {
-                top = top - ToolTipBorder.ActualHeight - 5;
+                top = top - _toolTipBorder.ActualHeight - 5;
             }
 
-            Canvas.SetTop(ToolTipBorder, top);
-            Canvas.SetLeft(ToolTipBorder, left);
+            Canvas.SetTop(_toolTipBorder, top);
+            Canvas.SetLeft(_toolTipBorder, left);
         }
 
     }
