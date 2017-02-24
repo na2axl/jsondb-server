@@ -1,44 +1,44 @@
-﻿using JSONDB.Library;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using WebSocketSharp;
 
 namespace JSONDB.Server
 {
-    public class Program
+    internal class Program
     {
         /// <summary>
         /// The JSONDB server address.
         /// </summary>
-        private static IPAddress ServerAddress = IPAddress.Any;
+        private static IPAddress _serverAddress = IPAddress.Any;
 
         /// <summary>
         /// Get the value determinating if an user is currently connected through the console.
         /// </summary>
-        private static bool UserIsConnected = false;
+        private static bool _userIsConnected;
 
         /// <summary>
         /// The name of the currently used server.
         /// </summary>
-        private static string ServerName = String.Empty;
+        private static string _serverName = string.Empty;
 
         /// <summary>
         /// The Database instance used with the current connection.
         /// </summary>
-        private static Database DB;
+        private static Database _db;
 
         /// <summary>
         /// Check if the server is running.
         /// </summary>
-        private static bool IsRunning = true;
+        private static bool _isRunning = true;
 
         /// <summary>
         /// Check if a server is already running. Used to allow multi instance for the console.
         /// </summary>
-        private static bool AServerIsRunning = false;
+        private static bool _aServerIsRunning = false;
 
         /// <summary>
         /// The main program logic.
@@ -58,77 +58,86 @@ namespace JSONDB.Server
                             {
                                 if (Util.TestServerAddress(args[i + 1]))
                                 {
-                                    ServerAddress = IPAddress.Parse(args[i + 1]);
+                                    _serverAddress = IPAddress.Parse(args[i + 1]);
                                 }
                             }
+                            break;
+
+                        case "-noServer":
+                            _aServerIsRunning = true;
                             break;
                     }
                 }
             }
 
-            HTTPServer http = null;
+            Server web = null;
             System.Threading.Thread qThread = null;
 
-            try
+            if (!_aServerIsRunning)
             {
-                // Create an HTTP Server
-                http = new HTTPServer(ServerAddress, 2717);
+                try
+                {
+                    // Create an HTTP Server
+                    web = new Server(_serverAddress, 2717);
 
-                // Add WebSocket Services to the HTTP server
-                http.AddWebSocketService<ClientSocketServer>(
-                    "/",
-                    () =>
-                        new ClientSocketServer()
-                        {
-                            Protocol = "jsondb",
-                            IgnoreExtensions = true,
-                            EmitOnPing = false
-                        }
-                );
-                http.AddWebSocketService<APISocketServer>(
-                    "/jdbwebapi",
-                    () =>
-                        new APISocketServer()
-                        {
-                            IgnoreExtensions = true,
-                            EmitOnPing = false,
-                            OriginValidator = (val) =>
+                    // Add WebSocket Services to the HTTP server
+                    web.AddWebSocketService(
+                        "/",
+                        () =>
+                            new ClientSocketServer
                             {
+                                Protocol = "jsondb",
+                                IgnoreExtensions = true,
+                                EmitOnPing = false
+                            }
+                    );
+                    web.AddWebSocketService(
+                        "/jdbwebapi",
+                        () =>
+                            new ApiSocketServer
+                            {
+                                IgnoreExtensions = true,
+                                EmitOnPing = false,
+                                OriginValidator = (val) =>
+                                {
                                 // Check the value of the Origin header, and return true if valid.
                                 Uri origin;
-                                return !val.IsNullOrEmpty()
-                                       && Uri.TryCreate(val, UriKind.Absolute, out origin)
-                                       && origin.Host == ServerAddress.ToString()
-                                       && origin.Port == 2717;
+                                    return !val.IsNullOrEmpty()
+                                           && Uri.TryCreate(val, UriKind.Absolute, out origin)
+                                           && origin.Host == _serverAddress.ToString()
+                                           && origin.Port == 2717;
+                                }
+                            }
+                    );
+
+                    // Start the HTTP server
+                    web.Start();
+
+                    // Execute queries while the server is running
+                    qThread = new System.Threading.Thread((state) =>
+                    {
+                        while (_isRunning)
+                        {
+                            if (ClientSocketServer.Pools.Count > 0 && !ClientSocketServer.Executing)
+                            {
+                                ClientSocketServer.Pools.Dequeue().Send();
                             }
                         }
-                );
+                    });
 
-                // Start the HTTP server
-                http.Start();
-
-                // Execute queries while the server is running
-                qThread = new System.Threading.Thread((state) => {
-                    while (IsRunning)
-                    {
-                        if (ClientSocketServer.Pools.Count > 0)
-                        {
-                            ClientSocketServer.Pools.Dequeue().Send();
-                        }
-                    }
-                });
-
-                qThread.Start();
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                AServerIsRunning = true;
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("An error occured while starting the server, please try again. If the error persist, contact your administrator. Press Enter to close.");
-                Console.ReadKey(true);
-                IsRunning = false;
+                    qThread.Start();
+                }
+                catch (System.Net.Sockets.SocketException)
+                {
+                    _aServerIsRunning = true;
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("An error occured while starting the server, please try again. If the error persist, contact your administrator.");
+                    Console.WriteLine("Press Enter to close.");
+                    Console.ReadKey(true);
+                    _isRunning = false;
+                }
             }
 
             // If the JSONDB Server is launched as a console
@@ -138,32 +147,32 @@ namespace JSONDB.Server
                 Console.WriteLine("Copyright (c) 2016 Centers Technologies. All rights reserved.");
                 Console.WriteLine("Server version 1.0.0");
                 Console.WriteLine();
-                Console.WriteLine("The server is listening for incomming connections at the address jsondb://" + ServerAddress.ToString() + ":2717");
-                Console.WriteLine("The web administration interface is available at the address http://" + ServerAddress.ToString() + ":2717");
+                Console.WriteLine("The server is listening for incomming queries at the address jsondb://" + _serverAddress + ":2717");
+                Console.WriteLine("The web administration interface is available at the address http://" + _serverAddress + ":2717");
                 Console.WriteLine();
                 Console.WriteLine("Type 'help' for the list of available commands.");
                 Console.WriteLine();
 
                 // Continue to recieve commands until we get a "close" command
-                while (IsRunning)
+                while (_isRunning)
                 {
-                    if (UserIsConnected)
+                    if (_userIsConnected)
                     {
-                        Console.Write("$ " + DB.GetUsername() + "@" + ServerName + " >  ");
+                        Console.Write("$ " + _db.GetUsername() + "@" + _serverName + " >  ");
                     }
                     else
                     {
                         Console.Write("$ jsondb >  ");
                     }
 
-                    string command = Console.ReadLine();
-                    string _cmd = command.ToLower().TrimStart();
+                    var command = Console.ReadLine() ?? string.Empty;
+                    var cmd = command.ToLower().TrimStart();
 
-                    if (_cmd == String.Empty)
+                    if (cmd == string.Empty)
                     {
                         // Do nothing...
                     }
-                    else if (_cmd.StartsWith("help"))
+                    else if (cmd.StartsWith("help"))
                     {
                         Console.WriteLine("Use help [commandName] for a detailed help about a command.");
                         Console.WriteLine();
@@ -179,55 +188,55 @@ namespace JSONDB.Server
                         Console.WriteLine("close              Disconnect and close the console.");
                         Console.WriteLine("clear              Clear the console.");
                     }
-                    else if (_cmd.StartsWith("mkserver"))
+                    else if (cmd.StartsWith("mkserver"))
                     {
                         ExecMkServer(command);
                     }
-                    else if (_cmd.StartsWith("rmserver"))
+                    else if (cmd.StartsWith("rmserver"))
                     {
                         ExecRmSrever(command);
                     }
-                    else if (_cmd.StartsWith("desc"))
+                    else if (cmd.StartsWith("desc"))
                     {
                         ExecDesc(command);
                     }
-                    else if (_cmd.StartsWith("connect"))
+                    else if (cmd.StartsWith("connect"))
                     {
                         ExecConnect(command);
                     }
-                    else if (_cmd.StartsWith("mkdatabase"))
+                    else if (cmd.StartsWith("mkdatabase"))
                     {
                         ExecMkDatabase(command);
                     }
-                    else if (_cmd.StartsWith("rmdatabase"))
+                    else if (cmd.StartsWith("rmdatabase"))
                     {
                         ExecRmDatabase(command);
                     }
-                    else if (_cmd.StartsWith("cd"))
+                    else if (cmd.StartsWith("cd"))
                     {
                         ExecChangeDatabase(command);
                     }
-                    else if (_cmd.StartsWith("mktable"))
+                    else if (cmd.StartsWith("mktable"))
                     {
                         ExecMkTable(command);
                     }
-                    else if (_cmd.StartsWith("rmtable"))
+                    else if (cmd.StartsWith("rmtable"))
                     {
                         ExecRmTable(command);
                     }
-                    else if (_cmd.StartsWith("query"))
+                    else if (cmd.StartsWith("query"))
                     {
                         ExecQuery(command);
                     }
-                    else if (_cmd.StartsWith("disconnect"))
+                    else if (cmd.StartsWith("disconnect"))
                     {
-                        ExecDisconnect(command);
+                        ExecDisconnect();
                     }
-                    else if (_cmd.StartsWith("quit") || _cmd.StartsWith("exit") || _cmd.StartsWith("close") || _cmd.StartsWith("shutdown"))
+                    else if (cmd.StartsWith("quit") || cmd.StartsWith("exit") || cmd.StartsWith("close") || cmd.StartsWith("shutdown"))
                     {
-                        ExecClose(command);
+                        ExecClose();
                     }
-                    else if (_cmd.StartsWith("clear"))
+                    else if (cmd.StartsWith("clear"))
                     {
                         Console.Clear();
                     }
@@ -243,48 +252,48 @@ namespace JSONDB.Server
             else
             {
                 // Continue to recieve queries until we get a "close" command
-                while (IsRunning)
+                while (_isRunning)
                 {
-                    string command = Console.In.ReadLine();
+                    var command = Console.In.ReadLine() ?? string.Empty;
                     if (command.ToLower().StartsWith("quit") || command.ToLower().StartsWith("exit") || command.ToLower().StartsWith("close") || command.ToLower().StartsWith("shutdown"))
                     {
-                        ExecClose(command);
+                        ExecClose();
                     }
                 }
             }
 
-            if (!AServerIsRunning)
+            if (!_aServerIsRunning)
             {
                 // Stop the server when a "close" command is recieved
-                http.Stop();
+                web?.Stop();
 
                 // Stop to execute queries
-                qThread.Abort();
+                qThread?.Abort();
             }
         }
 
         private static void ExecRmTable(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                if (DB.IsWorkingDatabase())
+                if (_db.IsWorkingDatabase())
                 {
-                    string table = command.Remove(0, 7).Trim();
-                    while (table == String.Empty)
+                    var table = command.Remove(0, 7).Trim();
+                    while (table == string.Empty)
                     {
                         Console.Write(" -> Table name: ");
-                        table = _validateName(Console.ReadLine().Trim());
+                        table = _validateName(Console.ReadLine()?.Trim());
                     }
 
-                    if (Util.Exists(Util.MakePath(DB.GetServer(), DB.GetDatabase(), table + ".jdbt")))
+                    if (Util.Exists(Util.MakePath(_db.GetServer(), _db.GetDatabase(), table + ".jdbt")))
                     {
                         try
                         {
                             Console.Write("The table will be deleted. It's recommended to backup your table before continue. Are you sure to delete this table ? (Type 'yes' to confirm): ");
-                            string choice = Console.ReadLine().ToLower().Trim();
+                            var choice = Console.ReadLine()?.ToLower().Trim();
                             if (choice == "yes" || choice == "y")
                             {
-                                File.Delete(Util.MakePath(DB.GetServer(), DB.GetDatabase(), table + ".jdbt"));
+                                File.Delete(Util.MakePath(_db.GetServer(), _db.GetDatabase(), table + ".jdbt"));
                                 Console.WriteLine("Table deleted.");
                             }
                             else
@@ -315,25 +324,25 @@ namespace JSONDB.Server
 
         private static void ExecRmDatabase(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                string database = command.Remove(0, 10).Trim();
+                var database = command.Remove(0, 10).Trim();
 
-                while (database == String.Empty)
+                while (database == string.Empty)
                 {
                     Console.Write(" -> Database name: ");
-                    database = _validateName(Console.ReadLine().Trim());
+                    database = _validateName(Console.ReadLine()?.Trim());
                 }
 
                 try
                 {
-                    if (DB.Exists(database))
+                    if (_db.Exists(database))
                     {
                         Console.Write("The database will be deleted, note that ALL your tables will be also deleted. It's recommended to backup your database before continue. Are you sure to delete this database ? (Type 'yes' to confirm): ");
-                        string choice = Console.ReadLine().ToLower().Trim();
+                        var choice = Console.ReadLine()?.ToLower().Trim();
                         if (choice == "yes" || choice == "y")
                         {
-                            Directory.Delete(Util.MakePath(DB.GetServer(), database), true);
+                            Directory.Delete(Util.MakePath(_db.GetServer(), database), true);
                             Console.WriteLine("Database deleted.");
                         }
                         else
@@ -359,13 +368,12 @@ namespace JSONDB.Server
 
         private static void ExecRmSrever(string command)
         {
-            string[] parts = command.Remove(0, 8).Trim().Split(' ');
+            var parts = command.Remove(0, 8).Trim().Split(' ');
 
-            string username = String.Empty;
-            string password = String.Empty;
-            string server = String.Empty;
+            var username = string.Empty;
+            var server = string.Empty;
 
-            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+            var password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
 
             for (int i = 0, l = parts.Length; i < l; i++)
             {
@@ -380,19 +388,19 @@ namespace JSONDB.Server
                 }
             }
 
-            while (server == String.Empty)
+            while (server == string.Empty)
             {
                 Console.Write(" -> Server name: ");
-                server = _validateName(Console.ReadLine().Trim());
+                server = _validateName(Console.ReadLine()?.Trim());
             }
 
-            while (username == String.Empty)
+            while (username == string.Empty)
             {
                 Console.Write(" -> Username: ");
-                username = _validateName(Console.ReadLine().Trim());
+                username = _validateName(Console.ReadLine()?.Trim());
             }
 
-            if (command.Trim().Length == 8 && password == String.Empty)
+            if (command.Trim().Length == 8 && password == string.Empty)
             {
                 Console.Write(" -> Password: ");
                 password = _password();
@@ -400,9 +408,9 @@ namespace JSONDB.Server
 
             try
             {
-                Library.JSONDB.Connect(server, username, password);
+                Jsondb.Connect(server, username, password);
                 Console.Write("The server will be deleted, note that ALL your databases and tables will be also deleted. It's recommended to backup your server before continue. Are you sure to delete this server ? (Type 'yes' to confirm): ");
-                string choice = Console.ReadLine().ToLower().Trim();
+                var choice = Console.ReadLine()?.ToLower().Trim();
                 if (choice == "yes" || choice == "y")
                 {
                     Directory.Delete(Util.MakePath(Util.AppRoot(), "servers", server), true);
@@ -422,42 +430,38 @@ namespace JSONDB.Server
 
         private static void ExecDesc(string command)
         {
-            string descWhat = command.Remove(0, 4).Trim();
-            int max_length = 0;
+            var descWhat = command.Remove(0, 4).Trim();
+            int maxLength;
 
             switch (descWhat)
             {
                 case "server":
-                    if (UserIsConnected)
+                    if (_userIsConnected)
                     {
-                        string[] databases = Database.GetDatabaseList(ServerName);
-                        max_length = 4;
-                        foreach (var database in databases)
-                        {
-                            max_length = Math.Max(max_length, database.Length);
-                        }
-                        max_length += 2;
+                        var databases = Database.GetDatabaseList(_serverName);
+                        maxLength = databases.Select(database => database.Length).Concat(new[] {4}).Max();
+                        maxLength += 2;
                         Console.Write("+");
-                        for (int i = 0; i < max_length; i++)
+                        for (var i = 0; i < maxLength; i++)
                         {
                             Console.Write("-");
                         }
                         Console.Write("+");
                         Console.WriteLine();
                         Console.Write("|");
-                        for (int i = 0; i < (max_length / 2) - 2; i++)
+                        for (var i = 0; i < (maxLength / 2) - 2; i++)
                         {
                             Console.Write(" ");
                         }
                         Console.Write("Name");
-                        for (int i = (max_length / 2) + 2; i < max_length; i++)
+                        for (var i = (maxLength / 2) + 2; i < maxLength; i++)
                         {
                             Console.Write(" ");
                         }
                         Console.Write("|");
                         Console.WriteLine();
                         Console.Write("+");
-                        for (int i = 0; i < max_length; i++)
+                        for (var i = 0; i < maxLength; i++)
                         {
                             Console.Write("-");
                         }
@@ -467,7 +471,7 @@ namespace JSONDB.Server
                         {
                             Console.Write("| ");
                             Console.Write(database);
-                            for (int i = 1 + database.Length; i < max_length; i++)
+                            for (var i = 1 + database.Length; i < maxLength; i++)
                             {
                                 Console.Write(" ");
                             }
@@ -475,7 +479,7 @@ namespace JSONDB.Server
                             Console.WriteLine();
                         }
                         Console.Write("+");
-                        for (int i = 0; i < max_length; i++)
+                        for (var i = 0; i < maxLength; i++)
                         {
                             Console.Write("-");
                         }
@@ -488,38 +492,34 @@ namespace JSONDB.Server
                     }
                     break;
                 case "database":
-                    if (UserIsConnected)
+                    if (_userIsConnected)
                     {
-                        if (DB.IsWorkingDatabase())
+                        if (_db.IsWorkingDatabase())
                         {
-                            string[] tables = DB.GetTableList();
-                            max_length = 4;
-                            foreach (var table in tables)
-                            {
-                                max_length = Math.Max(max_length, table.Length);
-                            }
-                            max_length += 2;
+                            var tables = _db.GetTableList();
+                            maxLength = tables.Select(table => table.Length).Concat(new[] {4}).Max();
+                            maxLength += 2;
                             Console.Write("+");
-                            for (int i = 0; i < max_length; i++)
+                            for (var i = 0; i < maxLength; i++)
                             {
                                 Console.Write("-");
                             }
                             Console.Write("+");
                             Console.WriteLine();
                             Console.Write("|");
-                            for (int i = 0; i < (max_length / 2) - 2; i++)
+                            for (var i = 0; i < (maxLength / 2) - 2; i++)
                             {
                                 Console.Write(" ");
                             }
                             Console.Write("Name");
-                            for (int i = (max_length / 2) + 2; i < max_length; i++)
+                            for (var i = (maxLength / 2) + 2; i < maxLength; i++)
                             {
                                 Console.Write(" ");
                             }
                             Console.Write("|");
                             Console.WriteLine();
                             Console.Write("+");
-                            for (int i = 0; i < max_length; i++)
+                            for (var i = 0; i < maxLength; i++)
                             {
                                 Console.Write("-");
                             }
@@ -529,7 +529,7 @@ namespace JSONDB.Server
                             {
                                 Console.Write("| ");
                                 Console.Write(table);
-                                for (int i = 1 + table.Length; i < max_length; i++)
+                                for (var i = 1 + table.Length; i < maxLength; i++)
                                 {
                                     Console.Write(" ");
                                 }
@@ -537,7 +537,7 @@ namespace JSONDB.Server
                                 Console.WriteLine();
                             }
                             Console.Write("+");
-                            for (int i = 0; i < max_length; i++)
+                            for (var i = 0; i < maxLength; i++)
                             {
                                 Console.Write("-");
                             }
@@ -562,19 +562,19 @@ namespace JSONDB.Server
 
         private static void ExecMkDatabase(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                string database = command.Remove(0, 10).Trim();
+                var database = command.Remove(0, 10).Trim();
 
-                while (database == String.Empty)
+                while (database == string.Empty)
                 {
                     Console.Write(" -> Database name: ");
-                    database = _validateName(Console.ReadLine().Trim());
+                    database = _validateName(Console.ReadLine()?.Trim());
                 }
 
                 try
                 {
-                    DB.CreateDatabase(database);
+                    _db.CreateDatabase(database);
                     Console.WriteLine("Database created.");
                 }
                 catch (Exception e)
@@ -590,19 +590,19 @@ namespace JSONDB.Server
 
         private static void ExecQuery(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                string query = command.Remove(0, 5).Trim();
+                var query = command.Remove(0, 5).Trim();
 
-                while (query == String.Empty)
+                while (query == string.Empty)
                 {
                     Console.Write(" -> ");
-                    query = Console.ReadLine().Trim();
+                    query = Console.ReadLine()?.Trim();
                 }
 
                 try
                 {
-                    Console.WriteLine(DB.Query(query).ToString());
+                    Console.WriteLine(_db.Query(query).ToString());
                 }
                 catch (Exception e)
                 {
@@ -617,13 +617,12 @@ namespace JSONDB.Server
 
         private static void ExecMkServer(string command)
         {
-            string[] parts = command.Remove(0, 8).Trim().Split(' ');
+            var parts = command.Remove(0, 8).Trim().Split(' ');
 
-            string username = String.Empty;
-            string password = String.Empty;
-            string server = String.Empty;
+            var username = string.Empty;
+            var server = string.Empty;
 
-            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+            var password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
 
             for (int i = 0, l = parts.Length; i < l; i++)
             {
@@ -638,19 +637,19 @@ namespace JSONDB.Server
                 }
             }
 
-            while (server == String.Empty)
+            while (server == string.Empty)
             {
                 Console.Write(" -> Server name: ");
-                server = _validateName(Console.ReadLine().Trim());
+                server = _validateName(Console.ReadLine()?.Trim());
             }
 
-            while (username == String.Empty)
+            while (username == string.Empty)
             {
                 Console.Write(" -> Username: ");
-                username = _validateName(Console.ReadLine().Trim());
+                username = _validateName(Console.ReadLine()?.Trim());
             }
 
-            if (command.Trim().Length == 8 && password == String.Empty)
+            if (command.Trim().Length == 8 && password == string.Empty)
             {
                 Console.Write(" -> Password (Leave blank to ignore (not recommended)): ");
                 password = _password();
@@ -658,7 +657,7 @@ namespace JSONDB.Server
 
             try
             {
-                Library.JSONDB.CreateServer(server, username, password);
+                Jsondb.CreateServer(server, username, password);
                 Console.WriteLine("Server created.");
             }
             catch (Exception e)
@@ -669,20 +668,20 @@ namespace JSONDB.Server
 
         private static void ExecChangeDatabase(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                string database = command.Remove(0, 2).Trim().Split(' ')[0];
-                if (database == String.Empty)
+                var database = command.Remove(0, 2).Trim().Split(' ')[0];
+                if (database == string.Empty)
                 {
                     Console.WriteLine("Use: cd DatabaseName");
                 }
                 else
                 {
-                    if (DB.Exists(database))
+                    if (_db.Exists(database))
                     {
                         try
                         {
-                            DB.SetDatabase(database);
+                            _db.SetDatabase(database);
                             Console.WriteLine("Database changed.");
                         }
                         catch (Exception e)
@@ -702,84 +701,83 @@ namespace JSONDB.Server
             }
         }
 
-        private static void ExecClose(string command)
+        private static void ExecClose()
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                DB.Disconnect();
+                _db.Disconnect();
             }
-            IsRunning = false;
+            _isRunning = false;
         }
 
-        private static void ExecDisconnect(string command)
+        private static void ExecDisconnect()
         {
-            ServerName = String.Empty;
-            DB.Disconnect();
-            UserIsConnected = false;
+            _serverName = string.Empty;
+            _db.Disconnect();
+            _userIsConnected = false;
         }
 
         private static void ExecMkTable(string command)
         {
-            if (UserIsConnected)
+            if (_userIsConnected)
             {
-                string table = command.Remove(0, 7).Trim();
-                if (DB.IsWorkingDatabase())
+                var table = command.Remove(0, 7).Trim();
+                if (_db.IsWorkingDatabase())
                 {
-                    while (table == String.Empty)
+                    while (table == string.Empty)
                     {
                         Console.Write(" -> Table name: ");
-                        table = _validateName(Console.ReadLine().Trim());
+                        table = _validateName(Console.ReadLine()?.Trim());
                     }
-                    JObject prototype = new JObject();
-                    bool IsAddindFields = true;
+                    var prototype = new JObject();
+                    var isAddindFields = true;
                     do
                     {
                         Console.Write("Do you want to add a new column? (Yes/No) ");
-                        string res = Console.ReadLine().Trim().ToLower();
+                        var res = Console.ReadLine()?.Trim().ToLower();
                         if (res == "yes" || res == "y")
                         {
                             Console.Write(" -> Column name: ");
-                            string c_name = Console.ReadLine().Trim();
+                            var cName = Console.ReadLine()?.Trim();
                             Console.Write(" -> Column type: ");
-                            string c_type = Console.ReadLine().Trim();
+                            var cType = Console.ReadLine()?.Trim();
                             Console.Write(" -> Default value (Leave blank to ignore): ");
-                            string c_defv = Console.ReadLine().Trim();
+                            var cDefv = Console.ReadLine()?.Trim();
                             Console.Write(" -> Max length (Leave blank to ignore): ");
-                            string c_maxl = Console.ReadLine().Trim();
+                            var cMaxl = Console.ReadLine()?.Trim();
                             Console.Write(" -> Not null (Yes/No): ");
-                            string c_null = Console.ReadLine().Trim().ToLower();
+                            var cNull = Console.ReadLine()?.Trim().ToLower();
                             Console.Write(" -> Auto increment (Yes/No): ");
-                            string c_auto = Console.ReadLine().Trim().ToLower();
+                            var cAuto = Console.ReadLine()?.Trim().ToLower();
                             Console.Write(" -> Primary key (Yes/No): ");
-                            string c_pkey = Console.ReadLine().Trim().ToLower();
+                            var cPkey = Console.ReadLine()?.Trim().ToLower();
                             Console.Write(" -> Unique key (Yes/No): ");
-                            string c_ukey = Console.ReadLine().Trim().ToLower();
+                            var cUkey = Console.ReadLine()?.Trim().ToLower();
 
-                            JObject properties = new JObject();
-                            properties["type"] = c_type ?? "string";
-                            if (c_defv != String.Empty) properties["default"] = c_defv;
-                            if (c_maxl != String.Empty) properties["max_length"] = c_maxl;
-                            if (c_null == "yes" || c_null == "y") properties["not_null"] = true;
-                            if (c_auto == "yes" || c_auto == "y") properties["auto_increment"] = true;
-                            if (c_pkey == "yes" || c_pkey == "y") properties["primary_key"] = true;
-                            if (c_ukey == "yes" || c_ukey == "y") properties["unique_key"] = true;
+                            var properties = new JObject {["type"] = cType ?? "string"};
+                            if (cDefv != string.Empty) properties["default"] = cDefv;
+                            if (cMaxl != string.Empty) properties["max_length"] = cMaxl;
+                            if (cNull == "yes" || cNull == "y") properties["not_null"] = true;
+                            if (cAuto == "yes" || cAuto == "y") properties["auto_increment"] = true;
+                            if (cPkey == "yes" || cPkey == "y") properties["primary_key"] = true;
+                            if (cUkey == "yes" || cUkey == "y") properties["unique_key"] = true;
 
-                            prototype[c_name] = properties;
+                            prototype[cName] = properties;
                         }
                         else
                         {
-                            IsAddindFields = false;
+                            isAddindFields = false;
                         }
-                    } while (IsAddindFields);
+                    } while (isAddindFields);
                     Console.WriteLine("The table \"" + table + "\" will be created with these columns:");
                     Console.WriteLine(prototype.ToString());
                     Console.Write("It's OK? (Yes/No) ");
-                    string ok = Console.ReadLine().Trim().ToLower();
+                    var ok = Console.ReadLine()?.Trim().ToLower();
                     if (ok == "yes" || ok == "y")
                     {
                         try
                         {
-                            DB.CreateTable(table, prototype);
+                            _db.CreateTable(table, prototype);
                             Console.WriteLine("Table created.");
                         }
                         catch (Exception e)
@@ -805,37 +803,36 @@ namespace JSONDB.Server
 
         private static void ExecConnect(string command)
         {
-            var cmd_args = command.Remove(0, 7).TrimStart().Split(' ');
-            string username = String.Empty;
-            string password = String.Empty;
-            string server = String.Empty;
-            string database = String.Empty;
+            var cmdArgs = command.Remove(0, 7).TrimStart().Split(' ');
+            var username = string.Empty;
+            var server = string.Empty;
+            var database = string.Empty;
 
-            password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
+            var password = new Regex("\"(.*)\"", RegexOptions.IgnoreCase).Replace(new Regex("-p \".*\"", RegexOptions.IgnoreCase).Match(command).Value.Replace("-p ", ""), "$1");
 
-            for (int i = 0, l = cmd_args.Length; i < l; ++i)
+            for (int i = 0, l = cmdArgs.Length; i < l; ++i)
             {
-                switch (cmd_args[i])
+                switch (cmdArgs[i])
                 {
                     case "-u":
-                        username = cmd_args[i + 1];
+                        username = cmdArgs[i + 1];
                         break;
                     case "-s":
-                        server = cmd_args[i + 1];
+                        server = cmdArgs[i + 1];
                         break;
                     case "-d":
-                        database = cmd_args[i + 1];
+                        database = cmdArgs[i + 1];
                         break;
                 }
             }
 
-            if (server == String.Empty)
+            if (server == string.Empty)
             {
                 Console.WriteLine("Cannot connect to a server. No server provided. Use \"-s ServerName\" to give the name of the server to use with the connection.");
             }
             else
             {
-                if (username == String.Empty)
+                if (username == string.Empty)
                 {
                     Console.WriteLine("Cannot connect to a server. No user provided. Use \"-u Username\" to give the username.");
                 }
@@ -843,9 +840,9 @@ namespace JSONDB.Server
                 {
                     try
                     {
-                        DB = Library.JSONDB.Connect(server, username, password, database);
-                        UserIsConnected = true;
-                        ServerName = server;
+                        _db = Jsondb.Connect(server, username, password, database);
+                        _userIsConnected = true;
+                        _serverName = server;
                     }
                     catch (Exception e)
                     {
@@ -857,20 +854,16 @@ namespace JSONDB.Server
 
         private static string _validateName(string name)
         {
-            if (!Regex.IsMatch(name, "^[a-zA-Z0-9_]+$"))
-            {
-                Console.WriteLine("Invalid server name.");
-                Console.WriteLine();
-                return String.Empty;
-            }
-
-            return name;
+            if (Regex.IsMatch(name, "^[a-zA-Z0-9_]+$")) return name;
+            Console.WriteLine("Invalid server name.");
+            Console.WriteLine();
+            return string.Empty;
         }
 
         private static string _password()
         {
             ConsoleKeyInfo c;
-            string password = String.Empty;
+            var password = string.Empty;
 
             while ((c = Console.ReadKey(true)).Key != ConsoleKey.Enter)
             {

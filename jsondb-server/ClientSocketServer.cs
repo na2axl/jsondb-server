@@ -19,6 +19,11 @@ namespace JSONDB.Server
         internal static Queue<QueryPool> Pools = new Queue<QueryPool>();
 
         /// <summary>
+        /// Define if a query is currently executing.
+        /// </summary>
+        internal static bool Executing = false;
+
+        /// <summary>
         /// Logger.
         /// </summary>
         private static readonly Logger Logger = new Logger();
@@ -40,7 +45,7 @@ namespace JSONDB.Server
             Logger.Log("Incomming message with ID: " + ID, Logger.LogType.Info);
             if (e.IsText)
             {
-                Pools.Enqueue(new QueryPool(e.Data, Context, ID));
+                Pools.Enqueue(new QueryPool(e.Data, Sessions, ID));
                 Logger.Log("Query enqueued with ID: " + ID, Logger.LogType.Info);
             }
             else
@@ -55,6 +60,7 @@ namespace JSONDB.Server
         /// <param name="e">The close event.</param>
         protected override void OnClose(CloseEventArgs e)
         {
+            Executing = false;
             Logger.Log("Connection " + ID + " closed: " + e.Reason, Logger.LogType.Info);
         }
 
@@ -83,12 +89,17 @@ namespace JSONDB.Server
             private readonly string _query;
             private readonly WebSocketContext _context;
             private readonly string _id;
+            private readonly WebSocketSessionManager _sessions;
 
-            public QueryPool(string query, WebSocketContext context, string id)
+            private Dictionary<string, string> _parsedQuery;
+
+            public QueryPool(string query, WebSocketSessionManager sessions, string id)
             {
                 _query = query;
-                _context = context;
+                _sessions = sessions;
                 _id = id;
+                _context = _sessions[_id].Context;
+                _parseQuery();
             }
 
             /// <summary>
@@ -96,43 +107,66 @@ namespace JSONDB.Server
             /// </summary>
             public void Send()
             {
-                var serverName = _context.Headers["jdb-server-name"];
-                if (string.IsNullOrEmpty(serverName))
+                IWebSocketSession s;
+                if (_sessions.TryGetSession(_id, out s))
                 {
-                    _context.WebSocket.Close(CloseStatusCode.InvalidData, "The request has not a server to connect on.");
-                }
-
-                else
-                {
-                    var databaseName = _context.Headers["jdb-database-name"];
-                    if (string.IsNullOrEmpty(databaseName))
+                    var serverName = _parsedQuery["jsondb-server-name"];
+                    if (string.IsNullOrEmpty(serverName))
                     {
-                        _context.WebSocket.Close(CloseStatusCode.InvalidData, "The request has not a database to connect on.");
+                       _sessions.CloseSession(_id, CloseStatusCode.InvalidData, "The request has not a server to connect on.");
                     }
+
                     else
                     {
-                        try
+                        var databaseName = _parsedQuery["jsondb-database-name"];
+                        if (string.IsNullOrEmpty(databaseName))
                         {
-                            var db = Jsondb.Connect(serverName, _context.Headers["authorization"].Replace("Basic ", ""));
-                            db.SetDatabase(databaseName);
-                            var res = db.Query(_query);
-                            _context.WebSocket.SendAsync(res.ToString(), (success) =>
+                            _sessions.CloseSession(_id, CloseStatusCode.InvalidData, "The request has not a database to connect on.");
+                        }
+                        else
+                        {
+                            try
                             {
-                                if (success)
+                                Executing = true;
+                                var db = Jsondb.Connect(serverName, _parsedQuery["jsondb-user-name"], _parsedQuery["jsondb-user-password"]);
+                                db.SetDatabase(databaseName);
+                                var res = db.Query(_parsedQuery["jsondb-query-request"]);
+                                _sessions.SendToAsync(res.ToString(), _id, (success) =>
                                 {
-                                    Logger.Log("Query executed with ID: " + _id, Logger.LogType.Info);
-                                    _context.WebSocket.Close(CloseStatusCode.Normal, "Received query executed.");
-                                }
-                                else
-                                {
-                                    _context.WebSocket.Close(CloseStatusCode.ServerError, "Error when executing the query.");
-                                }
-                            });
+                                    if (success)
+                                    {
+                                        Logger.Log("Query executed with ID: " + _id, Logger.LogType.Info);
+                                        _sessions.CloseSession(_id, CloseStatusCode.Normal, "Received query executed.");
+                                    }
+                                    else
+                                    {
+                                        _sessions.CloseSession(_id, CloseStatusCode.ServerError, "Error when executing the query.");
+                                    }
+                                });
+                            }
+                            catch (Exception e)
+                            {
+                                _sessions.CloseSession(_id, CloseStatusCode.ServerError, e.Message);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            _context.WebSocket.Close(CloseStatusCode.ServerError, e.Message);
-                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Parses the current query.
+            /// </summary>
+            private void _parseQuery()
+            {
+                _parsedQuery = new Dictionary<string, string>();
+                var parts = System.Text.RegularExpressions.Regex.Split(_query, "\\[:Separator:\\]");
+
+                foreach (var t in parts)
+                {
+                    if (!string.IsNullOrWhiteSpace(t))
+                    {
+                        var m = System.Text.RegularExpressions.Regex.Match(t, "\\[Key:(.+)\\]=\\[Value:(.+)\\]");
+                        _parsedQuery[m.Groups[1].Value.Trim('"')] = m.Groups[2].Value.Trim('"');
                     }
                 }
             }

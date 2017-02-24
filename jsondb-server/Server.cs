@@ -1,39 +1,38 @@
-﻿using JSONDB.Library;
-using System.Text;
+﻿using System.Text;
 using WebSocketSharp;
 using WebSocketSharp.Net;
 using WebSocketSharp.Server;
 
 namespace JSONDB.Server
 {
-    class HTTPServer : HttpServer
+    internal class Server : HttpServer
     {
-        public HTTPServer(int port) : base(port)
+        public Server(int port) : base(port)
         {
             InitializeServer();
         }
 
-        public HTTPServer(int port, bool secure) : base(port, secure)
+        public Server(int port, bool secure) : base(port, secure)
         {
             InitializeServer();
         }
 
-        public HTTPServer(string url) : base(url)
+        public Server(string url) : base(url)
         {
             InitializeServer();
         }
 
-        public HTTPServer(System.Net.IPAddress address, int port) : base(address, port)
+        public Server(System.Net.IPAddress address, int port) : base(address, port)
         {
             InitializeServer();
         }
 
-        public HTTPServer(System.Net.IPAddress address, int port, bool secure) : base(address, port, secure)
+        public Server(System.Net.IPAddress address, int port, bool secure) : base(address, port, secure)
         {
             InitializeServer();
         }
 
-        public HTTPServer() : base()
+        public Server()
         {
             InitializeServer();
         }
@@ -41,7 +40,7 @@ namespace JSONDB.Server
         private void InitializeServer()
         {
             // Set the rootpath of the web administration
-            RootPath = Util.AppRoot() + "\\web\\public\\";
+            RootPath = Util.MakePath(Util.AppRoot(), "web", "public");
 
             // Set the HTTP GET request event
             OnGet += (sender, e) =>
