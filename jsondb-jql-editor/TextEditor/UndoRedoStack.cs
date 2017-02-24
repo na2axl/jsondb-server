@@ -4,14 +4,14 @@ namespace JSONDB.JQLEditor.TextEditor
 {
     public class UndoRedoStack<T>
     {
-        private Stack<IStack<T>> _Undo;
-        private Stack<IStack<T>> _Redo;
+        private Stack<IStack<T>> _undo;
+        private Stack<IStack<T>> _redo;
 
         public int UndoCount
         {
             get
             {
-                return _Undo.Count;
+                return _undo.Count;
             }
         }
 
@@ -19,7 +19,7 @@ namespace JSONDB.JQLEditor.TextEditor
         {
             get
             {
-                return _Redo.Count;
+                return _redo.Count;
             }
         }
 
@@ -30,80 +30,68 @@ namespace JSONDB.JQLEditor.TextEditor
 
         public void Reset()
         {
-            _Undo = new Stack<IStack<T>>();
-            _Redo = new Stack<IStack<T>>();
+            _undo = new Stack<IStack<T>>();
+            _redo = new Stack<IStack<T>>();
         }
 
         public T Do(IStack<T> cmd, T input)
         {
-            T output = cmd.Do(input);
-            _Undo.Push(cmd);
-            _Redo.Clear();
+            var output = cmd.Do(input);
+            _undo.Push(cmd);
+            _redo.Clear();
             return output;
         }
 
         public T Undo(T input)
         {
-            if (_Undo.Count > 0)
+            if (_undo.Count > 0)
             {
-                IStack<T> cmd = _Undo.Pop();
+                IStack<T> cmd = _undo.Pop();
                 T output = cmd.Undo(input);
-                _Redo.Push(cmd);
+                _redo.Push(cmd);
                 return output;
             }
-            else
-            {
-                return input;
-            }
+            return input;
         }
 
         public T Redo(T input)
         {
-            if (_Redo.Count > 0)
+            if (_redo.Count > 0)
             {
-                IStack<T> cmd = _Redo.Pop();
+                IStack<T> cmd = _redo.Pop();
                 T output = cmd.Do(input);
-                _Undo.Push(cmd);
+                _undo.Push(cmd);
                 return output;
             }
-            else
-            {
-                return input;
-            }
+            return input;
         }
 
         public void Push(IStack<T> cmd)
         {
-            _Undo.Push(cmd);
-            _Redo.Clear();
+            _undo.Push(cmd);
+            _redo.Clear();
         }
 
         public IStack<T> UnPush(IStack<T> now)
         {
-            if (_Undo.Count > 0)
+            if (_undo.Count > 0)
             {
-                IStack<T> cmd = _Undo.Pop();
-                _Redo.Push(now);
+                IStack<T> cmd = _undo.Pop();
+                _redo.Push(now);
                 return cmd;
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public IStack<T> RePush(IStack<T> now)
         {
-            if (_Redo.Count > 0)
+            if (_redo.Count > 0)
             {
-                IStack<T> cmd = _Redo.Pop();
-                _Undo.Push(now);
+                IStack<T> cmd = _redo.Pop();
+                _undo.Push(now);
                 return cmd;
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
     }
 }
