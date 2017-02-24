@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,15 +22,15 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public double LineHeight
         {
-            get { return lineHeight; }
+            get { return _lineHeight; }
             set
             {
-                if (value != lineHeight)
+                if (value != _lineHeight)
                 {
-                    lineHeight = value;
-                    blockHeight = MaxLineCountInBlock * value;
+                    _lineHeight = value;
+                    _blockHeight = MaxLineCountInBlock * value;
                     TextBlock.SetLineStackingStrategy(this, LineStackingStrategy.BlockLineHeight);
-                    TextBlock.SetLineHeight(this, lineHeight);
+                    TextBlock.SetLineHeight(this, _lineHeight);
                 }
             }
         }
@@ -41,11 +40,11 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public int MaxLineCountInBlock
         {
-            get { return maxLineCountInBlock; }
+            get { return _maxLineCountInBlock; }
             set
             {
-                maxLineCountInBlock = value > 0 ? value : 0;
-                blockHeight = value * LineHeight;
+                _maxLineCountInBlock = value > 0 ? value : 0;
+                _blockHeight = value * LineHeight;
             }
         }
 
@@ -53,19 +52,19 @@ namespace JSONDB.JQLEditor.TextEditor
         // Fields
         // ----------------------------------------------------------
 
-        private Canvas suggestionCanvas;
-        private ListBox suggestionList;
-        private DrawingControl renderCanvas;
-        private DrawingControl lineNumbersCanvas;
-        private Line lineNumbersSeparator;
-        private ScrollViewer scrollViewer;
-        private double lineHeight;
-        private int totalLineCount;
-        private List<InnerTextBlock> blocks;
-        private double blockHeight;
-        private int maxLineCountInBlock;
-        private UndoRedoStack<TextState> stack = new UndoRedoStack<TextState>();
-        private bool cancelNextStack = false;
+        private Canvas _suggestionCanvas;
+        private ListBox _suggestionList;
+        private DrawingControl _renderCanvas;
+        private DrawingControl _lineNumbersCanvas;
+        private Line _lineNumbersSeparator;
+        private ScrollViewer _scrollViewer;
+        private double _lineHeight;
+        private int _totalLineCount;
+        private List<InnerTextBlock> _blocks;
+        private double _blockHeight;
+        private int _maxLineCountInBlock;
+        private UndoRedoStack<TextState> _stack = new UndoRedoStack<TextState>();
+        private bool _cancelNextStack = false;
 
         // ----------------------------------------------------------
         // Ctor and event handlers
@@ -80,27 +79,27 @@ namespace JSONDB.JQLEditor.TextEditor
 
             MaxLineCountInBlock = 100;
             LineHeight = FontSize * 1.3;
-            totalLineCount = 1;
-            blocks = new List<InnerTextBlock>();
+            _totalLineCount = 1;
+            _blocks = new List<InnerTextBlock>();
             IsUndoEnabled = false;
 
-            stack.Push(new TextStack());
+            _stack.Push(new TextStack());
 
             Loaded += (s, e) =>
             {
-                renderCanvas = (DrawingControl)Template.FindName("PART_RenderCanvas", this);
-                lineNumbersCanvas = (DrawingControl)Template.FindName("PART_LineNumbersCanvas", this);
-                scrollViewer = (ScrollViewer)Template.FindName("PART_ContentHost", this);
-                lineNumbersSeparator = (Line)Template.FindName("lineNumbersSeparator", this);
+                _renderCanvas = (DrawingControl)Template.FindName("PART_RenderCanvas", this);
+                _lineNumbersCanvas = (DrawingControl)Template.FindName("PART_LineNumbersCanvas", this);
+                _scrollViewer = (ScrollViewer)Template.FindName("PART_ContentHost", this);
+                _lineNumbersSeparator = (Line)Template.FindName("lineNumbersSeparator", this);
 
-                lineNumbersCanvas.Width = GetFormattedTextWidth(string.Format("{0:0000}", totalLineCount)) + 5;
+                _lineNumbersCanvas.Width = GetFormattedTextWidth($"{_totalLineCount:0000}") + 5;
 
-                suggestionCanvas = (Canvas)Template.FindName("PART_SuggestionCanvas", this);
-                suggestionList = (ListBox)Template.FindName("PART_SuggestionList", this);
+                _suggestionCanvas = (Canvas)Template.FindName("PART_SuggestionCanvas", this);
+                _suggestionList = (ListBox)Template.FindName("PART_SuggestionList", this);
 
-                scrollViewer.ScrollChanged += OnScrollChanged;
+                _scrollViewer.ScrollChanged += OnScrollChanged;
 
-                suggestionList.PreviewKeyDown += (kds, kde) =>
+                _suggestionList.PreviewKeyDown += (kds, kde) =>
                 {
                     // Hide Intellisense List
                     if (kde.Key == Key.Escape)
@@ -112,45 +111,45 @@ namespace JSONDB.JQLEditor.TextEditor
                     // Navigate through the Intellisense list
                     else if (kde.Key == Key.Up)
                     {
-                        suggestionList.Items.MoveCurrentToPrevious();
-                        if (suggestionList.Items.CurrentItem == null)
+                        _suggestionList.Items.MoveCurrentToPrevious();
+                        if (_suggestionList.Items.CurrentItem == null)
                         {
-                            suggestionList.Items.MoveCurrentToPosition(suggestionList.Items.Count - 1);
+                            _suggestionList.Items.MoveCurrentToPosition(_suggestionList.Items.Count - 1);
                         }
-                        int i = suggestionList.Items.CurrentPosition;
-                        while (!((IntellisenseListItem)suggestionList.Items.GetItemAt(Math.Abs(i) % suggestionList.Items.Count)).IsEnabled)
+                        var i = _suggestionList.Items.CurrentPosition;
+                        while (!((IntellisenseListItem)_suggestionList.Items.GetItemAt(Math.Abs(i) % _suggestionList.Items.Count)).IsEnabled)
                         {
                             i--;
                         }
-                        suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % suggestionList.Items.Count);
-                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).IsSelected = true;
-                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).Focus();
+                        _suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % _suggestionList.Items.Count);
+                        ((IntellisenseListItem)_suggestionList.Items.CurrentItem).IsSelected = true;
+                        ((IntellisenseListItem)_suggestionList.Items.CurrentItem).Focus();
                         kde.Handled = true;
                     }
                     else if (kde.Key == Key.Down)
                     {
-                        suggestionList.Items.MoveCurrentToNext();
-                        if (suggestionList.Items.CurrentItem == null)
+                        _suggestionList.Items.MoveCurrentToNext();
+                        if (_suggestionList.Items.CurrentItem == null)
                         {
-                            suggestionList.Items.MoveCurrentToPosition(0);
+                            _suggestionList.Items.MoveCurrentToPosition(0);
                         }
-                        int i = suggestionList.Items.CurrentPosition;
-                        while (!((IntellisenseListItem)suggestionList.Items.GetItemAt(Math.Abs(i) % suggestionList.Items.Count)).IsEnabled)
+                        var i = _suggestionList.Items.CurrentPosition;
+                        while (!((IntellisenseListItem)_suggestionList.Items.GetItemAt(Math.Abs(i) % _suggestionList.Items.Count)).IsEnabled)
                         {
                             i++;
                         }
-                        suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % suggestionList.Items.Count);
-                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).IsSelected = true;
-                        ((IntellisenseListItem)suggestionList.Items.CurrentItem).Focus();
+                        _suggestionList.Items.MoveCurrentToPosition(Math.Abs(i) % _suggestionList.Items.Count);
+                        ((IntellisenseListItem)_suggestionList.Items.CurrentItem).IsSelected = true;
+                        ((IntellisenseListItem)_suggestionList.Items.CurrentItem).Focus();
                         kde.Handled = true;
                     }
 
                     // Execute the Intellisense item action
                     else if (kde.Key == Key.Enter || kde.Key == Key.Tab)
                     {
-                        if (suggestionList.Items.CurrentItem != null)
+                        if (_suggestionList.Items.CurrentItem != null)
                         {
-                            ((IntellisenseListItem)suggestionList.Items.CurrentItem).Action();
+                            ((IntellisenseListItem)_suggestionList.Items.CurrentItem).Action();
                             kde.Handled = true;
                         }
                     }
@@ -183,11 +182,11 @@ namespace JSONDB.JQLEditor.TextEditor
                 // Auto open the Intellisense list...
                 if (e.Text == "." && !SuggestionListIsVisible())
                 {
-                    if (SelectedText == String.Empty)
+                    if (SelectedText == string.Empty)
                     {
-                        int LastCaretPos = CaretIndex;
-                        Text = Text.Insert(LastCaretPos, ".");
-                        CaretIndex = LastCaretPos + 1;
+                        var lastCaretPos = CaretIndex;
+                        Text = Text.Insert(lastCaretPos, ".");
+                        CaretIndex = lastCaretPos + 1;
                         ShowSuggestionList();
                         e.Handled = true;
                     }
@@ -201,9 +200,9 @@ namespace JSONDB.JQLEditor.TextEditor
                     // ...the parenthesis if not escaped
                     if (!Text.EndsWith("\\"))
                     {
-                        int LastCaretPos = CaretIndex;
-                        Text = Text.Insert(LastCaretPos, ")");
-                        CaretIndex = LastCaretPos;
+                        var lastCaretPos = CaretIndex;
+                        Text = Text.Insert(lastCaretPos, ")");
+                        CaretIndex = lastCaretPos;
                     }
                 }
             };
@@ -211,13 +210,13 @@ namespace JSONDB.JQLEditor.TextEditor
             TextChanged += (s, e) =>
             {
                 // Manually manage the Undo/Redo stack
-                if (!cancelNextStack)
+                if (!_cancelNextStack)
                 {
-                    stack.Push(new TextStack(Text, CaretIndex));
+                    _stack.Push(new TextStack(Text, CaretIndex));
                 }
                 else
                 {
-                    cancelNextStack = false;
+                    _cancelNextStack = false;
                 }
 
                 // Filter the list
@@ -230,7 +229,7 @@ namespace JSONDB.JQLEditor.TextEditor
 
             PreviewKeyDown += (s, e) =>
             {
-                int LastCaretPos = CaretIndex;
+                var lastCaretPos = CaretIndex;
 
                 // Update Intellisense list position
                 UpdateSuggestionListPosition();
@@ -254,13 +253,13 @@ namespace JSONDB.JQLEditor.TextEditor
                 {
                     if (e.Key == Key.Up || e.Key == Key.Down)
                     {
-                        if (suggestionList.Items.CurrentItem != null)
+                        if (_suggestionList.Items.CurrentItem != null)
                         {
-                            ((IntellisenseListItem)suggestionList.Items.CurrentItem).Focus();
+                            ((IntellisenseListItem)_suggestionList.Items.CurrentItem).Focus();
                         }
                         else
                         {
-                            suggestionList.Focus();
+                            _suggestionList.Focus();
                         }
                         e.Handled = true;
                     }
@@ -269,10 +268,10 @@ namespace JSONDB.JQLEditor.TextEditor
                 // Shift Key + Tab (BackTab) 
                 if (e.Key == Key.Tab && e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
                 {
-                    if (SelectedText != String.Empty)
+                    if (SelectedText != string.Empty)
                     {
-                        string[] lines = SelectedText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                        for (int i = 0; i < lines.Length; i++)
+                        var lines = SelectedText.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                        for (var i = 0; i < lines.Length; i++)
                         {
                             if (lines[i].StartsWith(Tab))
                             {
@@ -283,30 +282,30 @@ namespace JSONDB.JQLEditor.TextEditor
                                 lines[i] = lines[i].TrimStart(' ');
                             }
                         }
-                        SelectedText = String.Join(Environment.NewLine, lines);
+                        SelectedText = string.Join(Environment.NewLine, lines);
                     }
                     else
                     {
-                        int last_line = Text.LastIndexOf(Environment.NewLine, LastCaretPos);
+                        var lastLine = Text.LastIndexOf(Environment.NewLine, lastCaretPos, StringComparison.Ordinal);
 
-                        if (last_line == -1)
+                        if (lastLine == -1)
                         {
-                            last_line = Text.Length - 1;
+                            lastLine = Text.Length - 1;
                         }
 
-                        int start_line = Text.IndexOf(Environment.NewLine, last_line);
+                        var startLine = Text.IndexOf(Environment.NewLine, lastLine, StringComparison.Ordinal);
 
-                        if (start_line != -1)
+                        if (startLine != -1)
                         {
-                            start_line += Environment.NewLine.Length;
+                            startLine += Environment.NewLine.Length;
                         }
                         else
                         {
-                            start_line = 0;
+                            startLine = 0;
                         }
 
-                        int spaces = 0;
-                        for (int i = start_line; i < Text.Length - 1; i++)
+                        var spaces = 0;
+                        for (var i = startLine; i < Text.Length - 1; i++)
                         {
                             if (Text[i] == ' ')
                             {
@@ -323,19 +322,19 @@ namespace JSONDB.JQLEditor.TextEditor
                             spaces = TabSize;
                         }
 
-                        Text = Text.Remove(start_line, spaces);
+                        Text = Text.Remove(startLine, spaces);
 
-                        if (LastCaretPos >= start_line + spaces)
+                        if (lastCaretPos >= startLine + spaces)
                         {
-                            CaretIndex = LastCaretPos - spaces;
+                            CaretIndex = lastCaretPos - spaces;
                         }
-                        else if (LastCaretPos >= start_line && LastCaretPos < start_line + spaces)
+                        else if (lastCaretPos >= startLine && lastCaretPos < startLine + spaces)
                         {
-                            CaretIndex = start_line;
+                            CaretIndex = startLine;
                         }
                         else
                         {
-                            CaretIndex = LastCaretPos;
+                            CaretIndex = lastCaretPos;
                         }
                     }
 
@@ -353,13 +352,13 @@ namespace JSONDB.JQLEditor.TextEditor
                         {
                             if (SuggestionListHasItems())
                             {
-                                if (suggestionList.Items.CurrentItem != null)
+                                if (_suggestionList.Items.CurrentItem != null)
                                 {
-                                    ((IntellisenseListItem)suggestionList.Items.CurrentItem).Action();
+                                    ((IntellisenseListItem)_suggestionList.Items.CurrentItem).Action();
                                 }
                                 else
                                 {
-                                    ((IntellisenseListItem)suggestionList.Items[0]).Action();
+                                    ((IntellisenseListItem)_suggestionList.Items[0]).Action();
                                 }
                             }
                             else
@@ -369,10 +368,10 @@ namespace JSONDB.JQLEditor.TextEditor
                             }
                         }
                         // Otherwise...
-                        else if (SelectedText == String.Empty)
+                        else if (SelectedText == string.Empty)
                         {
-                            Text = Text.Insert(LastCaretPos, Tab);
-                            CaretIndex = LastCaretPos + TabSize;
+                            Text = Text.Insert(lastCaretPos, Tab);
+                            CaretIndex = lastCaretPos + TabSize;
                         }
                         else
                         {
@@ -395,21 +394,21 @@ namespace JSONDB.JQLEditor.TextEditor
                         // If we are here and the suggestion list is visible, then we have focus... Hide the list
                         HideSuggestionList();
 
-                        int last_line = Text.LastIndexOf(Environment.NewLine, LastCaretPos);
-                        int spaces = 0;
+                        var lastLine = Text.LastIndexOf(Environment.NewLine, lastCaretPos, StringComparison.Ordinal);
+                        var spaces = 0;
 
-                        if (last_line != -1)
+                        if (lastLine != -1)
                         {
-                            string line = Text.Substring(last_line, Text.Length - last_line);
+                            var line = Text.Substring(lastLine, Text.Length - lastLine);
 
-                            int start_line = line.IndexOf(Environment.NewLine);
+                            var startLine = line.IndexOf(Environment.NewLine, StringComparison.Ordinal);
 
-                            if (start_line != -1)
+                            if (startLine != -1)
                             {
-                                line = line.Substring(start_line).TrimStart(Environment.NewLine.ToCharArray());
+                                line = line.Substring(startLine).TrimStart(Environment.NewLine.ToCharArray());
                             }
 
-                            foreach (char c in line)
+                            foreach (var c in line)
                             {
                                 if (c == ' ')
                                 {
@@ -421,8 +420,8 @@ namespace JSONDB.JQLEditor.TextEditor
                                 }
                             }
                         }
-                        Text = Text.Insert(LastCaretPos, Environment.NewLine + new String(' ', spaces));
-                        CaretIndex = LastCaretPos + Environment.NewLine.Length + spaces;
+                        Text = Text.Insert(lastCaretPos, Environment.NewLine + new string(' ', spaces));
+                        CaretIndex = lastCaretPos + Environment.NewLine.Length + spaces;
 
                         e.Handled = true;
                     }
@@ -464,76 +463,76 @@ namespace JSONDB.JQLEditor.TextEditor
 
         private void UpdateTotalLineCount()
         {
-            totalLineCount = TextUtilities.GetLineCount(Text);
+            _totalLineCount = TextUtilities.GetLineCount(Text);
         }
 
         private void UpdateBlocks()
         {
-            if (blocks.Count == 0)
+            if (_blocks.Count == 0)
             {
                 return;
             }
 
             // While something is visible after last block...
-            while (!blocks.Last().IsLast && blocks.Last().Position.Y + blockHeight - VerticalOffset < ActualHeight)
+            while (!_blocks.Last().IsLast && _blocks.Last().Position.Y + _blockHeight - VerticalOffset < ActualHeight)
             {
-                int firstLineIndex = blocks.Last().LineEndIndex + 1;
-                int lastLineIndex = firstLineIndex + maxLineCountInBlock - 1;
-                lastLineIndex = lastLineIndex <= totalLineCount - 1 ? lastLineIndex : totalLineCount - 1;
+                var firstLineIndex = _blocks.Last().LineEndIndex + 1;
+                var lastLineIndex = firstLineIndex + _maxLineCountInBlock - 1;
+                lastLineIndex = lastLineIndex <= _totalLineCount - 1 ? lastLineIndex : _totalLineCount - 1;
 
-                int firstCharIndex = blocks.Last().CharEndIndex + 1;
-                int lastCharIndex = TextUtilities.GetLastCharIndexFromLineIndex(Text, lastLineIndex);
+                var firstCharIndex = _blocks.Last().CharEndIndex + 1;
+                var lastCharIndex = TextUtilities.GetLastCharIndexFromLineIndex(Text, lastLineIndex);
 
                 if (lastCharIndex <= firstCharIndex)
                 {
-                    blocks.Last().IsLast = true;
+                    _blocks.Last().IsLast = true;
                     return;
                 }
 
-                InnerTextBlock block = new InnerTextBlock(
+                var block = new InnerTextBlock(
                     firstCharIndex,
                     lastCharIndex,
-                    blocks.Last().LineEndIndex + 1,
+                    _blocks.Last().LineEndIndex + 1,
                     lastLineIndex,
                     LineHeight);
                 block.RawText = block.GetSubString(Text);
                 block.LineNumbers = GetFormattedLineNumbers(block.LineStartIndex, block.LineEndIndex);
-                blocks.Add(block);
-                FormatBlock(block, blocks.Count > 1 ? blocks[blocks.Count - 2] : null);
+                _blocks.Add(block);
+                FormatBlock(block, _blocks.Count > 1 ? _blocks[_blocks.Count - 2] : null);
             }
         }
 
         private void InvalidateBlocks(int changeOffset)
         {
             InnerTextBlock blockChanged = null;
-            for (int i = 0; i < blocks.Count; i++)
+            for (var i = 0; i < _blocks.Count; i++)
             {
-                if (blocks[i].CharStartIndex <= changeOffset && changeOffset <= blocks[i].CharEndIndex + 1)
+                if (_blocks[i].CharStartIndex <= changeOffset && changeOffset <= _blocks[i].CharEndIndex + 1)
                 {
-                    blockChanged = blocks[i];
+                    blockChanged = _blocks[i];
                     break;
                 }
             }
 
             if (blockChanged == null && changeOffset > 0)
             {
-                blockChanged = blocks.Last();
+                blockChanged = _blocks.Last();
             }
 
-            int fvline = blockChanged != null ? blockChanged.LineStartIndex : 0;
-            int lvline = GetIndexOfLastVisibleLine();
-            int fvchar = blockChanged != null ? blockChanged.CharStartIndex : 0;
-            int lvchar = TextUtilities.GetLastCharIndexFromLineIndex(Text, lvline);
+            var fvline = blockChanged?.LineStartIndex ?? 0;
+            var lvline = GetIndexOfLastVisibleLine();
+            var fvchar = blockChanged?.CharStartIndex ?? 0;
+            var lvchar = TextUtilities.GetLastCharIndexFromLineIndex(Text, lvline);
 
             if (blockChanged != null)
             {
-                blocks.RemoveRange(blocks.IndexOf(blockChanged), blocks.Count - blocks.IndexOf(blockChanged));
+                _blocks.RemoveRange(_blocks.IndexOf(blockChanged), _blocks.Count - _blocks.IndexOf(blockChanged));
             }
 
-            int localLineCount = 1;
-            int charStart = fvchar;
-            int lineStart = fvline;
-            for (int i = fvchar; i < Text.Length; i++)
+            var localLineCount = 1;
+            var charStart = fvchar;
+            var lineStart = fvline;
+            for (var i = fvchar; i < Text.Length; i++)
             {
                 if (Text[i] == '\n')
                 {
@@ -541,8 +540,8 @@ namespace JSONDB.JQLEditor.TextEditor
                 }
                 if (i == Text.Length - 1)
                 {
-                    string blockText = Text.Substring(charStart);
-                    InnerTextBlock block = new InnerTextBlock(
+                    var blockText = Text.Substring(charStart);
+                    var block = new InnerTextBlock(
                         charStart,
                         i, lineStart,
                         lineStart + TextUtilities.GetLineCount(blockText) - 1,
@@ -551,7 +550,7 @@ namespace JSONDB.JQLEditor.TextEditor
                     block.LineNumbers = GetFormattedLineNumbers(block.LineStartIndex, block.LineEndIndex);
                     block.IsLast = true;
 
-                    foreach (InnerTextBlock b in blocks)
+                    foreach (var b in _blocks)
                     {
                         if (b.LineStartIndex == block.LineStartIndex)
                         {
@@ -559,22 +558,22 @@ namespace JSONDB.JQLEditor.TextEditor
                         }
                     }
 
-                    blocks.Add(block);
-                    FormatBlock(block, blocks.Count > 1 ? blocks[blocks.Count - 2] : null);
+                    _blocks.Add(block);
+                    FormatBlock(block, _blocks.Count > 1 ? _blocks[_blocks.Count - 2] : null);
                     break;
                 }
-                if (localLineCount > maxLineCountInBlock)
+                if (localLineCount > _maxLineCountInBlock)
                 {
-                    InnerTextBlock block = new InnerTextBlock(
+                    var block = new InnerTextBlock(
                         charStart,
                         i,
                         lineStart,
-                        lineStart + maxLineCountInBlock - 1,
+                        lineStart + _maxLineCountInBlock - 1,
                         LineHeight);
                     block.RawText = block.GetSubString(Text);
                     block.LineNumbers = GetFormattedLineNumbers(block.LineStartIndex, block.LineEndIndex);
 
-                    foreach (InnerTextBlock b in blocks)
+                    foreach (var b in _blocks)
                     {
                         if (b.LineStartIndex == block.LineStartIndex)
                         {
@@ -582,11 +581,11 @@ namespace JSONDB.JQLEditor.TextEditor
                         }
                     }
 
-                    blocks.Add(block);
-                    FormatBlock(block, blocks.Count > 1 ? blocks[blocks.Count - 2] : null);
+                    _blocks.Add(block);
+                    FormatBlock(block, _blocks.Count > 1 ? _blocks[_blocks.Count - 2] : null);
 
                     charStart = i + 1;
-                    lineStart += maxLineCountInBlock;
+                    lineStart += _maxLineCountInBlock;
                     localLineCount = 1;
 
                     if (i > lvchar)
@@ -603,19 +602,19 @@ namespace JSONDB.JQLEditor.TextEditor
 
         private void DrawBlocks()
         {
-            if (!IsLoaded || renderCanvas == null || lineNumbersCanvas == null)
+            if (!IsLoaded || _renderCanvas == null || _lineNumbersCanvas == null)
             {
                 return;
             }
 
-            var dc = renderCanvas.GetContext();
-            var dc2 = lineNumbersCanvas.GetContext();
-            for (int i = 0; i < blocks.Count; i++)
+            var dc = _renderCanvas.GetContext();
+            var dc2 = _lineNumbersCanvas.GetContext();
+            for (var i = 0; i < _blocks.Count; i++)
             {
-                InnerTextBlock block = blocks[i];
-                Point blockPos = block.Position;
-                double top = blockPos.Y - VerticalOffset;
-                double bottom = top + blockHeight;
+                var block = _blocks[i];
+                var blockPos = block.Position;
+                var top = blockPos.Y - VerticalOffset;
+                var bottom = top + _blockHeight;
                 if (top < ActualHeight && bottom > 0)
                 {
                     try
@@ -623,8 +622,8 @@ namespace JSONDB.JQLEditor.TextEditor
                         dc.DrawText(block.FormattedText, new Point(2 - HorizontalOffset, block.Position.Y - VerticalOffset));
                         if (IsLineNumbersMarginVisible)
                         {
-                            lineNumbersCanvas.Width = GetFormattedTextWidth(string.Format("{0:0000}", totalLineCount)) + 5;
-                            dc2.DrawText(block.LineNumbers, new Point(lineNumbersCanvas.ActualWidth, 1 + block.Position.Y - VerticalOffset));
+                            _lineNumbersCanvas.Width = GetFormattedTextWidth($"{_totalLineCount:0000}") + 5;
+                            dc2.DrawText(block.LineNumbers, new Point(_lineNumbersCanvas.ActualWidth, 1 + block.Position.Y - VerticalOffset));
                         }
                     }
                     catch
@@ -652,11 +651,11 @@ namespace JSONDB.JQLEditor.TextEditor
             UpdateSuggestionListPosition();
 
             // Show the List if there is something to show
-            if (suggestionList.Items.Count > 0)
+            if (_suggestionList.Items.Count > 0)
             {
-                suggestionCanvas.IsHitTestVisible = true;
-                suggestionList.Visibility = Visibility.Visible;
-                suggestionList.Focus();
+                _suggestionCanvas.IsHitTestVisible = true;
+                _suggestionList.Visibility = Visibility.Visible;
+                _suggestionList.Focus();
             }
         }
 
@@ -664,168 +663,202 @@ namespace JSONDB.JQLEditor.TextEditor
         /// Add items to the Intellisense list.
         /// </summary>
         /// <param name="text">The text used to determine which item will be added.</param>
+        /// <param name="pos">The position of the carret.</param>
         private void PopulateSuggestionList(string text, int? pos)
         {
-            suggestionList.Items.Clear();
-            string LeftCaretText = text ?? Text.Substring(0, CaretIndex);
-            if (Regex.IsMatch(LeftCaretText, "\\w+[^)\\\\]?[\\r\\n\\t ]*\\.$"))
+            _suggestionList.Items.Clear();
+            var leftCaretText = text ?? Text.Substring(0, CaretIndex);
+            if (Regex.IsMatch(leftCaretText, "\\w+[^)\\\\]?[\\r\\n\\t ]*\\.$"))
             {
-                int LastCaretPos = pos ?? CaretIndex;
-                suggestionList.Items.Add(new IntellisenseListItem("count", "count()", "Count the number of rows in a table.", () =>
+                var lastCaretPos = pos ?? CaretIndex;
+                _suggestionList.Items.Add(new IntellisenseListItem("count", "count()", "Count the number of rows in a table.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "count()");
-                    CaretIndex = LastCaretPos + 6;
+                    Text = Text.Insert(lastCaretPos, "count()");
+                    CaretIndex = lastCaretPos + 6;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("delete", "delete()", "Remove the value of rows and columns in a table.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("delete", "delete()", "Remove the value of rows and columns in a table.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "delete()");
-                    CaretIndex = LastCaretPos + 7;
+                    Text = Text.Insert(lastCaretPos, "delete()");
+                    CaretIndex = lastCaretPos + 7;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("insert", "insert()", "Add a new row in a table.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("insert", "insert()", "Add a new row in a table.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "insert()");
-                    CaretIndex = LastCaretPos + 7;
+                    Text = Text.Insert(lastCaretPos, "insert()");
+                    CaretIndex = lastCaretPos + 7;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("update", "update()", "Update rows and columns with a new value.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("max", "max()", "Return the higher value of all values in a column.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "update()");
-                    CaretIndex = LastCaretPos + 7;
+                    Text = Text.Insert(lastCaretPos, "max()");
+                    CaretIndex = lastCaretPos + 4;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("select", "select()", "Retrieve data from a table.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("min", "min()", "Return the lower value of all values in a column.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "select()");
-                    CaretIndex = LastCaretPos + 7;
+                    Text = Text.Insert(lastCaretPos, "min()");
+                    CaretIndex = lastCaretPos + 4;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("truncate", "truncate()", "Delete all data and reset the table.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("update", "update()", "Update rows and columns with a new value.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "truncate()");
-                    CaretIndex = LastCaretPos + 9;
+                    Text = Text.Insert(lastCaretPos, "update()");
+                    CaretIndex = lastCaretPos + 7;
+                    Focus();
+                    HideSuggestionList();
+                }));
+                _suggestionList.Items.Add(new IntellisenseListItem("select", "select()", "Retrieve data from a table.", () =>
+                {
+                    if (CaretIndex - lastCaretPos > 0)
+                    {
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
+                    }
+                    Text = Text.Insert(lastCaretPos, "select()");
+                    CaretIndex = lastCaretPos + 7;
+                    Focus();
+                    HideSuggestionList();
+                }));
+                _suggestionList.Items.Add(new IntellisenseListItem("sum", "sum()", "Return the sum of all values in a column.", () =>
+                {
+                    if (CaretIndex - lastCaretPos > 0)
+                    {
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
+                    }
+                    Text = Text.Insert(lastCaretPos, "sum()");
+                    CaretIndex = lastCaretPos + 4;
+                    Focus();
+                    HideSuggestionList();
+                }));
+                _suggestionList.Items.Add(new IntellisenseListItem("truncate", "truncate()", "Delete all data and reset the table.", () =>
+                {
+                    if (CaretIndex - lastCaretPos > 0)
+                    {
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
+                    }
+                    Text = Text.Insert(lastCaretPos, "truncate()");
+                    CaretIndex = lastCaretPos + 9;
                     Focus();
                     HideSuggestionList();
                 }));
             }
-            else if (Regex.IsMatch(LeftCaretText, "\\)[\\r\\n\\t ]*\\.$"))
+            else if (Regex.IsMatch(leftCaretText, "\\)[\\r\\n\\t ]*\\.$"))
             {
-                int LastCaretPos = pos ?? CaretIndex;
-                suggestionList.Items.Add(new IntellisenseListItem("as", "as()", "Create an alias for a query parameter. Use it with select() and count().", () =>
+                var lastCaretPos = pos ?? CaretIndex;
+                _suggestionList.Items.Add(new IntellisenseListItem("as", "as()", "Create an alias for a query parameter. Use it with select() and count().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "as()");
-                    CaretIndex = LastCaretPos + 3;
+                    Text = Text.Insert(lastCaretPos, "as()");
+                    CaretIndex = lastCaretPos + 3;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("group", "group()", "Group the number of value's occurences. Use it with count().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("group", "group()", "Group the number of value's occurences. Use it with count().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "group()");
-                    CaretIndex = LastCaretPos + 6;
+                    Text = Text.Insert(lastCaretPos, "group()");
+                    CaretIndex = lastCaretPos + 6;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("in", "in()", "Define in which columns we have to insert data. Use it with insert().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("in", "in()", "Define in which columns we have to insert data. Use it with insert().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "in()");
-                    CaretIndex = LastCaretPos + 3;
+                    Text = Text.Insert(lastCaretPos, "in()");
+                    CaretIndex = lastCaretPos + 3;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("limit", "limit()", "Limit the number of retrieved results. Use it with select().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("limit", "limit()", "Limit the number of retrieved results. Use it with select().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "limit()");
-                    CaretIndex = LastCaretPos + 6;
+                    Text = Text.Insert(lastCaretPos, "limit()");
+                    CaretIndex = lastCaretPos + 6;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("on", "on()", "Define which action to execute on a column. Use it with select().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("on", "on()", "Define which action to execute on a column. Use it with select().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "on()");
-                    CaretIndex = LastCaretPos + 3;
+                    Text = Text.Insert(lastCaretPos, "on()");
+                    CaretIndex = lastCaretPos + 3;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("order", "order()", "Reorder retrieved results. Use it with select().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("order", "order()", "Reorder retrieved results. Use it with select().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "order()");
-                    CaretIndex = LastCaretPos + 6;
+                    Text = Text.Insert(lastCaretPos, "order()");
+                    CaretIndex = lastCaretPos + 6;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("where", "where()", "Apply conditions to the query.", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("where", "where()", "Apply conditions to the query.", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "where()");
-                    CaretIndex = LastCaretPos + 6;
+                    Text = Text.Insert(lastCaretPos, "where()");
+                    CaretIndex = lastCaretPos + 6;
                     Focus();
                     HideSuggestionList();
                 }));
-                suggestionList.Items.Add(new IntellisenseListItem("with", "with()", "Define which values to use. Use it with update().", () =>
+                _suggestionList.Items.Add(new IntellisenseListItem("with", "with()", "Define which values to use. Use it with update().", () =>
                 {
-                    if (CaretIndex - LastCaretPos > 0)
+                    if (CaretIndex - lastCaretPos > 0)
                     {
-                        Text = Text.Remove(LastCaretPos, CaretIndex - LastCaretPos);
+                        Text = Text.Remove(lastCaretPos, CaretIndex - lastCaretPos);
                     }
-                    Text = Text.Insert(LastCaretPos, "with()");
-                    CaretIndex = LastCaretPos + 5;
+                    Text = Text.Insert(lastCaretPos, "with()");
+                    CaretIndex = lastCaretPos + 5;
                     Focus();
                     HideSuggestionList();
                 }));
@@ -837,23 +870,23 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private void UpdateSuggestionListPosition()
         {
-            Point position = GetRectFromCharacterIndex(CaretIndex).BottomRight;
+            var position = GetRectFromCharacterIndex(CaretIndex).BottomRight;
 
-            double left = position.X - lineNumbersCanvas.ActualWidth - lineNumbersCanvas.Margin.Left - lineNumbersCanvas.Margin.Right - lineNumbersSeparator.Margin.Left - lineNumbersSeparator.Margin.Right - Padding.Left - Margin.Left - Padding.Right - Margin.Right;
-            double top = position.Y - Padding.Top;
+            var left = position.X - _lineNumbersCanvas.ActualWidth - _lineNumbersCanvas.Margin.Left - _lineNumbersCanvas.Margin.Right - _lineNumbersSeparator.Margin.Left - _lineNumbersSeparator.Margin.Right - Padding.Left - Margin.Left - Padding.Right - Margin.Right;
+            var top = position.Y - Padding.Top;
 
-            if (left + suggestionList.ActualWidth > suggestionCanvas.ActualWidth)
+            if (left + _suggestionList.ActualWidth > _suggestionCanvas.ActualWidth)
             {
-                left = suggestionCanvas.ActualWidth - suggestionList.ActualWidth - Padding.Right - Margin.Right;
+                left = _suggestionCanvas.ActualWidth - _suggestionList.ActualWidth - Padding.Right - Margin.Right;
             }
 
-            if (top + suggestionList.ActualHeight > suggestionCanvas.ActualHeight)
+            if (top + _suggestionList.ActualHeight > _suggestionCanvas.ActualHeight)
             {
-                top = suggestionCanvas.ActualHeight - suggestionList.ActualHeight - Padding.Bottom - Margin.Bottom;
+                top = _suggestionCanvas.ActualHeight - _suggestionList.ActualHeight - Padding.Bottom - Margin.Bottom;
             }
 
-            Canvas.SetLeft(suggestionList, left);
-            Canvas.SetTop(suggestionList, top);
+            Canvas.SetLeft(_suggestionList, left);
+            Canvas.SetTop(_suggestionList, top);
         }
 
         /// <summary>
@@ -861,8 +894,8 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private void HideSuggestionList()
         {
-            suggestionCanvas.IsHitTestVisible = false;
-            suggestionList.Visibility = Visibility.Collapsed;
+            _suggestionCanvas.IsHitTestVisible = false;
+            _suggestionList.Visibility = Visibility.Collapsed;
         }
 
         // ----------------------------------------------------------
@@ -885,13 +918,13 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <param name="saveCaretPosition">The caret have the same position after insertion</param>
         public void SetDocumentContents(string text, bool saveCaretPosition = false)
         {
-            int LastCaretPos = 0;
+            var lastCaretPos = 0;
             if (saveCaretPosition)
             {
-                LastCaretPos = CaretIndex;
+                lastCaretPos = CaretIndex;
             }
             Text = text;
-            CaretIndex = LastCaretPos;
+            CaretIndex = lastCaretPos;
         }
 
         /// <summary>
@@ -899,7 +932,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public void CleanDocument()
         {
-            Text = String.Empty;
+            Text = string.Empty;
         }
 
         /// <summary>
@@ -908,7 +941,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>true if it's possible, and false otherwise.</returns>
         public new bool CanUndo()
         {
-            return stack.UndoCount > 0;
+            return _stack.UndoCount > 0;
         }
 
         /// <summary>
@@ -917,7 +950,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>true if it's possible, and false otherwise.</returns>
         public new bool CanRedo()
         {
-            return stack.RedoCount > 0;
+            return _stack.RedoCount > 0;
         }
 
         /// <summary>
@@ -926,13 +959,13 @@ namespace JSONDB.JQLEditor.TextEditor
         public new void Undo()
         {
             HideSuggestionList();
-            var thisStack = stack.UnPush(new TextStack(Text, CaretIndex));
+            var thisStack = _stack.UnPush(new TextStack(Text, CaretIndex));
             if (thisStack != null)
             {
-                cancelNextStack = true;
-                TextState State = thisStack.Do(((TextStack)thisStack).State);
-                Text = State.Text;
-                CaretIndex = State.CaretIndex;
+                _cancelNextStack = true;
+                var state = thisStack.Do(((TextStack)thisStack).State);
+                Text = state.Text;
+                CaretIndex = state.CaretIndex;
             }
         }
 
@@ -942,13 +975,13 @@ namespace JSONDB.JQLEditor.TextEditor
         public new void Redo()
         {
             HideSuggestionList();
-            var thisStack = stack.RePush(new TextStack(Text, CaretIndex));
+            var thisStack = _stack.RePush(new TextStack(Text, CaretIndex));
             if (thisStack != null)
             {
-                cancelNextStack = true;
-                TextState State = thisStack.Do(((TextStack)thisStack).State);
-                Text = State.Text;
-                CaretIndex = State.CaretIndex;
+                _cancelNextStack = true;
+                var state = thisStack.Do(((TextStack)thisStack).State);
+                Text = state.Text;
+                CaretIndex = state.CaretIndex;
             }
         }
 
@@ -957,7 +990,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public void ResetUndoRedoStack()
         {
-            stack.Reset();
+            _stack.Reset();
         }
 
         /// <summary>
@@ -967,30 +1000,28 @@ namespace JSONDB.JQLEditor.TextEditor
         {
             if (SuggestionListIsVisible())
             {
-                int LastCaretPosititon = CaretIndex;
+                var activeLineIndex = GetIndexOfActiveLine() - 1;
+                var firstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, activeLineIndex);
+                var lastCharIndex = TextUtilities.GetLastCharIndexFromLineIndex(Text, activeLineIndex);
 
-                int ActiveLineIndex = GetIndexOfActiveLine() - 1;
-                int FirstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, ActiveLineIndex);
-                int LastCharIndex = TextUtilities.GetLastCharIndexFromLineIndex(Text, ActiveLineIndex);
+                var lineString = Text.Substring(firstCharIndex, lastCharIndex - firstCharIndex);
+                var lastDotPosition = lineString.LastIndexOf('.');
 
-                string LineString = Text.Substring(FirstCharIndex, LastCharIndex - FirstCharIndex);
-                int LastDotPosition = LineString.LastIndexOf('.');
-
-                string SuggestionLabelPart = LineString.Substring(LastDotPosition + 1);
+                var suggestionLabelPart = lineString.Substring(lastDotPosition + 1);
 
                 // Refresh the list first
-                for (int i = 0, l = suggestionList.Items.Count; i < l; i++)
+                for (int i = 0, l = _suggestionList.Items.Count; i < l; i++)
                 {
-                    IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
+                    var item = (IntellisenseListItem)_suggestionList.Items[i];
                     item.Visibility = Visibility.Visible;
                     item.IsEnabled = true;
                 }
 
-                int h = 0;
-                for (int i = 0, l = suggestionList.Items.Count; i < l; i++)
+                var h = 0;
+                for (int i = 0, l = _suggestionList.Items.Count; i < l; i++)
                 {
-                    IntellisenseListItem item = (IntellisenseListItem)suggestionList.Items[i];
-                    if (!Regex.IsMatch(item.DisplayText, "^" + Regex.Escape(SuggestionLabelPart)))
+                    var item = (IntellisenseListItem)_suggestionList.Items[i];
+                    if (!Regex.IsMatch(item.DisplayText, "^" + Regex.Escape(suggestionLabelPart)))
                     {
                         item.Visibility = Visibility.Collapsed;
                         item.IsEnabled = false;
@@ -1003,7 +1034,7 @@ namespace JSONDB.JQLEditor.TextEditor
                 }
 
                 // If all items are hidden
-                if (h == suggestionList.Items.Count)
+                if (h == _suggestionList.Items.Count)
                 {
                     HideSuggestionList();
                 }
@@ -1016,7 +1047,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>true if visible, false otherwise</returns>
         public bool SuggestionListIsVisible()
         {
-            return suggestionList.Visibility == Visibility.Visible;
+            return _suggestionList.Visibility == Visibility.Visible;
         }
 
         /// <summary>
@@ -1025,7 +1056,7 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns></returns>
         public bool SuggestionListHasItems()
         {
-            return suggestionList.Items.Count > 0;
+            return _suggestionList.Items.Count > 0;
         }
 
         /// <summary>
@@ -1061,8 +1092,8 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public int GetIndexOfFirstVisibleLine()
         {
-            int guessedLine = (int)(VerticalOffset / lineHeight);
-            return guessedLine > totalLineCount ? totalLineCount : guessedLine;
+            var guessedLine = (int)(VerticalOffset / _lineHeight);
+            return guessedLine > _totalLineCount ? _totalLineCount : guessedLine;
         }
 
         /// <summary>
@@ -1070,9 +1101,9 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         public int GetIndexOfLastVisibleLine()
         {
-            double height = VerticalOffset + ViewportHeight;
-            int guessedLine = (int)(height / lineHeight);
-            return guessedLine > totalLineCount - 1 ? totalLineCount - 1 : guessedLine;
+            var height = VerticalOffset + ViewportHeight;
+            var guessedLine = (int)(height / _lineHeight);
+            return guessedLine > _totalLineCount - 1 ? _totalLineCount - 1 : guessedLine;
         }
 
         /// <summary>
@@ -1083,7 +1114,7 @@ namespace JSONDB.JQLEditor.TextEditor
             currentBlock.FormattedText = GetFormattedText(currentBlock.RawText);
             if (CurrentHighlighter != null)
             {
-                int previousCode = previousBlock != null ? previousBlock.Code : -1;
+                var previousCode = previousBlock?.Code ?? -1;
                 currentBlock.Code = CurrentHighlighter.HighlightBlock(currentBlock.FormattedText, previousCode);
             }
         }
@@ -1093,16 +1124,18 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private FormattedText GetFormattedText(string text)
         {
-            FormattedText ft = new FormattedText(
+            var ft = new FormattedText(
                 text,
                 System.Globalization.CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
                 FontSize,
-                TextColor);
+                TextColor)
+            {
+                Trimming = TextTrimming.None,
+                LineHeight = _lineHeight
+            };
 
-            ft.Trimming = TextTrimming.None;
-            ft.LineHeight = lineHeight;
 
             return ft;
         }
@@ -1112,24 +1145,26 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private FormattedText GetFormattedLineNumbers(int firstIndex, int lastIndex)
         {
-            string text = "";
-            for (int i = firstIndex + 1; i <= lastIndex + 1; i++)
+            var text = "";
+            for (var i = firstIndex + 1; i <= lastIndex + 1; i++)
             {
                 text += i.ToString() + Environment.NewLine;
             }
             text = text.Trim();
 
-            FormattedText ft = new FormattedText(
+            var ft = new FormattedText(
                 text,
                 System.Globalization.CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
                 FontSize,
-                new SolidColorBrush(Color.FromRgb(0x21, 0xA1, 0xD8)));
+                new SolidColorBrush(Color.FromRgb(0x21, 0xA1, 0xD8)))
+            {
+                Trimming = TextTrimming.None,
+                LineHeight = _lineHeight,
+                TextAlignment = TextAlignment.Right
+            };
 
-            ft.Trimming = TextTrimming.None;
-            ft.LineHeight = lineHeight;
-            ft.TextAlignment = TextAlignment.Right;
 
             return ft;
         }
@@ -1139,16 +1174,18 @@ namespace JSONDB.JQLEditor.TextEditor
         /// </summary>
         private double GetFormattedTextWidth(string text)
         {
-            FormattedText ft = new FormattedText(
+            var ft = new FormattedText(
                 text,
                 System.Globalization.CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 new Typeface(FontFamily, FontStyle, FontWeight, FontStretch),
                 FontSize,
-                TextColor);
+                TextColor)
+            {
+                Trimming = TextTrimming.None,
+                LineHeight = _lineHeight
+            };
 
-            ft.Trimming = TextTrimming.None;
-            ft.LineHeight = lineHeight;
 
             return ft.Width;
         }
@@ -1163,18 +1200,12 @@ namespace JSONDB.JQLEditor.TextEditor
         /// <returns>Information about the current text state</returns>
         public override string ToString()
         {
-            int activeLineIndex = GetIndexOfActiveLine();
-            int firstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, activeLineIndex - 1);
-            int colIndex = Text.Substring(firstCharIndex, CaretIndex - firstCharIndex).Length + 1;
-            int charNB = Text.Length;
+            var activeLineIndex = GetIndexOfActiveLine();
+            var firstCharIndex = TextUtilities.GetFirstCharIndexFromLineIndex(Text, activeLineIndex - 1);
+            var colIndex = Text.Substring(firstCharIndex, CaretIndex - firstCharIndex).Length + 1;
+            var charNb = Text.Length;
 
-            string activeLineText = GetTextAtLine(activeLineIndex);
-
-            return String.Format("Ln {0}    Col {1}    Ch {2}/{3}",
-                activeLineIndex,
-                colIndex,
-                CaretIndex,
-                charNB);
+            return $"Ln {activeLineIndex}    Col {colIndex}    Ch {CaretIndex}/{charNb}";
         }
 
         // ----------------------------------------------------------
@@ -1197,15 +1228,9 @@ namespace JSONDB.JQLEditor.TextEditor
         // Properties
         // ----------------------------------------------------------
 
-        public int TabSize
-        {
-            get { return 4; }
-        }
+        public int TabSize => 4;
 
-        private string Tab
-        {
-            get { return new String(' ', TabSize); }
-        }
+        private string Tab => new string(' ', TabSize);
 
         public IHighlighter CurrentHighlighter { get; set; }
 
@@ -1237,7 +1262,7 @@ namespace JSONDB.JQLEditor.TextEditor
         // Structs
         // ----------------------------------------------------------
 
-        struct TextState
+        private struct TextState
         {
             public string Text { get; set; }
             public int CaretIndex { get; set; }
@@ -1256,11 +1281,11 @@ namespace JSONDB.JQLEditor.TextEditor
             public int CharEndIndex { get; private set; }
             public int LineStartIndex { get; private set; }
             public int LineEndIndex { get; private set; }
-            public Point Position { get { return new Point(0, LineStartIndex * lineHeight); } }
+            public Point Position => new Point(0, LineStartIndex * _lineHeight);
             public bool IsLast { get; set; }
             public int Code { get; set; }
 
-            private double lineHeight;
+            private readonly double _lineHeight;
 
             public InnerTextBlock(int charStart, int charEnd, int lineStart, int lineEnd, double lineHeight)
             {
@@ -1268,50 +1293,43 @@ namespace JSONDB.JQLEditor.TextEditor
                 CharEndIndex = charEnd;
                 LineStartIndex = lineStart;
                 LineEndIndex = lineEnd;
-                this.lineHeight = lineHeight;
+                _lineHeight = lineHeight;
                 IsLast = false;
 
             }
 
             public string GetSubString(string text)
             {
-                int length = CharEndIndex < text.Length ? CharEndIndex - CharStartIndex + 1 : CharEndIndex - CharStartIndex;
+                var length = CharEndIndex < text.Length ? CharEndIndex - CharStartIndex + 1 : CharEndIndex - CharStartIndex;
                 return text.Substring(CharStartIndex, length);
             }
 
             public override string ToString()
             {
-                return String.Format("L:{0}/{1} C:{2}/{3} {4}",
-                    LineStartIndex,
-                    LineEndIndex,
-                    CharStartIndex,
-                    CharEndIndex,
-                    FormattedText.Text);
+                return $"L:{LineStartIndex}/{LineEndIndex} C:{CharStartIndex}/{CharEndIndex} {FormattedText.Text}";
             }
         }
 
         private class TextStack : IStack<TextState>
         {
-            private TextState _State;
-
-            public TextState State
-            {
-                get { return _State; }
-                private set { _State = value; }
-            }
+            public TextState State { get; }
 
             public TextStack()
             {
-                _State = new TextState();
-                _State.Text = String.Empty;
-                _State.CaretIndex = 0;
+                State = new TextState
+                {
+                    Text = string.Empty,
+                    CaretIndex = 0
+                };
             }
 
             public TextStack(string text, int caret)
             {
-                _State = new TextState();
-                _State.CaretIndex = caret;
-                _State.Text = text;
+                State = new TextState
+                {
+                    CaretIndex = caret,
+                    Text = text
+                };
             }
 
             public TextState Do(TextState now)
@@ -1321,7 +1339,7 @@ namespace JSONDB.JQLEditor.TextEditor
 
             public TextState Undo(TextState last)
             {
-                return _State;
+                return State;
             }
         }
     }
