@@ -6,33 +6,33 @@ namespace JSONDB.JQLEditor.TextEditor
 {
     public class DrawingControl : FrameworkElement
     {
-        private VisualCollection visuals;
-        private DrawingVisual visual;
+        private VisualCollection _visuals;
+        private DrawingVisual _visual;
 
         public DrawingControl()
         {
-            visual = new DrawingVisual();
-            visuals = new VisualCollection(this);
-            visuals.Add(visual);
+            _visual = new DrawingVisual();
+            _visuals = new VisualCollection(this);
+            _visuals.Add(_visual);
         }
 
         public DrawingContext GetContext()
         {
-            return visual.RenderOpen();
+            return _visual.RenderOpen();
         }
 
         protected override int VisualChildrenCount
         {
-            get { return visuals.Count; }
+            get { return _visuals.Count; }
         }
 
         protected override Visual GetVisualChild(int index)
         {
-            if (index < 0 || index >= visuals.Count)
+            if (index < 0 || index >= _visuals.Count)
             {
                 throw new ArgumentOutOfRangeException();
             }
-            return visuals[index];
+            return _visuals[index];
         }
     }
 }
