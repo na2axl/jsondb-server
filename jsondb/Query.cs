@@ -1,36 +1,66 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace JSONDB
 {
+    /// <summary>
+    /// Class Query
+    /// </summary>
     public class Query
     {
-        private Database DbConnection { get; set; }
+        /// <summary>
+        /// The database instance in which the query will be executed.
+        /// </summary>
+        private Database _db;
 
-        private string Table { get; set; }
+        /// <summary>
+        /// The name of the table.
+        /// </summary>
+        private string _table;
 
-        private bool QueryExecuted { get; set; }
+        /// <summary>
+        /// Define is the query is executed or not.
+        /// </summary>
+        private bool _queryExecuted;
 
-        private JObject ParsedQuery { get; set; }
+        /// <summary>
+        /// The parsed query object.
+        /// </summary>
+        private JObject _parsedQuery;
 
+        /// <summary>
+        /// Create a new instance of <see cref="Query"/> by defining
+        /// the <see cref="Database"/> instance.
+        /// </summary>
+        /// <param name="database">The <see cref="Database"/> instance to use</param>
         public Query(Database database)
         {
-            DbConnection = database;
+            _db = database;
         }
 
+        /// <summary>
+        /// Send a new query to the server.
+        /// </summary>
+        /// <param name="query">The query to send (in JQL format)</param>
+        /// <returns>The query result</returns>
         public JObject Send(string query)
         {
-            ParsedQuery = QueryParser.Parse(query);
+            _parsedQuery = QueryParser.Parse(query);
 
-            QueryExecuted = false;
+            _queryExecuted = false;
 
             return _execute();
         }
 
+        /// <summary>
+        /// Send multiples queries at once.
+        /// </summary>
+        /// <param name="queries">Queries to send (in JQL format)</param>
+        /// <returns>A set of query results</returns>
         public JObject[] MultiSend(string queries)
         {
             var parsedQueries = QueryParser.MultilineParse(queries);
@@ -38,9 +68,9 @@ namespace JSONDB
 
             for (int i = 0, l = parsedQueries.Length; i < l; i++)
             {
-                ParsedQuery = parsedQueries[i];
+                _parsedQuery = parsedQueries[i];
 
-                QueryExecuted = false;
+                _queryExecuted = false;
 
                 results[i] = _execute();
             }
@@ -48,35 +78,34 @@ namespace JSONDB
             return results;
         }
 
+        /// <summary>
+        /// Execute the current query.
+        /// </summary>
+        /// <returns>The query result</returns>
         private JObject _execute()
         {
-            if (QueryExecuted)
+            if (_queryExecuted)
             {
-                throw new Exception("Query Error: There is no query to execute, or the query is already executed.");
+                throw new InvalidOperationException("Query Error: There is no query to execute, or the query is already executed.");
             }
 
-            _setTable(ParsedQuery["table"].ToString());
+            _setTable(_parsedQuery["table"].ToString());
 
-            var tablePath = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt");
+            var tablePath = Util.MakePath(_db.GetServer(), _db.GetDatabase(), _table + ".jdbt");
 
             if (!Util.Exists(tablePath))
             {
-                throw new Exception("Query Error: Can't execute the query. The table \"" + Table + "\" doesn't exists in database \"" + DbConnection.GetDatabase() + "\" or file access denied.");
+                throw new Exception("Query Error: Can't execute the query. The table \"" + _table + "\" doesn't exists in database \"" + _db.GetDatabase() + "\" or file access denied.");
             }
 
             // Wait until the file is unlocked and check the state each 100ms
-            while (Util.FileIsLocked(Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt")))
+            while (Util.FileIsLocked(tablePath))
             {
-                var end = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds + 100;
-                while (true)
-                {
-                    var now = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
-                    if (now >= end) break;
-                }
+                Thread.Sleep(100);
             }
 
             Benchmark.Mark("jsondb_(query)_start");
-            Util.LockFile(Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt"));
+            Util.LockFile(tablePath);
             Cache.Reset();
 
             var jsonArray = JObject.Parse(Cache.Get(tablePath));
@@ -84,8 +113,8 @@ namespace JSONDB
 
             try
             {
-                object res;
-                switch (ParsedQuery["action"].ToString())
+                dynamic res;
+                switch (_parsedQuery["action"].ToString())
                 {
                     case "select":
                         res = _select(jsonArray);
@@ -105,19 +134,16 @@ namespace JSONDB
                     case "delete":
                         res = _delete(jsonArray);
                         break;
-                    case "min":
-                        res = _min(jsonArray);
-                        break;
                     default:
-                        Util.UnlockFile(Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt"));
+                        Util.UnlockFile(tablePath);
                         Benchmark.Mark("jsondb_(query)_end");
-                        throw new Exception("Query Error: The query \"" + ParsedQuery["action"] + "\" is not supported by JSONDB.");
+                        throw new NotSupportedException("Query Error: The query \"" + _parsedQuery["action"] + "\" is not supported by JSONDB.");
                 }
 
-                Util.UnlockFile(Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt"));
+                Util.UnlockFile(tablePath);
                 Benchmark.Mark("jsondb_(query)_end");
 
-                QueryExecuted = true;
+                _queryExecuted = true;
                 queryResult["error"] = false;
                 queryResult["result"] = (JToken)res;
                 queryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
@@ -125,10 +151,10 @@ namespace JSONDB
             }
             catch (Exception e)
             {
-                Util.UnlockFile(Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt"));
+                Util.UnlockFile(tablePath);
                 Benchmark.Mark("jsondb_(query)_end");
 
-                QueryExecuted = false;
+                _queryExecuted = false;
                 queryResult["error"] = true;
                 queryResult["result"] = e.Message;
                 queryResult["elapsed_time"] = Benchmark.ElapsedTime("jsondb_(query)_start", "jsondb_(query)_end");
@@ -138,6 +164,12 @@ namespace JSONDB
             return queryResult;
         }
 
+        /// <summary>
+        /// Retrieve the last valid row ID from the table's data.
+        /// </summary>
+        /// <param name="data">Data in which retrieve the ID.</param>
+        /// <param name="min">Define if we have to get the minimal or the maximal value</param>
+        /// <returns>The last valid row ID</returns>
         private int _getLastValidRowID(JObject data, bool min)
         {
             var last = 0;
@@ -156,6 +188,12 @@ namespace JSONDB
             return last;
         }
 
+        /// <summary>
+        /// Retrieve the last valid row ID from the table's data.
+        /// </summary>
+        /// <param name="data">Data in which retrieve the ID.</param>
+        /// <param name="min">Define if we have to get the minimal or the maximal value</param>
+        /// <returns>The last valid row ID</returns>
         private int _getLastValidRowID(JArray data, bool min)
         {
             var last = 0;
@@ -174,44 +212,55 @@ namespace JSONDB
             return last;
         }
 
+        /// <summary>
+        /// Change the current working table.
+        /// </summary>
+        /// <param name="table">The name of the table</param>
         private void _setTable(string table)
         {
-            if (!DbConnection.IsWorkingDatabase())
+            if (!_db.IsWorkingDatabase())
             {
                 throw new Exception("Query Error: Can't use the table \"" + table + "\", there is no database selected.");
             }
 
-            var path = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), table + ".jdbt");
+            var path = Util.MakePath(_db.GetServer(), _db.GetDatabase(), table + ".jdbt");
             if (!Util.Exists(path))
             {
                 throw new Exception("Query Error: Can't use the table \"" + table + "\", the table doesn't exist in the database.");
             }
 
-            Table = table;
+            _table = table;
         }
 
+        /// <summary>
+        /// Parse a value.
+        /// </summary>
+        /// <param name="value">The value to parse</param>
+        /// <param name="properties">A set of properties used to parse the value</param>
+        /// <returns>The parsed value</returns>
         private JToken _parseValue(JToken value, JObject properties)
         {
             if (value != null || (properties["not_null"] != null && bool.Parse(properties["not_null"].ToString())))
             {
-                if (properties["type"] == null) return value;
-                if (new Regex("link\\(.+\\)").IsMatch(properties["type"].ToString()))
+                if (properties["type"] == null)
                 {
-                    var link = new Regex("link\\((.+)\\)").Replace(properties["type"].ToString(), "$1");
+                    return value;
+                }
+                else if (Regex.IsMatch(properties["type"].ToString(), "link\\(.+\\)"))
+                {
+                    var link = Regex.Replace(properties["type"].ToString(), "link\\((.+)\\)", "$1");
                     var linkInfo = link.Split('.');
-                    var linkTablePath = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), linkInfo[0] + ".jdbt");
+                    var linkTablePath = Util.MakePath(_db.GetServer(), _db.GetDatabase(), linkInfo[0] + ".jdbt");
                     var linkTableData = Database.GetTableData(linkTablePath);
                     value = _parseValue(value, (JObject)linkTableData["properties"][linkInfo[1]]);
-                    var dataIterator = ((JObject)linkTableData["data"]).GetEnumerator();
-                    while (dataIterator.MoveNext())
+                    foreach (var item in (JObject)linkTableData["data"])
                     {
-                        var data = (JObject)dataIterator.Current.Value;
+                        var data = (JObject)item.Value;
                         if (data[linkInfo[1]].ToString() == value.ToString())
                         {
-                            return dataIterator.Current.Key;
+                            return item.Key;
                         }
                     }
-                    dataIterator.Dispose();
                 }
                 else
                 {
@@ -241,13 +290,13 @@ namespace JSONDB
                         case "bool":
                         case "boolean":
                             bool b;
-                            value = bool.TryParse(value.ToString(), out b) ? b : value.ToString() != string.Empty;
+                            value = bool.TryParse(value.ToString(), out b) ? b : !string.IsNullOrEmpty(value.ToString());
                             break;
                         case "array":
                             value = JObject.Parse(value.ToString());
                             break;
                         default:
-                            throw new Exception("JSONDB Error: Trying to parse a value with an unsupported type \"" + properties["type"].ToString() + "\"");
+                            throw new NotSupportedException("JSONDB Error: Trying to parse a value with an unsupported type \"" + properties["type"].ToString() + "\"");
                     }
                 }
             }
@@ -255,10 +304,105 @@ namespace JSONDB
             {
                 value = _parseValue(properties["default"], properties);
             }
+
             return value;
         }
 
-        private JToken _parseFunction(string func, string value)
+        /// <summary>
+        /// Parse and execute a function used in the select() query.
+        /// </summary>
+        /// <param name="func">The function name</param>
+        /// <param name="row">The table's row on which the function will be applied</param>
+        /// <param name="value">The value on which the function will be applied</param>
+        /// <param name="data">The table data</param>
+        /// <returns>The function's result</returns>
+        private JToken _parseSelectFunction(string func, string row, string value, JArray data)
+        {
+            var temp = new List<JToken>();
+
+            switch (func)
+            {
+                case "sha1":
+                    return Util.Sha1(value);
+                case "md5":
+                    return Util.Md5(value);
+                case "lowercase":
+                    return value.ToLower();
+                case "uppercase":
+                    return value.ToUpper();
+                case "ucfirst":
+                    return value[0].ToString().ToUpper() + value.Substring(1).ToLower();
+                case "strlen":
+                    return value.Length;
+                case "min":
+                    for (int i = 0, l = data.Count; i < l; i++)
+                    {
+                        var line = (JObject)data[i];
+                        temp.Add(line[row.ToString()]);
+                    }
+
+                    var min = temp.Select((val) =>
+                    {
+                        float m;
+                        return float.TryParse(val.ToString(), out m) ? m : 0;
+                    }).Min();
+
+                    return min;
+                case "max":
+                    for (int i = 0, l = data.Count; i < l; i++)
+                    {
+                        var line = (JObject)data[i];
+                        temp.Add(line[row.ToString()]);
+                    }
+
+                    var max = temp.Select((val) =>
+                    {
+                        float m;
+                        return float.TryParse(val.ToString(), out m) ? m : 0;
+                    }).Max();
+
+                    return max;
+                case "sum":
+                    for (int i = 0, l = data.Count; i < l; i++)
+                    {
+                        var line = (JObject)data[i];
+                        temp.Add(line[row.ToString()]);
+                    }
+
+                    var sum = temp.Select((val) =>
+                    {
+                        float m;
+                        return float.TryParse(val.ToString(), out m) ? m : 0;
+                    }).Sum();
+
+                    return sum;
+                case "avg":
+                    for (int i = 0, l = data.Count; i < l; i++)
+                    {
+                        var line = (JObject)data[i];
+                        temp.Add(line[row.ToString()]);
+                    }
+
+                    var avg = temp.Select((val) =>
+                    {
+                        float m;
+                        return float.TryParse(val.ToString(), out m) ? m : 0;
+                    }).Average();
+
+                    return avg;
+                default:
+                    throw new NotImplementedException("JSONDB Query Parse Error: Sorry but the function " + func + "() is not implemented in JQL.");
+
+            }
+        }
+
+        /// <summary>
+        /// Parse and execute a function used in the where() extension.
+        /// </summary>
+        /// <param name="func">The function name</param>
+        /// <param name="value">The value on which the function will be applied</param>
+        /// <returns>The function's result</returns>
+        private JToken _parseWhereFunction(string func, string value)
         {
             switch (func)
             {
@@ -271,61 +415,73 @@ namespace JSONDB
                 case "uppercase":
                     return value.ToUpper();
                 case "ucfirst":
-                    var first = value[0].ToString().ToUpper();
-                    return first + value.Substring(1).ToLower();
+                    return value[0].ToString().ToUpper() + value.Substring(1).ToLower();
                 case "strlen":
                     return value.Length;
                 default:
-                    throw new Exception("JSONDB Query Parse Error: Sorry but the function " + func + "() is not implemented in JQL.");
+                    throw new NotImplementedException("JSONDB Query Parse Error: Sorry but the function " + func + "() is not implemented in JQL.");
 
             }
         }
 
+        /// <summary>
+        /// Execute the select() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JArray _select(JObject data)
         {
             var result = Util.Values((JObject)data["data"]);
 
-            if (((JArray)ParsedQuery["parameters"]).Count == 0)
+            if (((JArray)_parsedQuery["parameters"]).Count == 0)
             {
                 throw new Exception("Query Error: No columns to select in the query.");
             }
 
-            if (((JArray) ParsedQuery["extensions"]["where"])?.Count > 0)
+            if (((JArray)_parsedQuery["extensions"]["where"])?.Count > 0)
             {
                 var res = new JArray();
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["where"]).Count; i < l; i++)
                 {
-                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)_parsedQuery["extensions"]["where"][i]));
                 }
                 result = res;
             }
 
-            if (ParsedQuery["extensions"]["order"] != null)
+            if (_parsedQuery["extensions"]["order"] != null)
             {
-                var orderBy = ParsedQuery["extensions"]["order"][0].ToString();
-                var orderMethod = ParsedQuery["extensions"]["order"][1].ToString();
+                var orderBy = _parsedQuery["extensions"]["order"][0].ToString();
+                var orderMethod = _parsedQuery["extensions"]["order"][1].ToString();
 
-                result = Util.Sort(result, (after, now) =>
+                result = Util.Sort(result, (now, pivot) =>
                 {
                     int left, right;
                     if (orderMethod == "desc")
                     {
-                        return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(after[orderBy].ToString(), out right) ? left < right : string.CompareOrdinal(now[orderBy].ToString(), after[orderBy].ToString()) == -1;
+                        return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(pivot[orderBy].ToString(), out right) ? left > right : string.Compare(now[orderBy].ToString(), pivot[orderBy].ToString()) == 1;
                     }
-                    return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(after[orderBy].ToString(), out right) ? left > right : string.CompareOrdinal(now[orderBy].ToString(), after[orderBy].ToString()) == 1;
+                    return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(pivot[orderBy].ToString(), out right) ? left < right : string.Compare(now[orderBy].ToString(), pivot[orderBy].ToString()) == -1;
+                }, (now, pivot) =>
+                {
+                    int left, right;
+                    if (orderMethod == "desc")
+                    {
+                        return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(pivot[orderBy].ToString(), out right) ? left < right : string.Compare(now[orderBy].ToString(), pivot[orderBy].ToString()) == -1;
+                    }
+                    return int.TryParse(now[orderBy].ToString(), out left) && int.TryParse(pivot[orderBy].ToString(), out right) ? left > right : string.Compare(now[orderBy].ToString(), pivot[orderBy].ToString()) == 1;
                 });
             }
 
-            if (ParsedQuery["extensions"]["limit"] != null)
+            if (_parsedQuery["extensions"]["limit"] != null)
             {
-                result = Util.Slice(result, int.Parse(ParsedQuery["extensions"]["limit"][0].ToString()), int.Parse(ParsedQuery["extensions"]["limit"][1].ToString()));
+                result = Util.Slice(result, int.Parse(_parsedQuery["extensions"]["limit"][0].ToString()), int.Parse(_parsedQuery["extensions"]["limit"][1].ToString()));
             }
 
-            if (ParsedQuery["extensions"]["on"] != null)
+            if (_parsedQuery["extensions"]["on"] != null)
             {
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["on"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["on"]).Count; i < l; i++)
                 {
-                    var on = ParsedQuery["extensions"]["on"][i];
+                    var on = _parsedQuery["extensions"]["on"][i];
                     switch (on["action"]["name"].ToString())
                     {
                         case "link":
@@ -335,11 +491,11 @@ namespace JSONDB
                             for (int j = 0, m = result.Count; j < m; j++)
                             {
                                 var resultP = result[j];
-                                if (new Regex("link\\((.+)\\)").IsMatch(data["properties"][key]["type"].ToString()))
+                                if (Regex.IsMatch(data["properties"][key]["type"].ToString(), "link\\((.+)\\)"))
                                 {
-                                    var link = new Regex("link\\((.+)\\)").Replace(data["properties"][key]["type"].ToString(), "$1");
+                                    var link = Regex.Replace(data["properties"][key]["type"].ToString(), "link\\((.+)\\)", "$1");
                                     var linkInfo = link.Split('.');
-                                    var linkTablePath = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), linkInfo[0] + ".jdbt");
+                                    var linkTablePath = Util.MakePath(_db.GetServer(), _db.GetDatabase(), linkInfo[0] + ".jdbt");
                                     var linkTableData = Database.GetTableData(linkTablePath);
 
                                     foreach (var linkId in (JObject)linkTableData["data"])
@@ -364,12 +520,12 @@ namespace JSONDB
             }
 
             var temp = new JArray();
-            if (Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), "last_insert_id") != -1)
+            if (Array.IndexOf(((JArray)_parsedQuery["parameters"]).ToArray(), "last_insert_id") != -1)
             {
-                var res = new JObject {["last_insert_id"] = data["properties"]["last_insert_id"]};
+                var res = new JObject { ["last_insert_id"] = data["properties"]["last_insert_id"] };
                 temp.Add(res);
             }
-            else if (Array.IndexOf(((JArray)ParsedQuery["parameters"]).ToArray(), "*") != -1)
+            else if (Array.IndexOf(((JArray)_parsedQuery["parameters"]).ToArray(), "*") != -1)
             {
                 for (int i = 0, l = result.Count; i < l; i++)
                 {
@@ -385,16 +541,16 @@ namespace JSONDB
                     var line = (JObject)result[i];
                     var res = new JObject();
 
-                    for (int j = 0, m = ((JArray)ParsedQuery["parameters"]).Count; j < m; j++)
+                    for (int j = 0, m = ((JArray)_parsedQuery["parameters"]).Count; j < m; j++)
                     {
-                        var field = ParsedQuery["parameters"][j].ToString();
-                        if (new Regex("\\w+\\(.*\\)").IsMatch(field))
+                        var field = _parsedQuery["parameters"][j].ToString();
+                        if (Regex.IsMatch(field, "\\w+\\(.*\\)"))
                         {
-                            var parts = new Regex("(\\w+)\\((.*)\\)").Replace(field, "$1.$2").Split('.');
+                            var parts = Regex.Replace(field, "(\\w+)\\((.*)\\)", "$1.$2").Split('.');
                             var name = parts[0].ToLower();
                             var param = parts[1];
 
-                            res[field] = _parseFunction(name, line[param].ToString());
+                            res[field] = _parseSelectFunction(name, param, line[param].ToString(), result);
                         }
                         else if (Array.IndexOf(((JArray)data["prototype"]).ToArray(), field) != -1)
                         {
@@ -407,22 +563,22 @@ namespace JSONDB
                     }
                     temp.Add(res);
                 }
-                if (ParsedQuery["extensions"]["as"] != null)
+                if (_parsedQuery["extensions"]["as"] != null)
                 {
-                    for (int i = 0, l = ((JArray)ParsedQuery["parameters"]).Count - ((JArray)ParsedQuery["extensions"]["as"]).Count; i < l; i++)
+                    for (int i = 0, l = ((JArray)_parsedQuery["parameters"]).Count - ((JArray)_parsedQuery["extensions"]["as"]).Count; i < l; i++)
                     {
-                        ((JArray)ParsedQuery["extensions"]["as"]).Add("null");
+                        ((JArray)_parsedQuery["extensions"]["as"]).Add("null");
                     }
-                    var replace = Util.Combine((JArray)ParsedQuery["parameters"], (JArray)ParsedQuery["extensions"]["as"]);
+                    var replace = Util.Combine((JArray)_parsedQuery["parameters"], (JArray)_parsedQuery["extensions"]["as"]);
                     for (int i = 0, l = temp.Count; i < l; i++)
                     {
                         foreach (var item in replace)
                         {
                             var n = item.Value.ToString();
+                            if (n.ToLower() == item.Key.ToLower())
+                                break;
                             if (n.ToLower() == "null")
-                            {
                                 continue;
-                            }
                             temp[i][n] = temp[i][item.Key];
                             ((JObject)temp[i]).Remove(item.Key);
                         }
@@ -435,34 +591,39 @@ namespace JSONDB
             return result;
         }
 
+        /// <summary>
+        /// Execute the count() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JArray _count(JObject data)
         {
             var rows = (JArray)data["prototype"].DeepClone();
             var result = Util.Values((JObject)data["data"]);
             var final = new JArray();
 
-            if (Array.IndexOf(ParsedQuery["parameters"].ToArray(), "*") == -1)
+            if (Array.IndexOf(_parsedQuery["parameters"].ToArray(), "*") == -1)
             {
-                rows = (JArray)ParsedQuery["parameters"];
+                rows = (JArray)_parsedQuery["parameters"];
             }
 
-            if (((JArray) ParsedQuery["extensions"]["where"])?.Count > 0)
+            if (((JArray)_parsedQuery["extensions"]["where"])?.Count > 0)
             {
                 var res = new JArray();
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["where"]).Count; i < l; i++)
                 {
-                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)_parsedQuery["extensions"]["where"][i]));
                 }
                 result = res;
             }
 
-            if (ParsedQuery["extensions"]["group"] != null)
+            if (_parsedQuery["extensions"]["group"] != null)
             {
                 var used = new JArray();
                 for (int i = 0, l = result.Count; i < l; i++)
                 {
                     var arrayDataP = result[i];
-                    var currentColumn = ParsedQuery["extensions"]["group"][0].ToString();
+                    var currentColumn = _parsedQuery["extensions"]["group"][0].ToString();
                     var currentData = arrayDataP[currentColumn].ToString();
                     var currentCounter = 0;
                     if (Array.IndexOf(used.ToArray(), currentData) != -1) continue;
@@ -475,13 +636,13 @@ namespace JSONDB
                         }
                     }
                     var add = new JObject();
-                    if (ParsedQuery["extensions"]["as"] != null)
+                    if (_parsedQuery["extensions"]["as"] != null)
                     {
-                        add[ParsedQuery["extensions"]["as"][0].ToString()] = currentCounter;
+                        add[_parsedQuery["extensions"]["as"][0].ToString()] = currentCounter;
                     }
                     else
                     {
-                        add["count(" + string.Join(",", (JArray)ParsedQuery["parameters"]) + ")"] = currentCounter;
+                        add["count(" + string.Join(",", (JArray)_parsedQuery["parameters"]) + ")"] = currentCounter;
                     }
                     add[currentColumn] = currentData;
                     final.Add(add);
@@ -506,13 +667,13 @@ namespace JSONDB
                 var count = counter.Count > 0 ? (int)Util.Values(counter).Max() : 0;
 
                 var temp = new JObject();
-                if (ParsedQuery["extensions"]["as"] != null)
+                if (_parsedQuery["extensions"]["as"] != null)
                 {
-                    temp[ParsedQuery["extensions"]["as"][0].ToString()] = count;
+                    temp[_parsedQuery["extensions"]["as"][0].ToString()] = count;
                 }
                 else
                 {
-                    temp["count(" + string.Join(",", (JArray)ParsedQuery["parameters"]) + ")"] = count;
+                    temp["count(" + string.Join(",", (JArray)_parsedQuery["parameters"]) + ")"] = count;
                 }
 
                 final.Add(temp);
@@ -521,13 +682,18 @@ namespace JSONDB
             return final;
         }
 
+        /// <summary>
+        /// Execute the truncate() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JValue _truncate(JObject data)
         {
             data["properties"]["last_insert_id"] = 0;
             data["properties"]["last_valid_row_id"] = 0;
             data["data"] = new JObject();
 
-            var path = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt");
+            var path = Util.MakePath(_db.GetServer(), _db.GetDatabase(), _table + ".jdbt");
 
             try
             {
@@ -541,17 +707,22 @@ namespace JSONDB
             }
         }
 
+        /// <summary>
+        /// Execute the delete() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JValue _delete(JObject data)
         {
             var currentData = (JObject)data["data"].DeepClone();
             var toDelete = Util.Values(currentData);
 
-            if (((JArray) ParsedQuery["extensions"]["where"])?.Count > 0)
+            if (((JArray)_parsedQuery["extensions"]["where"])?.Count > 0)
             {
                 var res = new JArray();
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["where"]).Count; i < l; i++)
                 {
-                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)_parsedQuery["extensions"]["where"][i]));
                 }
                 toDelete = res;
             }
@@ -570,11 +741,19 @@ namespace JSONDB
 
             foreach (var lid in finalData)
             {
-                finalData[lid.Key] = Util.KeySort((JObject)lid.Value, (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()));
+                finalData[lid.Key] = Util.KeySort(
+                    (JObject)lid.Value,
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()),
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) < Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString())
+                );
             }
 
             var copy = finalData;
-            finalData = Util.KeySort(finalData, (after, now) => (int)copy[now]["#rowid"] > (int)copy[after]["#rowid"]);
+            finalData = Util.KeySort(
+                finalData,
+                (after, now) => (int)copy[now.ToString()]["#rowid"] > (int)copy[after.ToString()]["#rowid"],
+                (after, now) => (int)copy[now.ToString()]["#rowid"] < (int)copy[after.ToString()]["#rowid"]
+            );
 
             data["data"] = finalData;
             if (toDelete.Count > 0)
@@ -582,7 +761,7 @@ namespace JSONDB
                 data["properties"]["last_valid_row_id"] = _getLastValidRowID(toDelete, false) - 1;
             }
 
-            var path = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt");
+            var path = Util.MakePath(_db.GetServer(), _db.GetDatabase(), _table + ".jdbt");
 
             try
             {
@@ -596,34 +775,39 @@ namespace JSONDB
             }
         }
 
+        /// <summary>
+        /// Execute the update() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JValue _update(JObject data)
         {
             var result = Util.Values((JObject)data["data"]);
 
-            if (((JArray) ParsedQuery["extensions"]["where"])?.Count > 0)
+            if (((JArray)_parsedQuery["extensions"]["where"])?.Count > 0)
             {
                 var res = new JArray();
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["where"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["where"]).Count; i < l; i++)
                 {
-                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)ParsedQuery["extensions"]["where"][i]));
+                    res = Util.Merge(res, _filter((JObject)data["data"], (JArray)_parsedQuery["extensions"]["where"][i]));
                 }
                 result = res;
             }
 
-            if (ParsedQuery["extensions"]["with"] == null)
+            if (_parsedQuery["extensions"]["with"] == null)
             {
                 throw new Exception("JSONDB Error: Can't execute the \"update()\" query without values. The \"with()\" extension is required.");
             }
 
-            var fieldsNb = ((JArray)ParsedQuery["parameters"]).Count;
-            var valuesNb = ((JArray)ParsedQuery["extensions"]["with"]).Count;
+            var fieldsNb = ((JArray)_parsedQuery["parameters"]).Count;
+            var valuesNb = ((JArray)_parsedQuery["extensions"]["with"]).Count;
 
             if (fieldsNb != valuesNb)
             {
                 throw new Exception("JSONDB Error: Can't execute the \"update()\" query. Invalid number of parameters (trying to update \"" + fieldsNb + "\" columns with \"" + valuesNb + "\" values).");
             }
 
-            var values = Util.Combine((JArray)ParsedQuery["parameters"], (JArray)ParsedQuery["extensions"]["with"]);
+            var values = Util.Combine((JArray)_parsedQuery["parameters"], (JArray)_parsedQuery["extensions"]["with"]);
 
             for (int i = 0, l = result.Count; i < l; i++)
             {
@@ -635,7 +819,7 @@ namespace JSONDB
                 foreach (var key in (JObject)data["data"])
                 {
                     var dataLine = (JObject)key.Value;
-                    if ((int) dataLine["#rowid"] != (int) resLine["#rowid"]) continue;
+                    if ((int)dataLine["#rowid"] != (int)resLine["#rowid"]) continue;
                     data["data"][key.Key] = result[i];
                     break;
                 }
@@ -657,10 +841,10 @@ namespace JSONDB
             for (int i = 0, l = ((JArray)data["properties"]["unique_keys"]).Count; i < l; i++)
             {
                 var uk = data["properties"]["unique_keys"][i].ToString();
-                var array = new JObject {[uk] = values[uk]};
+                var array = new JObject { [uk] = values[uk] };
                 foreach (var item in (JObject)data["data"])
                 {
-                    var arrayData = new JObject {[uk] = item.Value[uk]};
+                    var arrayData = new JObject { [uk] = item.Value[uk] };
                     ukError = (ukError || (array[uk] != null && JToken.DeepEquals(array, arrayData)));
                     if (ukError)
                     {
@@ -671,17 +855,25 @@ namespace JSONDB
 
             foreach (var lid in (JObject)data["data"])
             {
-                data["data"][lid.Key] = Util.KeySort((JObject)lid.Value, (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()));
+                data["data"][lid.Key] = Util.KeySort(
+                    (JObject)lid.Value,
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()),
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString())
+                );
             }
 
-            data["data"] = Util.KeySort((JObject)data["data"], (after, now) => (int)data["data"][now]["#rowid"] > (int)data["data"][after]["#rowid"]);
+            data["data"] = Util.KeySort(
+                (JObject)data["data"],
+                (after, now) => (int)data["data"][now.ToString()]["#rowid"] > (int)data["data"][after.ToString()]["#rowid"],
+                (after, now) => (int)data["data"][now.ToString()]["#rowid"] < (int)data["data"][after.ToString()]["#rowid"]
+            );
 
             var lastAi = 0;
             foreach (var item in (JObject)data["properties"])
             {
                 var prop = item.Value;
 
-                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool) prop["auto_increment"])
+                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool)prop["auto_increment"])
                     continue;
 
                 foreach (var lid in (JObject)data["data"])
@@ -693,7 +885,7 @@ namespace JSONDB
 
             data["properties"]["last_insert_id"] = lastAi;
 
-            var path = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt");
+            var path = Util.MakePath(_db.GetServer(), _db.GetDatabase(), _table + ".jdbt");
 
             try
             {
@@ -707,26 +899,31 @@ namespace JSONDB
             }
         }
 
+        /// <summary>
+        /// Execute the insert() query.
+        /// </summary>
+        /// <param name="data">The table's data</param>
+        /// <returns>The query result</returns>
         private JValue _insert(JObject data)
         {
             var rows = (JArray)data["prototype"].DeepClone();
             rows.RemoveAt(Array.IndexOf(rows.ToArray(), "#rowid"));
 
-            if (ParsedQuery["extensions"]["in"] != null)
+            if (_parsedQuery["extensions"]["in"] != null)
             {
-                rows = (JArray)ParsedQuery["extensions"]["in"];
+                rows = (JArray)_parsedQuery["extensions"]["in"];
                 for (int i = 0, l = rows.Count; i < l; i++)
                 {
                     if (Array.IndexOf(((JArray)data["prototype"]).ToArray(), rows[i].ToString()) == -1)
                     {
-                        throw new Exception("JSONDB Error: Can't insert data in the table \"" + Table + "\". The column \"" + rows[i] + "\" doesn't exist.");
+                        throw new Exception("JSONDB Error: Can't insert data in the table \"" + _table + "\". The column \"" + rows[i] + "\" doesn't exist.");
                     }
                 }
             }
 
-            if (((JArray)ParsedQuery["parameters"]).Count != rows.Count)
+            if (((JArray)_parsedQuery["parameters"]).Count != rows.Count)
             {
-                throw new Exception("JSONDB Error: Can't insert data in the table \"" + Table + "\". Invalid number of parameters (given \"" + ((JArray)ParsedQuery["parameters"]).Count + "\" values to insert in \"" + rows.Count + "\" columns).");
+                throw new Exception("JSONDB Error: Can't insert data in the table \"" + _table + "\". Invalid number of parameters (given \"" + ((JArray)_parsedQuery["parameters"]).Count + "\" values to insert in \"" + rows.Count + "\" columns).");
             }
 
             var currentData = (JObject)data["data"];
@@ -734,22 +931,22 @@ namespace JSONDB
             var lkId = (int)data["properties"]["last_link_id"] + 1;
             var insert = new JObject
             {
-                ["#" + lkId] = new JObject {["#rowid"] = (int) data["properties"]["last_valid_row_id"] + 1}
+                ["#" + lkId] = new JObject { ["#rowid"] = (int)data["properties"]["last_valid_row_id"] + 1 }
             };
 
-            for (int i = 0, l = ((JArray)ParsedQuery["parameters"]).Count; i < l; i++)
+            for (int i = 0, l = ((JArray)_parsedQuery["parameters"]).Count; i < l; i++)
             {
-                insert["#" + lkId][rows[i].ToString()] = _parseValue(ParsedQuery["parameters"][i], (JObject)data["properties"][rows[i].ToString()]);
+                insert["#" + lkId][rows[i].ToString()] = _parseValue(_parsedQuery["parameters"][i], (JObject)data["properties"][rows[i].ToString()]);
             }
 
-            if (ParsedQuery["extensions"]["and"] != null)
+            if (_parsedQuery["extensions"]["and"] != null)
             {
-                for (int i = 0, l = ((JArray)ParsedQuery["extensions"]["and"]).Count; i < l; i++)
+                for (int i = 0, l = ((JArray)_parsedQuery["extensions"]["and"]).Count; i < l; i++)
                 {
-                    var values = (JArray)ParsedQuery["extensions"]["and"][i];
+                    var values = (JArray)_parsedQuery["extensions"]["and"][i];
                     if (values.Count != rows.Count)
                     {
-                        throw new Exception("JSONDB Error: Can't insert data in the table \"" + Table + "\". Invalid number of parameters (given \"" + values.Count + "\" values to insert in \"" + rows.Count + "\" columns).");
+                        throw new Exception("JSONDB Error: Can't insert data in the table \"" + _table + "\". Invalid number of parameters (given \"" + values.Count + "\" values to insert in \"" + rows.Count + "\" columns).");
                     }
                     var toAdd = new JObject
                     {
@@ -767,7 +964,7 @@ namespace JSONDB
             {
                 var prop = item.Value;
 
-                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool) prop["auto_increment"])
+                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool)prop["auto_increment"])
                     continue;
 
                 foreach (var lid in insert)
@@ -820,10 +1017,10 @@ namespace JSONDB
                 var uk = data["properties"]["unique_keys"][i].ToString();
                 foreach (var lid in insert)
                 {
-                    var arrayData = new JObject {[uk] = lid.Value[uk]};
+                    var arrayData = new JObject { [uk] = lid.Value[uk] };
                     foreach (var slid in Util.Slice(insert, index + 1))
                     {
-                        var value = new JObject {[uk] = slid.Value[uk]};
+                        var value = new JObject { [uk] = slid.Value[uk] };
                         ukError = (ukError || (value[uk] != null && JToken.DeepEquals(value, arrayData)));
                         if (ukError)
                         {
@@ -836,18 +1033,26 @@ namespace JSONDB
 
             foreach (var lid in insert)
             {
-                insert[lid.Key] = Util.KeySort((JObject)lid.Value, (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()));
+                insert[lid.Key] = Util.KeySort(
+                    (JObject)lid.Value,
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString()),
+                    (after, now) => Array.IndexOf(((JArray)data["prototype"]).ToArray(), now.ToString()) > Array.IndexOf(((JArray)data["prototype"]).ToArray(), after.ToString())
+                );
             }
 
             var copy = insert;
-            insert = Util.KeySort(insert, (after, now) => (int)copy[now]["#rowid"] > (int)copy[after]["#rowid"]);
+            insert = Util.KeySort(
+                insert,
+                (after, now) => (int)copy[now.ToString()]["#rowid"] > (int)copy[after.ToString()]["#rowid"],
+                (after, now) => (int)copy[now.ToString()]["#rowid"] < (int)copy[after.ToString()]["#rowid"]
+            );
 
             var lastAi = 0;
             foreach (var item in (JObject)data["properties"])
             {
                 var prop = item.Value;
 
-                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool) prop["auto_increment"])
+                if (prop.Type != JTokenType.Object || prop["auto_increment"] == null || !(bool)prop["auto_increment"])
                     continue;
 
                 foreach (var lid in insert)
@@ -862,7 +1067,7 @@ namespace JSONDB
             data["properties"]["last_insert_id"] = lastAi;
             data["properties"]["last_link_id"] = lkId;
 
-            var path = Util.MakePath(DbConnection.GetServer(), DbConnection.GetDatabase(), Table + ".jdbt");
+            var path = Util.MakePath(_db.GetServer(), _db.GetDatabase(), _table + ".jdbt");
 
             try
             {
@@ -876,60 +1081,14 @@ namespace JSONDB
             }
         }
 
-        private JArray _min(JObject data)
-        {
-            var row = (JArray) ParsedQuery["parameters"];
-            var result = Util.Values((JObject)data["data"]);
-            var temp = new List<JToken>();
-            var final = new JObject();
-
-            if (((JArray) ParsedQuery["extensions"]["where"])?.Count > 0)
-            {
-                var res = new JArray();
-                for (int i = 0, l = ((JArray) ParsedQuery["extensions"]["where"]).Count; i < l; i++)
-                {
-                    res = Util.Merge(res, _filter((JObject) data["data"], (JArray) ParsedQuery["extensions"]["where"][i]));
-                }
-                result = res;
-            }
-
-            for (int i = 0, l = result.Count; i < l; i++)
-            {
-                var line = (JObject) result[i];
-
-                if (Array.IndexOf(((JArray) data["prototype"]).ToArray(), row[0]) != -1)
-                {
-                    temp.Add(line[row[0].ToString()]);
-                }
-                else
-                {
-                    throw new Exception("JSONDB Error: The column " + row[0] + " doesn't exists in the table.");
-                }
-            }
-
-            var min = temp.Select((value) =>
-            {
-                int m;
-                return int.TryParse(value.ToString(), out m) ? m : 0;
-            }).Min();
-
-            if (ParsedQuery["extensions"]["as"] != null)
-            {
-                final[ParsedQuery["extensions"]["as"][0].ToString()] = min;
-            }
-            else
-            {
-                final["min(" + row[0] + ")"] = min;
-            }
-
-            var ret = new JArray {final};
-
-            return ret;
-        }
-
+        /// <summary>
+        /// Return the set of <paramref name="data"/> which pass tests in <paramref name="filters"/>.
+        /// </summary>
+        /// <param name="data">The set of data to filter</param>
+        /// <param name="filters">A set of tests</param>
+        /// <returns>The filtered data</returns>
         private JArray _filter(JObject data, JArray filters)
         {
-            var result = data;
             var temp = new JObject();
 
             for (int i = 0, l = filters.Count; i < l; i++)
@@ -940,83 +1099,83 @@ namespace JSONDB
                     filter["value"] = data["properties"]["last_insert_id"];
                 }
 
-                foreach (var lid in result)
+                foreach (var lid in data)
                 {
                     var line = (JObject)lid.Value;
                     var value = line[filter["field"].ToString()];
-                    if (new Regex("\\w+\\(.*\\)").IsMatch(filter["field"].ToString()))
+                    if (Regex.IsMatch(filter["field"].ToString(), "\\w+\\(.*\\)"))
                     {
-                        var parts = new Regex("(\\w+)\\((.*)\\)").Replace(filter["field"].ToString(), "$1.$2").Split('.');
+                        var parts = Regex.Replace(filter["field"].ToString(), "(\\w+)\\((.*)\\)", "$1.$2").Split('.');
                         var name = parts[0].ToLower();
                         var param = parts[1];
-                        value = _parseFunction(name, line[param].ToString());
+                        value = _parseWhereFunction(name, line[param].ToString());
                         filter["field"] = param;
                     }
                     if (line[filter["field"].ToString()] == null)
                     {
-                        throw new Exception("JSONDB Error: The field \"" + filter["field"] + "\" doesn't exists in the table \"" + Table + "\".");
+                        throw new Exception("JSONDB Error: The field \"" + filter["field"] + "\" doesn't exists in the table \"" + _table + "\".");
                     }
-                    int left, right;
+                    float left, right;
                     switch (filter["operator"].ToString())
                     {
                         case "<":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left < right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) == -1)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left < right : string.Compare(value.ToString(), filter["value"].ToString()) == -1)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case "<=":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left <= right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) >= 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left <= right : string.Compare(value.ToString(), filter["value"].ToString()) >= 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case "=":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left == right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) == 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left == right : string.Compare(value.ToString(), filter["value"].ToString()) == 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case ">=":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left >= right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) <= 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left >= right : string.Compare(value.ToString(), filter["value"].ToString()) <= 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case ">":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left > right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) == 1)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left > right : string.Compare(value.ToString(), filter["value"].ToString()) == 1)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case "!=":
                         case "<>":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) ? left != right : string.CompareOrdinal(value.ToString(), filter["value"].ToString()) != 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) ? left != right : string.Compare(value.ToString(), filter["value"].ToString()) != 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case "%=":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) && left % right == 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) && left % right == 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         case "%!":
-                            if (int.TryParse(value.ToString(), out left) && int.TryParse(filter["value"].ToString(), out right) && left % right != 0)
+                            if (float.TryParse(value.ToString(), out left) && float.TryParse(filter["value"].ToString(), out right) && left % right != 0)
                             {
                                 temp[line["#rowid"].ToString()] = line;
                             }
                             break;
                         default:
-                            throw new Exception("JSONDB Error: The operator \"" + filter["operator"] +"\" is not supported. Try to use one of these operators: \"<\", \"<=\", \"=\", \">=\", \">\", \"<>\", \"!=\", \"%=\" or \"%!\".");
+                            throw new Exception("JSONDB Error: The operator \"" + filter["operator"] + "\" is not supported. Try to use one of these operators: \"<\", \"<=\", \"=\", \">=\", \">\", \"<>\", \"!=\", \"%=\" or \"%!\".");
                     }
                 }
-                result = temp;
+                data = temp;
                 temp = new JObject();
             }
 
-            return Util.Values(result);
+            return Util.Values((JObject)data);
         }
     }
 }
